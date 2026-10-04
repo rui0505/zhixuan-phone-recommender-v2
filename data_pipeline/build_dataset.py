@@ -389,6 +389,9 @@ def main():
 
     # ================================================== 阶段 7 核验 + 报告
     s = time.time()
+    hash_result = verify_inputs(cfg, paths, manifest)
+    if not hash_result['passed']:
+        raise ValueError('Input hash changed during build')
     report = build_quality_report(cfg, paths, manifest, entities, assets_pack, issues,
                                  counts, id_stats, aux_diff, log, fk_errors)
     write_json(os.path.join(paths["output_dir"], "quality_report.json"), report)
@@ -400,7 +403,7 @@ def main():
                {k: v for k, v in manifest.items() if not k.startswith("_")})
 
     import stage_report
-    stage_report.write_docx(os.path.join(paths["output_dir"], "验收报告.docx"),
+    stage_report.write_docx(os.path.join(paths["output_dir"], cfg['report_name']),
                             report, cfg)
     print(f"[6/7] 验收报告完成")
     print(f"[7/7] 总耗时 {round(time.time() - t0, 1)}s")
@@ -511,8 +514,9 @@ def build_quality_report(cfg, paths, manifest, entities, assets_pack, issues,
     data_src = set(r["source_record_id"] for r in manifest["_raw_rows"]
                    if not r["is_header_row"] and r["file_key"] != "images_zip")
     unmapped = data_src - mapped_set
+    source_audit = stage_manifest.audit_source_cells(cfg, manifest['_raw_cells'])
     add("原始值可复查", "所有源记录有映射；原始数值/文字/类型/公式逐项对照，差异为零",
-        len(unmapped) == 0,
+        len(unmapped) == 0 and source_audit['status'] == 'PASS',
         f"数据源行 {len(data_src)}，已映射 {len(data_src) - len(unmapped)}，"
         f"未映射 {len(unmapped)}；原始层共 {total_rows} 行、{len(manifest['_raw_cells'])} 单元格",
         f"raw_snapshot/raw_cells.jsonl；catalog.sqlite:raw_cells")
@@ -520,12 +524,12 @@ def build_quality_report(cfg, paths, manifest, entities, assets_pack, issues,
     # 3 版本正确
     sat = q("SELECT COUNT(*) FROM phone_variants WHERE satellite_support=1")
     lpd = q("SELECT COUNT(*) FROM skus WHERE storage_raw LIKE '%LPDDR5T%'")
-    dup_combos = q("SELECT COUNT(*) FROM (SELECT model_id, ram_raw, storage_raw, COUNT(*) c "
-                   "FROM skus GROUP BY model_id, ram_raw, storage_raw HAVING c>1)")
+    dup_combos = q("SELECT COUNT(*) FROM (SELECT model_id,variant_id, ram_raw, storage_raw, COUNT(*) c "
+                   "FROM skus GROUP BY model_id,variant_id, ram_raw, storage_raw HAVING c>1)")
     add("版本正确", "普通版/卫星版/内存类型差异保留；跨版本自动合并为零",
         sat >= 3 and lpd >= 1 and dup_combos == 0,
         f"卫星通信版 variant {sat} 个；含 LPDDR5T 标注的 sku {lpd} 个；"
-        f"同机型同 RAM 同存储的重复 sku {dup_combos} 个",
+        f"同硬件版本同 RAM 同存储的重复 sku {dup_combos} 个；跨版本配置保留",
         "catalog.sqlite:phone_variants / skus")
 
     # 4 关联有效
@@ -580,7 +584,7 @@ def build_quality_report(cfg, paths, manifest, entities, assets_pack, issues,
     add("中文可用", "原文中文逐值一致；XLSX 与 DOCX 可打开，无缺字/乱码/截断/科学计数法 ID",
         bad == 0,
         f"原始层替换字符 U+FFFD 命中 {bad} 处；"
-        f"XLSX 工作表 {len(openpyxl.load_workbook(os.path.join(paths['output_dir'], '手机推荐混合数据集_v1.xlsx')).sheetnames)} 个",
+        f"XLSX 工作表 {len(openpyxl.load_workbook(os.path.join(paths['output_dir'], cfg['workbook_name'])).sheetnames)} 个；视觉与 WPS 独立复核",
         "logs/wps_review.md")
 
     # 10 网页可读
@@ -628,33 +632,22 @@ def build_quality_report(cfg, paths, manifest, entities, assets_pack, issues,
         f"图片 {assets_pack['stats'].get('images')} 个、可解码 {assets_pack['stats'].get('decoded')} 个、"
         f"解码失败 {assets_pack['stats'].get('decode_failed')} 个、机型覆盖 "
         f"{assets_pack['stats'].get('models_covered')} 个、颜色 {assets_pack['stats'].get('colors')} 种。",
-        f"数值核验：原始层与源单元格逐格对照通过，派生层按规则复算通过；"
-        f"人工抽查跨品牌记录 {report_spot_check(con_path=db)} 条。",
+        f"原始集合对照：{source_audit['status']}；派生复算见独立验收脚本；人工抽查尚未完成。",
     ]
 
     con.close()
+    config_arg = "data_pipeline/config/build_config.local.json"
+    db_arg = os.path.join(out, "catalog.sqlite")
     reproduce = [
-        "# 1. 输入哈希核验（不改动源文件）",
-        f'python build_dataset.py --config config/build_config.json --verify-only',
-        "",
-        "# 2. 完整构建（原始层 -> ID -> 派生 -> 建库 -> Excel -> 报告）",
-        f'python build_dataset.py --config config/build_config.json',
-        "",
-        "# 3. 验收测试（11 项验收 + 边界案例 + 接口检查）",
-        f'python tests/acceptance.py --config config/build_config.json',
-        "",
-        "# 4. 本地预览",
-        f'python data_preview.py --list-models',
-        f'python data_preview.py --model "iPhone 16 Pro" --mode used',
-        f'python data_preview.py --model "vivo X200 Pro" --observations --missing',
-        f'python data_preview.py --decision --metrics honor_of_kings_avg_fps,dxomark_photo --mode new',
-        "",
-        "# 5. 重建稳定性对照",
-        f'python tests/acceptance.py --config config/build_config.json --rebuild-check',
+        "# Run from the repository root; set PHONE_SOURCE_DIR for your own input directory.",
+        f'python data_pipeline/build_dataset.py --config {config_arg} --verify-only',
+        f'python data_pipeline/build_dataset.py --config {config_arg}',
+        f'python data_pipeline/tests/acceptance.py --config {config_arg} --rebuild-check',
+        f'python data_pipeline/data_preview.py --db "{db_arg}" --list-models',
+        f'python data_pipeline/data_preview.py --db "{db_arg}" --model "vivo X200 Pro" --observations --missing',
     ]
-
     next_steps = [
-        "WPS 复核：在装有 WPS 的机器上打开 手机推荐混合数据集_v1.xlsx，检查表头、冻结区域、"
+        f"WPS 复核：在装有 WPS 的机器上打开 {cfg['workbook_name']}，检查表头、冻结区域、"
         "筛选、中文与 ID 格式，复查关键原始值与派生值；复核后把本报告 wps_review 字段改为 PASS。",
         "正式网页接入：新接口 repository.py 已完成本地验证，接入前请确认 phone-demo 数据加载入口，"
         "将 data/phones.xlsx 的读取替换为 CatalogRepository，并保留原有部署副本。",
@@ -669,7 +662,7 @@ def build_quality_report(cfg, paths, manifest, entities, assets_pack, issues,
     ]
 
     deliverables = {
-        "规范 Excel": os.path.join(out, "手机推荐混合数据集_v1.xlsx"),
+        "规范 Excel": os.path.join(out, cfg['workbook_name']),
         "SQLite 目录库": os.path.join(out, "catalog.sqlite"),
         "输入清单": os.path.join(out, "source_manifest.json"),
         "ID 注册表": os.path.join(out, "id_registry.csv"),
@@ -677,13 +670,8 @@ def build_quality_report(cfg, paths, manifest, entities, assets_pack, issues,
         "图片清单": os.path.join(out, "assets_manifest.csv"),
         "ZIP 成员清单": os.path.join(out, "zip_members.csv"),
         "质检问题清单": os.path.join(out, "quality_issues.csv"),
-        "构建脚本": os.path.join(out, "build_dataset.py"),
-        "配置文件": os.path.join(out, "config", "build_config.json"),
-        "网页读取接口": os.path.join(out, "repository.py"),
-        "本地预览入口": os.path.join(out, "data_preview.py"),
-        "验收测试": os.path.join(out, "tests", "acceptance.py"),
         "质量报告": os.path.join(out, "quality_report.json"),
-        "验收报告": os.path.join(out, "验收报告.docx"),
+        "验收报告": os.path.join(out, cfg['report_name']),
         "网页副本目录": os.path.join(out, "assets_derived"),
         "原包解压目录": os.path.join(out, "assets_extracted"),
     }
@@ -738,6 +726,7 @@ def build_quality_report(cfg, paths, manifest, entities, assets_pack, issues,
                                "描述性结论不折算成 0-10 分",
         },
     }
+    apply_report_status(report)
     return report
 
 
@@ -750,9 +739,24 @@ def con2_rows(db, sql):
         con.close()
 
 
-def report_spot_check(con_path=None, n=20):
-    """人工抽查条目数：跨品牌抽样，写入报告说明。"""
-    return n
+def apply_report_status(report):
+    """Machine completion never impersonates human review or public deployment."""
+    checks = report.get('checks', [])
+    machine = 'FAIL' if any(c['result'] == 'FAIL' for c in checks) else 'PASS' if checks and all(c['result'] == 'PASS' for c in checks) else 'PENDING'
+    report['machine_checks'] = list(checks)
+    report['manual_checks'] = report.get('manual_checks') or [
+        {'item':'跨品牌人工抽查','result':'NOT_CHECKED','completed':0,'target':20},
+        {'item':'WPS复核','result':report.get('wps_review','NOT_CHECKED')}]
+    manual_pass = all(c['result'] == 'PASS' for c in report['manual_checks'])
+    report['machine_acceptance'] = machine
+    report['overall_acceptance'] = 'FAIL' if machine == 'FAIL' or any(c['result'] == 'FAIL' for c in report['manual_checks']) else 'PASS' if machine == 'PASS' and manual_pass else 'PENDING'
+    result = lambda name: next((c['result'] for c in checks if c['item'] == name),'NOT_CHECKED')
+    report['delivery_status'] = {
+        '数据库完成':'FAIL 数据库机器验收失败' if machine == 'FAIL' else 'PASS 已构建且机器检查通过 人工验收待完成' if machine == 'PASS' else 'PENDING 已构建 机器验收尚未全部完成',
+        '本地预览通过':result('网页可读'),
+        'WPS 已复核或待复核':report.get('wps_review','NOT_CHECKED') + ' 需实际复核并保存记录',
+        '正式网页未更新':'未更新 本阶段仅构建新库 原网页未替换',
+    }
 
 
 if __name__ == "__main__":

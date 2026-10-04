@@ -27,9 +27,19 @@ import openpyxl  # noqa: E402
 from common import (force_utf8_stdio, load_config, resolve_dirs, sha256_file,
                     value_to_text, value_type_of, write_csv_bom, write_json)  # noqa: E402
 import rules  # noqa: E402
-from repository import CatalogRepository  # noqa: E402
+sys.path.insert(0, os.path.dirname(ROOT))
+from catalog.repository import CatalogRepository  # noqa: E402
+from stage_manifest import audit_source_cells
+from common import business_digest
+from build_dataset import apply_report_status
 
 RESULTS = []
+
+
+def run_rebuild(config):
+    return subprocess.run([sys.executable, os.path.join(ROOT, 'build_dataset.py'),
+                           '--config', config], capture_output=True, text=True,
+                          encoding='utf-8', check=False)
 
 
 def record(item, standard, passed, detail, evidence=""):
@@ -78,37 +88,14 @@ def main():
 
     # ============================================== 2 原始值可复查（全量机器对照）
     src = paths["source_dir"]
-    files = {"price_main": (cfg["inputs"]["price_main"], cfg["primary_sheet"]),
-             "price_aux": (cfg["inputs"]["price_aux"], cfg["primary_sheet"]),
-             "camera": (cfg["inputs"]["camera"], cfg["camera_sheet"])}
-    checked, mismatch = 0, []
-    for key, (fname, sheet) in files.items():
-        wb = openpyxl.load_workbook(os.path.join(src, fname), data_only=False)
-        ws = wb[sheet]
-        header = [c.value for c in ws[1]]
-        rows = {}
-        for r in Q("SELECT source_row_no, source_col_no, field_name, raw_value_text,"
-                   " raw_value_type, formula, number_format FROM raw_cells"
-                   " WHERE file_key=? AND sheet_name=?", (key, sheet)):
-            rows[(r["source_row_no"], r["source_col_no"])] = r
-        for (rno, cno), rec in rows.items():
-            c = ws.cell(rno, cno)
-            checked += 1
-            exp_text = value_to_text(c.value)
-            exp_type = value_type_of(c.value)
-            exp_formula = c.value if isinstance(c.value, str) and c.value.startswith("=") else ""
-            if (rec["raw_value_text"] != exp_text or rec["raw_value_type"] != exp_type
-                    or (rec["formula"] or "") != exp_formula
-                    or rec["number_format"] != c.number_format
-                    or rec["field_name"] != (header[cno - 1] if cno - 1 < len(header) else None)):
-                mismatch.append({"file": key, "row": rno, "col": cno,
-                                 "expected": exp_text, "stored": rec["raw_value_text"]})
-        wb.close()
-    record("原始值可复查", "所有源记录有映射；原始数值/文字/值类型/公式逐项对照，差异为零",
-           len(mismatch) == 0,
-           f"全量机器对照 {checked} 个原始单元格（值/类型/公式/数字格式/字段名），差异 {len(mismatch)} 处；"
-           f"映射覆盖：源数据行 {S('SELECT COUNT(DISTINCT source_record_id) FROM raw_rows WHERE is_header_row=0 AND file_key<>\"images_zip\"')} 行，"
-           f"import_mapping 覆盖 {S('SELECT COUNT(DISTINCT source_record_id) FROM import_mapping')} 行",
+    source_audit = audit_source_cells(cfg, [dict(r) for r in Q('SELECT * FROM raw_cells')])
+    checked = source_audit['expected_count']
+    mismatch = source_audit['missing'] + source_audit['extra'] + source_audit['changed'] + source_audit['duplicates']
+    record("原始值可复查", "原始集合和值类型公式格式与源文件全量对照，差异为零",
+           source_audit['status'] == 'PASS',
+           f"期望 {checked} 个单元格，存储 {source_audit['actual_count']}；"
+           f"遗漏 {len(source_audit['missing'])} 多余 {len(source_audit['extra'])} "
+           f"改变 {len(source_audit['changed'])} 重复 {len(source_audit['duplicates'])}",
            json.dumps(mismatch[:5], ensure_ascii=False))
 
     # 派生层按规则复算
@@ -188,12 +175,14 @@ def main():
     for table, col in (("specifications", "subject_id"), ("benchmark_runs", "subject_id"),
                        ("evidence_snippets", "subject_id")):
         for stype in [r[0] for r in Q(f"SELECT DISTINCT subject_type FROM {table}")]:
-            if stype != "model":
+            target = {'model':('phone_models','model_id'), 'variant':('phone_variants','variant_id'),
+                      'sku':('skus','sku_id')}.get(stype)
+            if target is None:
                 subject_checks[f"{table}({stype})"] = -1
                 continue
-            n = S(f"SELECT COUNT(*) FROM {table} t WHERE t.subject_type='model' "
-                  f"AND t.{col} NOT IN (SELECT model_id FROM phone_models)")
-            subject_checks[f"{table}(model)"] = n
+            n = S(f"SELECT COUNT(*) FROM {table} t WHERE t.subject_type=? "
+                  f"AND t.{col} NOT IN (SELECT {target[1]} FROM {target[0]})", (stype,))
+            subject_checks[f"{table}({stype})"] = n
     # related_run_id 也必须是存在的 run
     bad_run_ref = S("SELECT COUNT(*) FROM evidence_snippets WHERE related_run_id IS NOT NULL "
                     "AND related_run_id NOT IN (SELECT run_id FROM benchmark_runs)")
@@ -259,7 +248,7 @@ def main():
 
     # ============================================== 8 重建稳定
     if args.rebuild_check:
-        before = {"counts": dict((t, S(f"SELECT COUNT(*) FROM {t}")) for t in
+        before = {"business_digest": business_digest(db), "counts": dict((t, S(f"SELECT COUNT(*) FROM {t}")) for t in
                                  ("phone_models", "phone_variants", "skus", "price_snapshots",
                                   "specifications", "benchmark_runs", "metric_observations")),
                   "sku_ids": [r[0] for r in Q("SELECT sku_id FROM skus ORDER BY sku_id")],
@@ -267,25 +256,24 @@ def main():
                   "registry_sha": hashlib.sha256(
                       open(os.path.join(out, "id_registry.csv"), "rb").read()).hexdigest()}
         con.close()
-        r = subprocess.run([sys.executable, os.path.join(ROOT, "build_dataset.py"),
-                            "--config", args.config], capture_output=True, text=True)
+        r = run_rebuild(args.config)
         con = sqlite3.connect(db)
         con.row_factory = sqlite3.Row
         Q = lambda sql, p=(): con.execute(sql, p).fetchall()  # noqa: E731
         S = lambda sql, p=(): con.execute(sql, p).fetchone()[0]  # noqa: E731
-        after = {"counts": dict((t, S(f"SELECT COUNT(*) FROM {t}")) for t in
+        after = {"business_digest": business_digest(db), "counts": dict((t, S(f"SELECT COUNT(*) FROM {t}")) for t in
                                 ("phone_models", "phone_variants", "skus", "price_snapshots",
                                  "specifications", "benchmark_runs", "metric_observations")),
                  "sku_ids": [r[0] for r in Q("SELECT sku_id FROM skus ORDER BY sku_id")],
                  "model_ids": [r[0] for r in Q("SELECT model_id FROM phone_models ORDER BY model_id")],
                  "registry_sha": hashlib.sha256(
                      open(os.path.join(out, "id_registry.csv"), "rb").read()).hexdigest()}
-        stable = (before["counts"] == after["counts"] and before["sku_ids"] == after["sku_ids"]
+        stable = (r.returncode == 0 and before["business_digest"] == after["business_digest"] and before["counts"] == after["counts"] and before["sku_ids"] == after["sku_ids"]
                   and before["model_ids"] == after["model_ids"]
                   and before["registry_sha"] == after["registry_sha"])
         record("重建稳定", "同一输入重复导入的业务 ID、规范记录和观测数量一致，无重复追加",
                stable,
-               f"重建前后记录数 {'一致' if before['counts'] == after['counts'] else '不一致'}；"
+               f"业务 digest 一致={before['business_digest'] == after['business_digest']}；重建返回码={r.returncode}；记录数 {'一致' if before['counts'] == after['counts'] else '不一致'}；"
                f"sku_id 序列 {'一致' if before['sku_ids'] == after['sku_ids'] else '不一致'}；"
                f"model_id 序列 {'一致' if before['model_ids'] == after['model_ids'] else '不一致'}；"
                f"id_registry.csv 哈希 {'一致' if before['registry_sha'] == after['registry_sha'] else '不一致'}",
@@ -299,7 +287,7 @@ def main():
     # ============================================== 9 中文可用
     bad_cells = S("SELECT COUNT(*) FROM raw_cells WHERE raw_value_text LIKE '%\ufffd%'")
     susp = S("SELECT COUNT(*) FROM raw_cells WHERE raw_value_text LIKE '%鏁%' OR raw_value_text LIKE '%锟斤拷%'")
-    xlsx_path = os.path.join(out, "手机推荐混合数据集_v1.xlsx")
+    xlsx_path = os.path.join(out, cfg['workbook_name'])
     wb = openpyxl.load_workbook(xlsx_path)
     sheets = wb.sheetnames
     id_text_ok = True
@@ -335,7 +323,7 @@ def main():
            f"U+FFFD 命中 {bad_cells}；可疑乱码串命中 {susp}；"
            f"源表产品名称 {len(names_src)} 个与库内 display_name 逐值{'一致' if name_ok else '不一致'}；"
            f"ID 列抽样（工作表, 值, 单元格类型, 数字格式）{id_samples}；XLSX 工作表 {sheets}",
-           "手机推荐混合数据集_v1.xlsx")
+           cfg['workbook_name'])
 
     # ============================================== 10 网页可读
     repo = CatalogRepository(db)
@@ -515,9 +503,14 @@ def main():
         spot = list(spot) + list(extra)
     spot_rows = []
     for r in spot:
-        sp = {x["spec_key"]: dict(x) for x in Q(
-            "SELECT spec_key, value_num, raw_value FROM specifications WHERE subject_id=?",
-            (r["model_id"],))}
+        variant = S('SELECT variant_id FROM skus WHERE sku_id=?',(r['sku_id'],))
+        sp = {}
+        for x in Q("SELECT spec_key,value_num,raw_value FROM specifications WHERE "
+                   "(subject_type='sku' AND subject_id=?) OR (subject_type='variant' AND subject_id=?) "
+                   "OR (subject_type='model' AND subject_id=?) ORDER BY "
+                   "CASE subject_type WHEN 'sku' THEN 0 WHEN 'variant' THEN 1 ELSE 2 END, spec_id",
+                   (r['sku_id'],variant,r['model_id'])):
+            sp.setdefault(x['spec_key'],dict(x))
         spot_rows.append([
             r["brand"], r["display_name"], r["sku_id"],
             r["ram_raw"], r["ram_gb"], r["storage_raw"], r["storage_gb"], r["memory_type"],
@@ -565,11 +558,12 @@ def main():
                             "run_at": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
                             "rebuild_check": bool(args.rebuild_check)}
     report["wps_review"] = "NOT_CHECKED"
+    apply_report_status(report)
     write_json(rp, report)
 
     import stage_report
-    stage_report.write_docx(os.path.join(out, "验收报告.docx"), report, cfg)
-    print(f"\n已更新：{rp}\n已更新：{os.path.join(out, '验收报告.docx')}")
+    stage_report.write_docx(os.path.join(out, cfg['report_name']), report, cfg)
+    print(f"\n已更新：{rp}\n已更新：{os.path.join(out, cfg['report_name'])}")
 
     # WPS 复核清单
     wps = ["# WPS 人工复核清单", "",

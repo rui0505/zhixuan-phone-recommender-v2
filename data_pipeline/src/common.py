@@ -33,6 +33,7 @@ def load_config(path: str) -> dict:
         if os.environ.get(env_name):
             cfg[key] = os.environ[env_name]
     cfg.setdefault('workbook_name', '手机推荐混合数据集_' + cfg.get('dataset_version', '未命名') + '.xlsx')
+    cfg.setdefault('report_name', '验收报告_' + cfg.get('dataset_version', '未命名') + '.docx')
     return cfg
 
 
@@ -71,6 +72,29 @@ def sha256_file(path: str, chunk: int = 1 << 20) -> str:
 
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def business_digest(db_path) -> str:
+    """Stable business content, including values and links; omit local build metadata."""
+    import sqlite3
+    tables = ('phone_models','phone_variants','skus','price_snapshots','specifications','spec_provenance',
+              'benchmark_runs','metric_observations','metric_definitions','sources','assets',
+              'asset_colors','model_covers','evidence_snippets','import_mapping','dataset_releases','field_dictionary')
+    excluded = {'built_at','release_id','extracted_path','mapping_id'}
+    con = sqlite3.connect(str(db_path))
+    result = {}
+    try:
+        available = {r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        for table in tables:
+            if table not in available:
+                continue
+            columns = [r[1] for r in con.execute(f'PRAGMA table_info({table})') if r[1] not in excluded]
+            rows = [list(r) for r in con.execute(f'SELECT {",".join(columns)} FROM {table}')]
+            rows.sort(key=lambda row: json.dumps(row, ensure_ascii=False, sort_keys=True))
+            result[table] = {'columns':columns,'rows':rows}
+    finally:
+        con.close()
+    return sha256_bytes(json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(',',':'),allow_nan=False).encode('utf-8'))
 
 
 def file_stat(path: str) -> dict:

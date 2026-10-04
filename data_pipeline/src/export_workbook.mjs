@@ -9,6 +9,7 @@ await fs.mkdir(previewDir, {recursive:true});
 for (let index=0; index<payload.sheets.length; index++) {
   const data=payload.sheets[index];
   const sheet=wb.worksheets.add(data.title);
+  sheet.showGridLines=false;
   const start=data.note ? 1 : 0;
   const matrix=[data.header, ...data.rows];
   sheet.getRangeByIndexes(start,0,matrix.length,data.header.length).values=matrix;
@@ -16,7 +17,9 @@ for (let index=0; index<payload.sheets.length; index++) {
   used.format.font={name:'Microsoft YaHei',size:10};
   used.format.verticalAlignment='center';
   used.format.rowHeight=22;
+  used.format.wrapText=true;
   sheet.getRangeByIndexes(start,0,1,data.header.length).format={fill:'#DDEBF7',font:{name:'Microsoft YaHei',size:10,bold:true},rowHeight:32,wrapText:true,verticalAlignment:'center'};
+  sheet.getRangeByIndexes(start,0,1,data.header.length).format.horizontalAlignment='center';
   if(data.note) {
     sheet.getCell(0,0).values=[[data.note]];
     sheet.getCell(0,0).format.font={name:'Microsoft YaHei',size:10,italic:true,color:'#666666'};
@@ -29,8 +32,14 @@ for (let index=0; index<payload.sheets.length; index++) {
     if(payload.text_cols.includes(header) || header.endsWith('ID') || header==='源记录' || header==='SHA256') column.setNumberFormat('@');
   }
   sheet.freezePanes.freezeRows(start+1);
+  used.format.autofitRows();
+  if(data.note) {
+    sheet.getCell(0,0).format.wrapText=false;
+    sheet.getCell(0,0).format.rowHeight=24;
+  }
   sheet.freezePanes.freezeColumns(1);
   sheet.tables.add(sheet.getRangeByIndexes(start,0,matrix.length,data.header.length),true,`Dataset${index+1}`);
+  sheet.getRangeByIndexes(start,0,1,data.header.length).format.font={name:'Microsoft YaHei',size:10,bold:true,color:'#000000'};
 }
 wb.recalculate();
 const exported=await SpreadsheetFile.exportXlsx(wb);

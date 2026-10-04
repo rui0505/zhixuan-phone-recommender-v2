@@ -39,11 +39,13 @@ MEMBER_HEADER = ["member_path", "is_dir", "is_image", "format", "size_bytes",
 
 
 def is_safe_member(name: str) -> bool:
+    if not name or '\x00' in name or ':' in name or '..' in name.replace('\\','/').split('/'):
+        return False
     if name.startswith("/") or name.startswith("\\"):
         return False
     if len(name) > 1 and name[1] == ":":
         return False
-    norm = posixpath.normpath(name)
+    norm = posixpath.normpath(name.replace('\\','/'))
     return not (norm.startswith("../") or norm == ".." or "/../" in norm)
 
 
@@ -91,7 +93,7 @@ def build_assets(cfg, paths, model_id_by_key, model_order, issues):
         for info in z.infolist():
             name = info.filename
             stats["members"] += 1
-            safe = is_safe_member(name)
+            safe = is_safe_member(name) and ((info.external_attr >> 16) & 0o170000) != 0o120000
             ext = os.path.splitext(name)[1].lower()
             is_img = (not info.is_dir()) and ext in IMAGE_EXT
             rec = {
@@ -116,7 +118,7 @@ def build_assets(cfg, paths, model_id_by_key, model_order, issues):
 
             data = z.read(name)
             rec["sha256"] = sha256_bytes(data)
-            target = os.path.join(paths["assets_extracted"], *name.split("/"))
+            target = os.path.join(paths["assets_extracted"], *name.replace('\\','/').split("/"))
             os.makedirs(os.path.dirname(target), exist_ok=True)
             if not os.path.exists(target):
                 with open(target, "wb") as fh:

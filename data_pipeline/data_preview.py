@@ -18,8 +18,8 @@ import json
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from repository import CatalogRepository  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from catalog.repository import CatalogRepository  # noqa: E402
 
 
 def _print_table(rows, cols=None, limit=None, width=28):
@@ -49,7 +49,7 @@ def main():
     except Exception:
         pass
     ap = argparse.ArgumentParser()
-    ap.add_argument("--db", default=None, help="catalog.sqlite 路径")
+    ap.add_argument("--db", default=os.environ.get('PHONE_CATALOG_DB'), help="catalog.sqlite 路径")
     ap.add_argument("--model", default=None, help="机型名称或 model_id")
     ap.add_argument("--mode", default="all", choices=["all", "new", "used"],
                     help="价格模式：新机/二手/全部")

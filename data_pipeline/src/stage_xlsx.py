@@ -144,9 +144,12 @@ def export_workbook(path, cfg, manifest, entities, assets_pack, issues, counts, 
              s["source_col"], s["parse_status"], s["note"], s["comparison_group"], s["source_id"],
              s["source_record_id"], s["rule_version"]]
             for s in entities["specifications"]],
-           note="机型级共享规格，非逐配置实测；无法精确解析时派生值为 NULL，原文照常保留。"
+           note="SKU 优先；仅当前全部配置一致的规格提升为机型共有值。无法精确解析时保持 NULL。"
                 "「口径/条件说明」保留源表原文；「可比性分组」为规范化分组键，仅用于比较，"
                 "不同组不直接混排。")
+
+    _sheet(wb, '规格来源映射', ['spec_id','source_record_id','源列','source_id'],
+           [[p['spec_id'],p['source_record_id'],p['source_col'],p['source_id']] for p in entities.get('spec_provenance',[])])
 
     # ---- 评测运行 ----
     _sheet(wb, "评测运行",
