@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+local_build/
+local_evidence/
+docs/superpowers/
+.superpowers/
+data_pipeline/config/build_config.local.json
+node_modules/
+*.log
