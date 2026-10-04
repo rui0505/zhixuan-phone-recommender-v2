@@ -18,6 +18,8 @@ import json
 import os
 import sys
 import time
+import shutil
+import csv
 from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -105,10 +107,14 @@ def main():
     ap.add_argument("--config", default=os.path.join(HERE, "config", "build_config.json"))
     ap.add_argument("--skip-assets", action="store_true", help="跳过图片阶段（调试用）")
     ap.add_argument("--verify-only", action="store_true", help="只做输入哈希核验")
+    ap.add_argument('--pilot-sku-ids', help='JSON数组：仅导出选定配置的业务实体，原始层保持全量')
+    ap.add_argument('--data-only', action='store_true', help='只生成数据库和机器证据，不生成XLSX/DOCX')
     args = ap.parse_args()
 
     t0 = time.time()
     cfg = load_config(args.config)
+    if cfg['rule_version'] != RULE_VERSION:
+        raise ValueError('Configured rule version does not match implementation')
     paths = resolve_dirs(cfg)
     ensure_dirs(paths)
     log = {"stage_times": {}, "warnings": []}
@@ -125,6 +131,10 @@ def main():
     write_jsonl(os.path.join(paths["raw_snapshot"], "raw_cells.jsonl"), raw_cells)
     write_json(os.path.join(paths["output_dir"], "source_manifest.json"),
                {k: v for k, v in manifest.items() if not k.startswith("_")})
+    source_audit = stage_manifest.audit_source_cells(cfg, raw_cells)
+    write_json(os.path.join(paths['logs'], 'source_cells_audit.json'), source_audit)
+    if source_audit['status'] != 'PASS':
+        raise ValueError('Source cell set differs from captured raw layer')
     mark("1_manifest", s)
     print(f"[1/7] 输入登记完成：{len(raw_rows)} 行 / {len(raw_cells)} 单元格")
 
@@ -190,6 +200,11 @@ def main():
     # ================================================== 阶段 2 稳定 ID
     s = time.time()
     registry_path = os.path.join(paths["output_dir"], "id_registry.csv")
+    seed_path = os.path.abspath(os.path.join(os.path.dirname(args.config), cfg.get('registry_seed', '../id_registry.csv')))
+    if not os.path.exists(registry_path):
+        if not os.path.isfile(seed_path):
+            raise ValueError('Existing ID registry seed is required')
+        shutil.copy2(seed_path, registry_path)
     alias_path = os.path.join(paths["output_dir"], "model_aliases.csv")
     model_order, variant_list, _, alias_rows, id_issues, id_stats = stage_ids.build_ids(
         main_rows, registry_path, alias_path, RULE_VERSION, cfg["id_registry_version"])
@@ -317,6 +332,17 @@ def main():
                                source_record_id=r["source_record_id"],
                                detail="该源记录没有任何映射目标"))
 
+    if args.pilot_sku_ids:
+        with open(args.pilot_sku_ids, encoding='utf-8') as fh:
+            pilot_ids = json.load(fh)
+        if not isinstance(pilot_ids, list) or not all(isinstance(x, str) for x in pilot_ids):
+            raise ValueError('Pilot IDs must be a JSON string array')
+        if len(pilot_ids) != len(set(pilot_ids)):
+            raise ValueError('Duplicate pilot IDs')
+        filter_pilot_entities(entities, assets_pack, set(pilot_ids))
+        id_stats.update(models=len(entities['phone_models']), variants=len(entities['phone_variants']),
+                        skus=len(entities['skus']))
+
     # ================================================== 阶段 5 建库
     s = time.time()
     db_path = os.path.join(paths["output_dir"], "catalog.sqlite")
@@ -327,10 +353,21 @@ def main():
         issues.append(dict(issue_code="FOREIGN_KEY_VIOLATION", severity="high",
                            source_record_id="", detail=f"外键检查发现 {len(fk_errors)} 条违规"))
     print(f"[4/7] 数据库完成：{db_path}（外键违规 {len(fk_errors)}）")
+    if fk_errors:
+        raise ValueError('Foreign key violations: database is not accepted')
+    if args.data_only:
+        hash_checks = verify_inputs(cfg, paths, manifest)
+        write_json(os.path.join(paths['logs'], 'data_only_status.json'), {
+            'scope': 'pilot' if args.pilot_sku_ids else 'full', 'counts': counts,
+            'source_cells': source_audit['status'], 'input_hashes': hash_checks,
+            'manual_review': 'NOT_CHECKED', 'wps_review': 'NOT_CHECKED',
+            'web_deployment': 'NOT_UPDATED', 'overall_acceptance': 'PENDING'})
+        print('Data-only build finished; document/WPS/manual acceptance is pending')
+        return
 
     # ================================================== 阶段 6 XLSX
     s = time.time()
-    xlsx_path = os.path.join(paths["output_dir"], "手机推荐混合数据集_v1.xlsx")
+    xlsx_path = os.path.join(paths["output_dir"], cfg['workbook_name'])
     stage_xlsx.export_workbook(xlsx_path, cfg, manifest, entities, assets_pack,
                                issues, counts, id_stats)
     mark("6_xlsx", s)
@@ -367,6 +404,39 @@ def main():
                             report, cfg)
     print(f"[6/7] 验收报告完成")
     print(f"[7/7] 总耗时 {round(time.time() - t0, 1)}s")
+
+
+def filter_pilot_entities(entities: dict, assets_pack: dict, sku_ids: set[str]) -> None:
+    available = {row['sku_id'] for row in entities['skus']}
+    if not sku_ids or not sku_ids <= available:
+        raise ValueError('Pilot contains unknown SKU IDs or is empty')
+    entities['skus'] = [r for r in entities['skus'] if r['sku_id'] in sku_ids]
+    model_ids = {r['model_id'] for r in entities['skus']}
+    variant_ids = {r['variant_id'] for r in entities['skus']}
+    scope_ids = {'sku': sku_ids, 'model': model_ids, 'variant': variant_ids}
+    for table, column, values in (('phone_models', 'model_id', model_ids),
+                                  ('phone_variants', 'variant_id', variant_ids),
+                                  ('price_snapshots', 'sku_id', sku_ids)):
+        entities[table] = [r for r in entities[table] if r[column] in values]
+    entities['specifications'] = [r for r in entities['specifications']
+        if r['subject_id'] in scope_ids.get(r['subject_type'], set())]
+    entities['benchmark_runs'] = [r for r in entities['benchmark_runs']
+        if r.get('model_id') in model_ids and (not r.get('variant_id') or r['variant_id'] in variant_ids)
+        and (not r.get('sku_id') or r['sku_id'] in sku_ids)]
+    run_ids = {r['run_id'] for r in entities['benchmark_runs']}
+    entities['metric_observations'] = [r for r in entities['metric_observations'] if r['run_id'] in run_ids]
+    if 'evidence_snippets' in entities:
+        entities['evidence_snippets'] = [r for r in entities['evidence_snippets']
+            if r.get('subject_id') in scope_ids.get(r.get('subject_type'), set())
+            and (not r.get('related_run_id') or r['related_run_id'] in run_ids)]
+    mapping_ids = dict(scope_ids, price={r['price_id'] for r in entities['price_snapshots']}, benchmark_run=run_ids)
+    entities['import_mapping'] = [r for r in entities['import_mapping']
+        if r['target_id'] in mapping_ids.get(r['target_type'], set())]
+    for table in ('assets', 'covers'):
+        assets_pack[table] = [r for r in assets_pack.get(table, []) if r['model_id'] in model_ids]
+    if 'spec_provenance' in entities:
+        spec_ids = {r['spec_id'] for r in entities['specifications']}
+        entities['spec_provenance'] = [r for r in entities['spec_provenance'] if r['spec_id'] in spec_ids]
 
 
 def _norm(s):

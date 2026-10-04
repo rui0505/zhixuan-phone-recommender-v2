@@ -1,0 +1,18 @@
+{
+  "dataset_version": "catalog-2026-10-04-v2",
+  "rule_version": "rules-2.1.0",
+  "id_registry_version": "ids-1.0.0",
+  "source_dir": "./private_sources",
+  "output_dir": "./local_build/full",
+  "registry_seed": "../id_registry.csv",
+  "inputs": {
+    "price_main": "手机价格表_完整配置补充.xlsx",
+    "price_aux": "手机价格表_游戏性能补充.xlsx",
+    "camera": "手机拍照性能数据表（综合版）_修正.xlsx",
+    "images_zip": "手机图片_按型号和颜色.zip"
+  },
+  "primary_sheet": "近年来热销150款手机",
+  "camera_sheet": "综合版",
+  "required_fields": {"price_main": ["产品名称", "运行内存", "存储", "价格"], "price_aux": ["产品名称", "运行内存", "存储"]},
+  "conventions": {"storage_tb_to_gb": 1024, "default_region_when_evidenced": "中国大陆", "webp_max_width": 1200, "webp_quality": 82}
+}

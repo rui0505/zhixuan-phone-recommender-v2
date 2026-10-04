@@ -29,12 +29,18 @@ def load_config(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as fh:
         cfg = json.load(fh)
     cfg["config_path"] = os.path.abspath(path)
+    for key, env_name in (("source_dir", "PHONE_SOURCE_DIR"), ("output_dir", "PHONE_BUILD_DIR")):
+        if os.environ.get(env_name):
+            cfg[key] = os.environ[env_name]
+    cfg.setdefault('workbook_name', '手机推荐混合数据集_' + cfg.get('dataset_version', '未命名') + '.xlsx')
     return cfg
 
 
 def resolve_dirs(cfg: dict) -> dict:
     src = os.path.abspath(cfg["source_dir"])
     out = os.path.abspath(cfg["output_dir"])
+    if src == out or os.path.commonpath([src, out]) == src:
+        raise ValueError('Output must not be inside the original source directory')
     return {
         "source_dir": src,
         "output_dir": out,

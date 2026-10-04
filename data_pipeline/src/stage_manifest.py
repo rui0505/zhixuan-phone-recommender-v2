@@ -142,3 +142,34 @@ def build_manifest(cfg: dict, paths: dict):
         "files": files,
     }
     return manifest, all_rows, all_cells
+
+
+def audit_source_cells(cfg: dict, raw_cells: list[dict]) -> dict:
+    """Compare the complete expected set, including blanks, not just captured cells."""
+    fields = ('field_name', 'raw_value_text', 'raw_value_type', 'formula',
+              'cached_value_text', 'cached_value_type', 'number_format')
+    expected, hashes = {}, {}
+    for key, name in cfg['inputs'].items():
+        if not name.lower().endswith('.xlsx'):
+            continue
+        path = os.path.join(cfg['source_dir'], name)
+        hashes[key] = sha256_file(path)
+        _, _, cells = read_workbook(path, key)
+        for cell in cells:
+            coordinate = (key, cell['sheet_name'], cell['source_row_no'], cell['source_col_no'])
+            expected[coordinate] = cell
+    actual, duplicates = {}, []
+    for cell in raw_cells:
+        coordinate = (cell['file_key'], cell['sheet_name'], cell['source_row_no'], cell['source_col_no'])
+        if coordinate in actual:
+            duplicates.append(coordinate)
+        actual[coordinate] = cell
+    missing = sorted(expected.keys() - actual.keys())
+    extra = sorted(actual.keys() - expected.keys())
+    changed = [{'coordinate': coordinate, 'fields': [f for f in fields
+                if expected[coordinate].get(f) != actual[coordinate].get(f)]}
+               for coordinate in sorted(expected.keys() & actual.keys())
+               if any(expected[coordinate].get(f) != actual[coordinate].get(f) for f in fields)]
+    return {'status': 'FAIL' if missing or extra or changed or duplicates else 'PASS',
+            'missing': missing, 'extra': extra, 'changed': changed, 'duplicates': duplicates,
+            'expected_count': len(expected), 'actual_count': len(raw_cells), 'file_hashes': hashes}

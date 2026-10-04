@@ -213,3 +213,42 @@ def append_registry(path: str, *allocators) -> None:
         for a in allocators:
             for row in a.rows:
                 w.writerow([row.get(h, "") for h in REGISTRY_HEADER])
+
+
+def select_pilot_ids(rows: list[dict], registry: list[dict], n: int = 20) -> list[str]:
+    registered = {r['id'] for r in registry if r.get('id_type') == 'sku'}
+    unique = {r['_sku_id']: r for r in rows if r.get('_sku_id') in registered}
+    if len(unique) < n:
+        raise ValueError('Not enough registered SKUs for the requested pilot')
+    chosen = []
+    ordered = sorted(unique.items())
+    cases = [('realme', 'GT5'), ('荣耀', 'X70'), ('华为', 'Mate80Pro')]
+    for tokens in cases:
+        case_name = ''.join(tokens).casefold()
+        matches = [(sid, row) for sid, row in ordered if case_name ==
+                   str(row.get('产品名称', '')).replace(' ', '').casefold()]
+        # Cover each known configuration variation rather than only a model's first row.
+        for sid, _ in matches:
+            if sid not in chosen and len(chosen) < n:
+                chosen.append(sid)
+    for sid, row in ordered:
+        if '卫星' in str(row.get('版本/备注') or '') and sid not in chosen and len(chosen) < n:
+            chosen.append(sid)
+            for standard_id, standard in ordered:
+                if (standard.get('产品名称') == row.get('产品名称')
+                        and standard.get('运行内存') == row.get('运行内存')
+                        and standard.get('存储') == row.get('存储')
+                        and '卫星' not in str(standard.get('版本/备注') or '')
+                        and standard_id not in chosen and len(chosen) < n):
+                    chosen.append(standard_id)
+                    break
+    brands = {detect_brand(unique[sid].get('产品名称')) for sid in chosen}
+    for sid, row in ordered:
+        brand = detect_brand(row.get('产品名称'))
+        if brand not in brands and sid not in chosen and len(chosen) < n:
+            chosen.append(sid)
+            brands.add(brand)
+    for sid, _ in ordered:
+        if sid not in chosen and len(chosen) < n:
+            chosen.append(sid)
+    return sorted(chosen)
