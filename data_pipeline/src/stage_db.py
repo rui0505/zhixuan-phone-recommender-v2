@@ -83,6 +83,13 @@ CREATE TABLE specifications (
 );
 CREATE INDEX idx_spec_subject ON specifications(subject_type, subject_id, spec_key);
 
+CREATE TABLE spec_provenance (
+  spec_id TEXT NOT NULL REFERENCES specifications(spec_id),
+  source_record_id TEXT NOT NULL, source_col TEXT NOT NULL,
+  source_id TEXT REFERENCES sources(source_id),
+  PRIMARY KEY (spec_id, source_record_id, source_col)
+);
+
 CREATE TABLE benchmark_runs (
   run_id TEXT PRIMARY KEY, subject_type TEXT NOT NULL, subject_id TEXT NOT NULL,
   model_id TEXT, variant_id TEXT, sku_id TEXT,
@@ -189,7 +196,7 @@ CREATE TABLE field_dictionary (
 );
 """
 
-TABLES = ["ingestion_files", "raw_rows", "raw_cells", "phone_models", "phone_variants",
+TABLES = ["spec_provenance", "ingestion_files", "raw_rows", "raw_cells", "phone_models", "phone_variants",
           "skus", "price_snapshots", "specifications", "benchmark_runs",
           "metric_observations", "metric_definitions", "sources", "evidence_snippets",
           "assets", "asset_colors", "model_covers", "zip_members", "import_mapping",
@@ -260,6 +267,10 @@ def build_db(db_path, manifest, entities, assets_pack, issues, stats, cfg):
         con.executemany(f"INSERT INTO evidence_snippets VALUES ({ph(SNIPPET_COLS)})",
                         [tuple(s.get(h) for h in SNIPPET_COLS)
                          for s in entities.get("evidence_snippets", [])])
+
+        con.executemany('INSERT INTO spec_provenance VALUES (?,?,?,?)',
+                        [(p['spec_id'], p['source_record_id'], p['source_col'], p['source_id'])
+                         for p in entities.get('spec_provenance', [])])
 
         # 指标定义
         for key, name_cn, unit, direction, prefix, vtype, rng in METRIC_DEFINITIONS:

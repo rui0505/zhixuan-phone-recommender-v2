@@ -653,6 +653,9 @@ def build_derived(cfg, paths, main_rows, camera_rows, aux_rows, model_by_key,
         if spec['subject_type'] == 'sku':
             grouped_specs.setdefault((sku_model[spec['subject_id']], spec['spec_key']), []).append(spec)
     removed = set()
+    spec_provenance = [{key: s.get(key) for key in ('spec_id', 'source_record_id', 'source_col', 'source_id')}
+                       for s in specs]
+    merged_into = {}
     signature_keys = ('unit', 'value_num', 'value_text', 'raw_value', 'raw_value_type',
                       'source_col', 'source_id', 'parse_status', 'note', 'comparison_group')
     for (mid, key), records in grouped_specs.items():
@@ -661,16 +664,20 @@ def build_derived(cfg, paths, main_rows, camera_rows, aux_rows, model_by_key,
             first = records[0]
             first['subject_type'], first['subject_id'], first['variant_id'] = 'model', mid, None
             removed.update(s['spec_id'] for s in records[1:])
+            merged_into.update({s['spec_id']: first['spec_id'] for s in records[1:]})
         elif len(signatures) > 1:
             issues.append(dict(issue_code='SKU_SPEC_SCOPE_DIFFERENCE', severity='info',
                                source_record_id=records[0]['source_record_id'],
                                detail=f'{mid} 的 {key} 在配置间有差异，保留 {len(records)} 条配置级规格，不自动共用'))
     specs = [s for s in specs if s['spec_id'] not in removed]
+    for link in spec_provenance:
+        link['spec_id'] = merged_into.get(link['spec_id'], link['spec_id'])
 
     return {
         "skus": skus, "price_snapshots": prices, "specifications": specs,
         "benchmark_runs": runs, "metric_observations": observations,
         "sources": sources.rows, "evidence_snippets": snippets,
+        'spec_provenance': spec_provenance,
     }, issues
 
 

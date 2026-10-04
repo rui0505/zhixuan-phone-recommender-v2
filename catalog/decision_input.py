@@ -182,7 +182,7 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
     else:
         status, reason = 'ready', '输入可供算法使用；本接口不计算排名或保证评测质量'
     release = repo.dataset_version()
-    from repository import pd, PRICE_PRIORITY_NEW, PRICE_PRIORITY_USED
+    from .repository import pd, PRICE_PRIORITY_NEW, PRICE_PRIORITY_USED
     return {'candidates': pd.DataFrame(candidates) if pd is not None else candidates,
             'X': X, 'criterion_definitions': criteria, 'weights': w,
             'missing_mask': masks, 'comparison_groups': chosen_groups, 'provenance': provenance,

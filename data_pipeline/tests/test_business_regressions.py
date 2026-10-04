@@ -1,11 +1,12 @@
 """Literal source cases catch configuration collapse and unsafe ranking inputs."""
 import sys
 import unittest
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT), str(ROOT / 'src')]
-from repository import CatalogRepository
+sys.path[:0] = [str(ROOT.parent), str(ROOT / 'src')]
+from catalog.repository import CatalogRepository
 from stage_derived import build_derived
 
 
@@ -56,7 +57,16 @@ class DerivedScopeTests(unittest.TestCase):
 class AdapterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.repo = CatalogRepository(str(ROOT / 'catalog.sqlite'))
+        cls.repo = CatalogRepository(os.environ.get('PHONE_CATALOG_DB') or str(ROOT.parent / 'local_build/full/catalog.sqlite'))
+
+    def test_redmi_k70_ultra_configuration_weights_match_source_rows_441_445(self):
+        # Independently reread source workbook: R441 12GB/256GB=211g; R445 24GB/1TB=212g.
+        di = self.repo.build_decision_input(['weight_g'], mode='all')
+        rows = self.repo.as_records(di['candidates'])
+        actual = {(row['ram_raw'], row['storage_raw']): di['X'][i][0]
+                  for i, row in enumerate(rows) if row['display_name'] == 'Redmi K70 至尊版'}
+        self.assertEqual(actual[('12GB', '256GB')], 211)
+        self.assertEqual(actual[('24GB', '1TB')], 212)
 
     def test_normalized_dxo_is_display_only(self):
         with self.assertRaises(ValueError):

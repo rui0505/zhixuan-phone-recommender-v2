@@ -13,6 +13,7 @@ import json
 import os
 import sqlite3
 import math
+import hashlib
 from numbers import Real
 from pathlib import Path
 
@@ -61,6 +62,22 @@ class CatalogRepository:
         rows = self.as_records(self._q(
             "SELECT * FROM dataset_releases ORDER BY built_at DESC LIMIT 1"))
         return rows[0] if rows else {}
+
+    def get_spec_provenance(self, spec_id: str) -> list[dict]:
+        return self.as_records(self._q('SELECT * FROM spec_provenance WHERE spec_id=? '
+                                      'ORDER BY source_record_id,source_col', (spec_id,)))
+
+    def resolve_legacy_sku_id(self, legacy_id: str) -> dict:
+        candidates = self.as_records(self._q('SELECT s.sku_id,m.display_name,s.ram_raw,s.storage_raw '
+                                             'FROM skus s JOIN phone_models m USING(model_id) ORDER BY s.sku_id'))
+        matched = []
+        for row in candidates:
+            identity = '\x01'.join(str(row[key]).strip() for key in ('display_name', 'ram_raw', 'storage_raw'))
+            old = 'SKU-' + hashlib.sha1(identity.encode('utf-8')).hexdigest()[:8].upper()
+            if old == legacy_id:
+                matched.append(row['sku_id'])
+        return {'status': 'unique' if len(matched) == 1 else 'ambiguous' if matched else 'not_found',
+                'sku_ids': matched}
 
     # ------------------------------------------------------------ 目录
     def load_catalog(self, brand=None, mode="all", min_storage_gb=None, max_price=None):
@@ -258,7 +275,7 @@ class CatalogRepository:
                              max_price=None, min_storage_gb=None, brands=None,
                              price_kind_preference=None):
         """只构建可比输入，不计算 TOPSIS/VIKOR 分数。先检查 decision_status。"""
-        from decision_input import build_decision_input
+        from .decision_input import build_decision_input
         return build_decision_input(self, metric_keys, mode, weights, max_price,
                                     min_storage_gb, brands, price_kind_preference)
 
