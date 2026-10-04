@@ -1,0 +1,23 @@
+{
+  "hard_constraints": {
+    "max_price": 3000,
+    "min_storage_gb": 256,
+    "brands": []
+  },
+  "target_screen_inches": 6.5,
+  "preferences": {
+    "price": "unknown",
+    "weight": "very_important",
+    "storage": "unknown",
+    "refresh": "unknown",
+    "screen": "unknown"
+  },
+  "unsupported_needs": [],
+  "clarification_questions": [],
+  "evidence": {
+    "hard_constraints.max_price": "预算不超过3000元",
+    "hard_constraints.min_storage_gb": "至少256GB",
+    "preferences.weight": "特别在意重量，希望轻一点",
+    "target_screen_inches": "希望6.5英寸左右"
+  }
+}

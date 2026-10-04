@@ -1,0 +1,782 @@
+﻿id,id_type,registry_key,parent_id,display_name,match_key,ram_raw,storage_raw,memory_type,source_record_id,assigned_at,rule_version
+M0001,model,model|iphone 15,,iPhone 15,iphone 15,,,,price_main#近年来热销150款手机#R2,2026-10-03T13:48:22,rules-1.0.0
+M0002,model,model|iphone 16 pro max,,iPhone 16 Pro Max,iphone 16 pro max,,,,price_main#近年来热销150款手机#R5,2026-10-03T13:48:22,rules-1.0.0
+M0003,model,model|iphone 16 pro,,iPhone 16 Pro,iphone 16 pro,,,,price_main#近年来热销150款手机#R8,2026-10-03T13:48:22,rules-1.0.0
+M0004,model,model|iphone 16,,iPhone 16,iphone 16,,,,price_main#近年来热销150款手机#R12,2026-10-03T13:48:22,rules-1.0.0
+M0005,model,model|iphone 15 pro max,,iPhone 15 Pro Max,iphone 15 pro max,,,,price_main#近年来热销150款手机#R15,2026-10-03T13:48:22,rules-1.0.0
+M0006,model,model|iphone 17 pro max,,iPhone 17 Pro Max,iphone 17 pro max,,,,price_main#近年来热销150款手机#R18,2026-10-03T13:48:22,rules-1.0.0
+M0007,model,model|iphone 17,,iPhone 17,iphone 17,,,,price_main#近年来热销150款手机#R22,2026-10-03T13:48:22,rules-1.0.0
+M0008,model,model|iphone 17 pro,,iPhone 17 Pro,iphone 17 pro,,,,price_main#近年来热销150款手机#R24,2026-10-03T13:48:22,rules-1.0.0
+M0009,model,model|iphone 14,,iPhone 14,iphone 14,,,,price_main#近年来热销150款手机#R27,2026-10-03T13:48:22,rules-1.0.0
+M0010,model,model|iphone 16e,,iPhone 16e,iphone 16e,,,,price_main#近年来热销150款手机#R30,2026-10-03T13:48:22,rules-1.0.0
+M0011,model,model|iphone 15 pro,,iPhone 15 Pro,iphone 15 pro,,,,price_main#近年来热销150款手机#R33,2026-10-03T13:48:22,rules-1.0.0
+M0012,model,model|三星galaxy s24 ultra,,三星Galaxy S24 Ultra,三星galaxy s24 ultra,,,,price_main#近年来热销150款手机#R37,2026-10-03T13:48:22,rules-1.0.0
+M0013,model,model|三星galaxy s25 ultra,,三星Galaxy S25 Ultra,三星galaxy s25 ultra,,,,price_main#近年来热销150款手机#R40,2026-10-03T13:48:22,rules-1.0.0
+M0014,model,model|三星galaxy s26 ultra,,三星Galaxy S26 Ultra,三星galaxy s26 ultra,,,,price_main#近年来热销150款手机#R43,2026-10-03T13:48:22,rules-1.0.0
+M0015,model,model|三星galaxy a56,,三星Galaxy A56,三星galaxy a56,,,,price_main#近年来热销150款手机#R46,2026-10-03T13:48:22,rules-1.0.0
+M0016,model,model|华为mate 60 pro,,华为Mate 60 Pro,华为mate 60 pro,,,,price_main#近年来热销150款手机#R48,2026-10-03T13:48:22,rules-1.0.0
+M0017,model,model|华为mate 80,,华为Mate 80,华为mate 80,,,,price_main#近年来热销150款手机#R51,2026-10-03T13:48:22,rules-1.0.0
+M0018,model,model|华为mate 70,,华为Mate 70,华为mate 70,,,,price_main#近年来热销150款手机#R54,2026-10-03T13:48:22,rules-1.0.0
+M0019,model,model|redmi k80,,Redmi K80,redmi k80,,,,price_main#近年来热销150款手机#R57,2026-10-03T13:48:22,rules-1.0.0
+M0020,model,model|荣耀x50,,荣耀X50,荣耀x50,,,,price_main#近年来热销150款手机#R62,2026-10-03T13:48:22,rules-1.0.0
+M0021,model,model|荣耀x70,,荣耀X70,荣耀x70,,,,price_main#近年来热销150款手机#R66,2026-10-03T13:48:22,rules-1.0.0
+M0022,model,model|小米15,,小米15,小米15,,,,price_main#近年来热销150款手机#R70,2026-10-03T13:48:22,rules-1.0.0
+M0023,model,model|小米14,,小米14,小米14,,,,price_main#近年来热销150款手机#R74,2026-10-03T13:48:22,rules-1.0.0
+M0024,model,model|iphone 13,,iPhone 13,iphone 13,,,,price_main#近年来热销150款手机#R78,2026-10-03T13:48:22,rules-1.0.0
+M0025,model,model|iphone 13 pro,,iPhone 13 Pro,iphone 13 pro,,,,price_main#近年来热销150款手机#R81,2026-10-03T13:48:22,rules-1.0.0
+M0026,model,model|iphone 13 pro max,,iPhone 13 Pro Max,iphone 13 pro max,,,,price_main#近年来热销150款手机#R85,2026-10-03T13:48:22,rules-1.0.0
+M0027,model,model|iphone 12,,iPhone 12,iphone 12,,,,price_main#近年来热销150款手机#R89,2026-10-03T13:48:22,rules-1.0.0
+M0028,model,model|iphone 12 pro,,iPhone 12 Pro,iphone 12 pro,,,,price_main#近年来热销150款手机#R92,2026-10-03T13:48:22,rules-1.0.0
+M0029,model,model|iphone 15 plus,,iPhone 15 Plus,iphone 15 plus,,,,price_main#近年来热销150款手机#R95,2026-10-03T13:48:22,rules-1.0.0
+M0030,model,model|iphone 16 plus,,iPhone 16 Plus,iphone 16 plus,,,,price_main#近年来热销150款手机#R98,2026-10-03T13:48:22,rules-1.0.0
+M0031,model,model|iphone se 3,,iPhone SE 3,iphone se 3,,,,price_main#近年来热销150款手机#R101,2026-10-03T13:48:22,rules-1.0.0
+M0032,model,model|iphone air,,iPhone Air,iphone air,,,,price_main#近年来热销150款手机#R104,2026-10-03T13:48:22,rules-1.0.0
+M0033,model,model|iphone 14 plus,,iPhone 14 Plus,iphone 14 plus,,,,price_main#近年来热销150款手机#R107,2026-10-03T13:48:22,rules-1.0.0
+M0034,model,model|三星galaxy s24,,三星Galaxy S24,三星galaxy s24,,,,price_main#近年来热销150款手机#R110,2026-10-03T13:48:22,rules-1.0.0
+M0035,model,model|三星galaxy s24+,,三星Galaxy S24+,三星galaxy s24+,,,,price_main#近年来热销150款手机#R113,2026-10-03T13:48:22,rules-1.0.0
+M0036,model,model|三星galaxy s25,,三星Galaxy S25,三星galaxy s25,,,,price_main#近年来热销150款手机#R115,2026-10-03T13:48:22,rules-1.0.0
+M0037,model,model|三星galaxy s25+,,三星Galaxy S25+,三星galaxy s25+,,,,price_main#近年来热销150款手机#R117,2026-10-03T13:48:22,rules-1.0.0
+M0038,model,model|三星galaxy s23 ultra,,三星Galaxy S23 Ultra,三星galaxy s23 ultra,,,,price_main#近年来热销150款手机#R119,2026-10-03T13:48:22,rules-1.0.0
+M0039,model,model|三星galaxy s23,,三星Galaxy S23,三星galaxy s23,,,,price_main#近年来热销150款手机#R123,2026-10-03T13:48:22,rules-1.0.0
+M0040,model,model|三星galaxy a55,,三星Galaxy A55,三星galaxy a55,,,,price_main#近年来热销150款手机#R126,2026-10-03T13:48:22,rules-1.0.0
+M0041,model,model|三星galaxy z fold6,,三星Galaxy Z Fold6,三星galaxy z fold6,,,,price_main#近年来热销150款手机#R128,2026-10-03T13:48:22,rules-1.0.0
+M0042,model,model|三星galaxy z flip6,,三星Galaxy Z Flip6,三星galaxy z flip6,,,,price_main#近年来热销150款手机#R130,2026-10-03T13:48:22,rules-1.0.0
+M0043,model,model|三星galaxy z fold5,,三星Galaxy Z Fold5,三星galaxy z fold5,,,,price_main#近年来热销150款手机#R132,2026-10-03T13:48:22,rules-1.0.0
+M0044,model,model|三星galaxy z flip5,,三星Galaxy Z Flip5,三星galaxy z flip5,,,,price_main#近年来热销150款手机#R134,2026-10-03T13:48:22,rules-1.0.0
+M0045,model,model|三星galaxy s26,,三星Galaxy S26,三星galaxy s26,,,,price_main#近年来热销150款手机#R136,2026-10-03T13:48:22,rules-1.0.0
+M0046,model,model|华为mate 70 pro,,华为Mate 70 Pro,华为mate 70 pro,,,,price_main#近年来热销150款手机#R137,2026-10-03T13:48:22,rules-1.0.0
+M0047,model,model|华为mate 70 pro+,,华为Mate 70 Pro+,华为mate 70 pro+,,,,price_main#近年来热销150款手机#R140,2026-10-03T13:48:22,rules-1.0.0
+M0048,model,model|华为mate 70 rs 非凡大师,,华为Mate 70 RS 非凡大师,华为mate 70 rs 非凡大师,,,,price_main#近年来热销150款手机#R142,2026-10-03T13:48:22,rules-1.0.0
+M0049,model,model|华为mate 80 pro,,华为Mate 80 Pro,华为mate 80 pro,,,,price_main#近年来热销150款手机#R144,2026-10-03T13:48:22,rules-1.0.0
+M0050,model,model|华为mate 80 pro max,,华为Mate 80 Pro Max,华为mate 80 pro max,,,,price_main#近年来热销150款手机#R148,2026-10-03T13:48:22,rules-1.0.0
+M0051,model,model|华为pura 70,,华为Pura 70,华为pura 70,,,,price_main#近年来热销150款手机#R150,2026-10-03T13:48:22,rules-1.0.0
+M0052,model,model|华为pura 70 pro,,华为Pura 70 Pro,华为pura 70 pro,,,,price_main#近年来热销150款手机#R153,2026-10-03T13:48:22,rules-1.0.0
+M0053,model,model|华为pura 70 ultra,,华为Pura 70 Ultra,华为pura 70 ultra,,,,price_main#近年来热销150款手机#R156,2026-10-03T13:48:22,rules-1.0.0
+M0054,model,model|华为mate 60,,华为Mate 60,华为mate 60,,,,price_main#近年来热销150款手机#R158,2026-10-03T13:48:22,rules-1.0.0
+M0055,model,model|华为mate 60 pro+,,华为Mate 60 Pro+,华为mate 60 pro+,,,,price_main#近年来热销150款手机#R161,2026-10-03T13:48:22,rules-1.0.0
+M0056,model,model|华为nova 12,,华为nova 12,华为nova 12,,,,price_main#近年来热销150款手机#R163,2026-10-03T13:48:22,rules-1.0.0
+M0057,model,model|华为nova 12 pro,,华为nova 12 Pro,华为nova 12 pro,,,,price_main#近年来热销150款手机#R165,2026-10-03T13:48:22,rules-1.0.0
+M0058,model,model|华为pura x,,华为Pura X,华为pura x,,,,price_main#近年来热销150款手机#R167,2026-10-03T13:48:22,rules-1.0.0
+M0059,model,model|华为mate x5,,华为Mate X5,华为mate x5,,,,price_main#近年来热销150款手机#R169,2026-10-03T13:48:22,rules-1.0.0
+M0060,model,model|华为mate x5 典藏版,,华为Mate X5 典藏版,华为mate x5 典藏版,,,,price_main#近年来热销150款手机#R172,2026-10-03T13:48:22,rules-1.0.0
+M0061,model,model|华为pura 70 pro+,,华为Pura 70 Pro+,华为pura 70 pro+,,,,price_main#近年来热销150款手机#R174,2026-10-03T13:48:22,rules-1.0.0
+M0062,model,model|华为pura x 典藏版,,华为Pura X 典藏版,华为pura x 典藏版,,,,price_main#近年来热销150款手机#R176,2026-10-03T13:48:22,rules-1.0.0
+M0063,model,model|小米13,,小米13,小米13,,,,price_main#近年来热销150款手机#R178,2026-10-03T13:48:22,rules-1.0.0
+M0064,model,model|小米13 pro,,小米13 Pro,小米13 pro,,,,price_main#近年来热销150款手机#R182,2026-10-03T13:48:22,rules-1.0.0
+M0065,model,model|小米13 ultra,,小米13 Ultra,小米13 ultra,,,,price_main#近年来热销150款手机#R186,2026-10-03T13:48:22,rules-1.0.0
+M0066,model,model|小米14 pro,,小米14 Pro,小米14 pro,,,,price_main#近年来热销150款手机#R189,2026-10-03T13:48:22,rules-1.0.0
+M0067,model,model|小米14 ultra,,小米14 Ultra,小米14 ultra,,,,price_main#近年来热销150款手机#R192,2026-10-03T13:48:22,rules-1.0.0
+M0068,model,model|小米15 pro,,小米15 Pro,小米15 pro,,,,price_main#近年来热销150款手机#R195,2026-10-03T13:48:22,rules-1.0.0
+M0069,model,model|redmi k60,,Redmi K60,redmi k60,,,,price_main#近年来热销150款手机#R198,2026-10-03T13:48:22,rules-1.0.0
+M0070,model,model|redmi k60 pro,,Redmi K60 Pro,redmi k60 pro,,,,price_main#近年来热销150款手机#R203,2026-10-03T13:48:22,rules-1.0.0
+M0071,model,model|redmi k70e,,Redmi K70E,redmi k70e,,,,price_main#近年来热销150款手机#R208,2026-10-03T13:48:22,rules-1.0.0
+M0072,model,model|redmi note 13,,Redmi Note 13,redmi note 13,,,,price_main#近年来热销150款手机#R211,2026-10-03T13:48:22,rules-1.0.0
+M0073,model,model|redmi note 13 pro+,,Redmi Note 13 Pro+,redmi note 13 pro+,,,,price_main#近年来热销150款手机#R215,2026-10-03T13:48:22,rules-1.0.0
+M0074,model,model|redmi note 14,,Redmi Note 14,redmi note 14,,,,price_main#近年来热销150款手机#R218,2026-10-03T13:48:22,rules-1.0.0
+M0075,model,model|redmi note 14 pro,,Redmi Note 14 Pro,redmi note 14 pro,,,,price_main#近年来热销150款手机#R221,2026-10-03T13:48:22,rules-1.0.0
+M0076,model,model|redmi turbo 3,,Redmi Turbo 3,redmi turbo 3,,,,price_main#近年来热销150款手机#R224,2026-10-03T13:48:22,rules-1.0.0
+M0077,model,model|redmi 12c,,Redmi 12C,redmi 12c,,,,price_main#近年来热销150款手机#R228,2026-10-03T13:48:22,rules-1.0.0
+M0078,model,model|redmi note 12 turbo,,Redmi Note 12 Turbo,redmi note 12 turbo,,,,price_main#近年来热销150款手机#R231,2026-10-03T13:48:22,rules-1.0.0
+M0079,model,model|小米civi 4 pro,,小米Civi 4 Pro,小米civi 4 pro,,,,price_main#近年来热销150款手机#R235,2026-10-03T13:48:22,rules-1.0.0
+M0080,model,model|redmi k80 pro,,Redmi K80 Pro,redmi k80 pro,,,,price_main#近年来热销150款手机#R238,2026-10-03T13:48:22,rules-1.0.0
+M0081,model,model|redmi note 15 pro,,Redmi Note 15 Pro,redmi note 15 pro,,,,price_main#近年来热销150款手机#R242,2026-10-03T13:48:22,rules-1.0.0
+M0082,model,model|redmi 13r,,Redmi 13R,redmi 13r,,,,price_main#近年来热销150款手机#R245,2026-10-03T13:48:22,rules-1.0.0
+M0083,model,model|redmi note 15,,Redmi Note 15,redmi note 15,,,,price_main#近年来热销150款手机#R247,2026-10-03T13:48:22,rules-1.0.0
+M0084,model,model|荣耀200,,荣耀200,荣耀200,,,,price_main#近年来热销150款手机#R251,2026-10-03T13:48:22,rules-1.0.0
+M0085,model,model|荣耀200 pro,,荣耀200 Pro,荣耀200 pro,,,,price_main#近年来热销150款手机#R256,2026-10-03T13:48:22,rules-1.0.0
+M0086,model,model|荣耀magic6,,荣耀Magic6,荣耀magic6,,,,price_main#近年来热销150款手机#R260,2026-10-03T13:48:22,rules-1.0.0
+M0087,model,model|荣耀magic6 pro,,荣耀Magic6 Pro,荣耀magic6 pro,,,,price_main#近年来热销150款手机#R263,2026-10-03T13:48:22,rules-1.0.0
+M0088,model,model|荣耀x50 pro,,荣耀X50 Pro,荣耀x50 pro,,,,price_main#近年来热销150款手机#R266,2026-10-03T13:48:22,rules-1.0.0
+M0089,model,model|荣耀90,,荣耀90,荣耀90,,,,price_main#近年来热销150款手机#R267,2026-10-03T13:48:22,rules-1.0.0
+M0090,model,model|荣耀90 pro,,荣耀90 Pro,荣耀90 pro,,,,price_main#近年来热销150款手机#R270,2026-10-03T13:48:22,rules-1.0.0
+M0091,model,model|荣耀畅玩60 plus,,荣耀畅玩60 Plus,荣耀畅玩60 plus,,,,price_main#近年来热销150款手机#R273,2026-10-03T13:48:22,rules-1.0.0
+M0092,model,model|荣耀play9t,,荣耀Play9T,荣耀play9t,,,,price_main#近年来热销150款手机#R275,2026-10-03T13:48:22,rules-1.0.0
+M0093,model,model|荣耀x40,,荣耀X40,荣耀x40,,,,price_main#近年来热销150款手机#R278,2026-10-03T13:48:22,rules-1.0.0
+M0094,model,model|荣耀magic7,,荣耀Magic7,荣耀magic7,,,,price_main#近年来热销150款手机#R282,2026-10-03T13:48:22,rules-1.0.0
+M0095,model,model|vivo x200,,vivo X200,vivo x200,,,,price_main#近年来热销150款手机#R286,2026-10-03T13:48:22,rules-1.0.0
+M0096,model,model|vivo x200 pro,,vivo X200 Pro,vivo x200 pro,,,,price_main#近年来热销150款手机#R290,2026-10-03T13:48:22,rules-1.0.0
+M0097,model,model|vivo x100 pro,,vivo X100 Pro,vivo x100 pro,,,,price_main#近年来热销150款手机#R294,2026-10-03T13:48:22,rules-1.0.0
+M0098,model,model|vivo s19,,vivo S19,vivo s19,,,,price_main#近年来热销150款手机#R298,2026-10-03T13:48:22,rules-1.0.0
+M0099,model,model|vivo s20,,vivo S20,vivo s20,,,,price_main#近年来热销150款手机#R302,2026-10-03T13:48:22,rules-1.0.0
+M0100,model,model|vivo y200,,vivo Y200,vivo y200,,,,price_main#近年来热销150款手机#R306,2026-10-03T13:48:22,rules-1.0.0
+M0101,model,model|iqoo 12,,iQOO 12,iqoo 12,,,,price_main#近年来热销150款手机#R310,2026-10-03T13:48:22,rules-1.0.0
+M0102,model,model|iqoo 13,,iQOO 13,iqoo 13,,,,price_main#近年来热销150款手机#R313,2026-10-03T13:48:22,rules-1.0.0
+M0103,model,model|iqoo neo9,,iQOO Neo9,iqoo neo9,,,,price_main#近年来热销150款手机#R318,2026-10-03T13:48:22,rules-1.0.0
+M0104,model,model|iqoo neo10 pro,,iQOO Neo10 Pro,iqoo neo10 pro,,,,price_main#近年来热销150款手机#R322,2026-10-03T13:48:22,rules-1.0.0
+M0105,model,model|vivo y100,,vivo Y100,vivo y100,,,,price_main#近年来热销150款手机#R327,2026-10-03T13:48:22,rules-1.0.0
+M0106,model,model|vivo x200 pro mini,,vivo X200 Pro Mini,vivo x200 pro mini,,,,price_main#近年来热销150款手机#R331,2026-10-03T13:48:22,rules-1.0.0
+M0107,model,model|vivo x200 ultra,,vivo X200 Ultra,vivo x200 ultra,,,,price_main#近年来热销150款手机#R335,2026-10-03T13:48:22,rules-1.0.0
+M0108,model,model|oppo find x8,,OPPO Find X8,oppo find x8,,,,price_main#近年来热销150款手机#R338,2026-10-03T13:48:22,rules-1.0.0
+M0109,model,model|oppo find x8 pro,,OPPO Find X8 Pro,oppo find x8 pro,,,,price_main#近年来热销150款手机#R343,2026-10-03T13:48:22,rules-1.0.0
+M0110,model,model|oppo find x7,,OPPO Find X7,oppo find x7,,,,price_main#近年来热销150款手机#R348,2026-10-03T13:48:22,rules-1.0.0
+M0111,model,model|oppo reno 12,,OPPO Reno 12,oppo reno 12,,,,price_main#近年来热销150款手机#R352,2026-10-03T13:48:22,rules-1.0.0
+M0112,model,model|oppo reno 12 pro,,OPPO Reno 12 Pro,oppo reno 12 pro,,,,price_main#近年来热销150款手机#R356,2026-10-03T13:48:22,rules-1.0.0
+M0113,model,model|oppo reno 13,,OPPO Reno 13,oppo reno 13,,,,price_main#近年来热销150款手机#R359,2026-10-03T13:48:22,rules-1.0.0
+M0114,model,model|oppo find x7 ultra,,OPPO Find X7 Ultra,oppo find x7 ultra,,,,price_main#近年来热销150款手机#R364,2026-10-03T13:48:22,rules-1.0.0
+M0115,model,model|一加12,,一加12,一加12,,,,price_main#近年来热销150款手机#R367,2026-10-03T13:48:22,rules-1.0.0
+M0116,model,model|一加13,,一加13,一加13,,,,price_main#近年来热销150款手机#R371,2026-10-03T13:48:22,rules-1.0.0
+M0117,model,model|一加ace 2,,一加Ace 2,一加ace 2,,,,price_main#近年来热销150款手机#R375,2026-10-03T13:48:22,rules-1.0.0
+M0118,model,model|一加ace 2 pro,,一加Ace 2 Pro,一加ace 2 pro,,,,price_main#近年来热销150款手机#R378,2026-10-03T13:48:22,rules-1.0.0
+M0119,model,model|一加ace 3 pro,,一加Ace 3 Pro,一加ace 3 pro,,,,price_main#近年来热销150款手机#R381,2026-10-03T13:48:22,rules-1.0.0
+M0120,model,model|realme gt5,,realme GT5,realme gt5,,,,price_main#近年来热销150款手机#R385,2026-10-03T13:48:22,rules-1.0.0
+M0121,model,model|realme gt5 pro,,realme GT5 Pro,realme gt5 pro,,,,price_main#近年来热销150款手机#R388,2026-10-03T13:48:22,rules-1.0.0
+M0122,model,model|realme neo7,,realme Neo7,realme neo7,,,,price_main#近年来热销150款手机#R392,2026-10-03T13:48:22,rules-1.0.0
+M0123,model,model|一加ace 5,,一加Ace 5,一加ace 5,,,,price_main#近年来热销150款手机#R397,2026-10-03T13:48:22,rules-1.0.0
+M0124,model,model|realme gt neo6,,realme GT Neo6,realme gt neo6,,,,price_main#近年来热销150款手机#R402,2026-10-03T13:48:22,rules-1.0.0
+M0125,model,model|vivo y300i,,vivo Y300i,vivo y300i,,,,price_main#近年来热销150款手机#R406,2026-10-03T13:48:22,rules-1.0.0
+M0126,model,model|vivo y37,,vivo Y37,vivo y37,,,,price_main#近年来热销150款手机#R410,2026-10-03T13:48:22,rules-1.0.0
+M0127,model,model|redmi 14r,,Redmi 14R,redmi 14r,,,,price_main#近年来热销150款手机#R415,2026-10-03T13:48:22,rules-1.0.0
+M0128,model,model|vivo y36,,vivo Y36,vivo y36,,,,price_main#近年来热销150款手机#R419,2026-10-03T13:48:22,rules-1.0.0
+M0129,model,model|vivo y35+,,vivo Y35+,vivo y35+,,,,price_main#近年来热销150款手机#R424,2026-10-03T13:48:22,rules-1.0.0
+M0130,model,model|vivo y200i,,vivo Y200i,vivo y200i,,,,price_main#近年来热销150款手机#R425,2026-10-03T13:48:22,rules-1.0.0
+M0131,model,model|oppo a2,,OPPO A2,oppo a2,,,,price_main#近年来热销150款手机#R428,2026-10-03T13:48:22,rules-1.0.0
+M0132,model,model|oppo a3x,,OPPO A3x,oppo a3x,,,,price_main#近年来热销150款手机#R430,2026-10-03T13:48:22,rules-1.0.0
+M0133,model,model|华为nova 13,,华为nova 13,华为nova 13,,,,price_main#近年来热销150款手机#R434,2026-10-03T13:48:22,rules-1.0.0
+M0134,model,model|redmi k70,,Redmi K70,redmi k70,,,,price_main#近年来热销150款手机#R437,2026-10-03T13:48:22,rules-1.0.0
+M0135,model,model|redmi k70 至尊版,,Redmi K70 至尊版,redmi k70 至尊版,,,,price_main#近年来热销150款手机#R441,2026-10-03T13:48:22,rules-1.0.0
+M0136,model,model|华为nova 12 活力版,,华为nova 12 活力版,华为nova 12 活力版,,,,price_main#近年来热销150款手机#R446,2026-10-03T13:48:22,rules-1.0.0
+M0137,model,model|redmi note 13 pro,,Redmi Note 13 Pro,redmi note 13 pro,,,,price_main#近年来热销150款手机#R448,2026-10-03T13:48:22,rules-1.0.0
+M0138,model,model|荣耀畅玩50,,荣耀畅玩50,荣耀畅玩50,,,,price_main#近年来热销150款手机#R453,2026-10-03T13:48:22,rules-1.0.0
+M0139,model,model|荣耀x60,,荣耀X60,荣耀x60,,,,price_main#近年来热销150款手机#R455,2026-10-03T13:48:22,rules-1.0.0
+M0140,model,model|redmi turbo 4 pro,,Redmi Turbo 4 Pro,redmi turbo 4 pro,,,,price_main#近年来热销150款手机#R459,2026-10-03T13:48:22,rules-1.0.0
+M0141,model,model|荣耀400,,荣耀400,荣耀400,,,,price_main#近年来热销150款手机#R464,2026-10-03T13:48:22,rules-1.0.0
+M0142,model,model|oppo a2m,,OPPO A2m,oppo a2m,,,,price_main#近年来热销150款手机#R467,2026-10-03T13:48:22,rules-1.0.0
+M0143,model,model|一加ace 3,,一加Ace 3,一加ace 3,,,,price_main#近年来热销150款手机#R470,2026-10-03T13:48:22,rules-1.0.0
+M0144,model,model|荣耀100,,荣耀100,荣耀100,,,,price_main#近年来热销150款手机#R473,2026-10-03T13:48:22,rules-1.0.0
+M0145,model,model|vivo x100,,vivo X100,vivo x100,,,,price_main#近年来热销150款手机#R476,2026-10-03T13:48:22,rules-1.0.0
+M0146,model,model|redmi 14c 4g,,Redmi 14C 4G,redmi 14c 4g,,,,price_main#近年来热销150款手机#R481,2026-10-03T13:48:22,rules-1.0.0
+M0147,model,model|redmi 13c 5g,,Redmi 13C 5G,redmi 13c 5g,,,,price_main#近年来热销150款手机#R484,2026-10-03T13:48:22,rules-1.0.0
+V0001,variant,variant|iphone 15|base,M0001,标准版,iphone 15,,,,price_main#近年来热销150款手机#R2,2026-10-03T13:48:22,rules-1.0.0
+V0002,variant,variant|iphone 16 pro max|base,M0002,标准版,iphone 16 pro max,,,,price_main#近年来热销150款手机#R5,2026-10-03T13:48:22,rules-1.0.0
+V0003,variant,variant|iphone 16 pro|base,M0003,标准版,iphone 16 pro,,,,price_main#近年来热销150款手机#R8,2026-10-03T13:48:22,rules-1.0.0
+V0004,variant,variant|iphone 16|base,M0004,标准版,iphone 16,,,,price_main#近年来热销150款手机#R12,2026-10-03T13:48:22,rules-1.0.0
+V0005,variant,variant|iphone 15 pro max|base,M0005,标准版,iphone 15 pro max,,,,price_main#近年来热销150款手机#R15,2026-10-03T13:48:22,rules-1.0.0
+V0006,variant,variant|iphone 17 pro max|base,M0006,标准版,iphone 17 pro max,,,,price_main#近年来热销150款手机#R18,2026-10-03T13:48:22,rules-1.0.0
+V0007,variant,variant|iphone 17|base,M0007,标准版,iphone 17,,,,price_main#近年来热销150款手机#R22,2026-10-03T13:48:22,rules-1.0.0
+V0008,variant,variant|iphone 17 pro|base,M0008,标准版,iphone 17 pro,,,,price_main#近年来热销150款手机#R24,2026-10-03T13:48:22,rules-1.0.0
+V0009,variant,variant|iphone 14|base,M0009,标准版,iphone 14,,,,price_main#近年来热销150款手机#R27,2026-10-03T13:48:22,rules-1.0.0
+V0010,variant,variant|iphone 16e|base,M0010,标准版,iphone 16e,,,,price_main#近年来热销150款手机#R30,2026-10-03T13:48:22,rules-1.0.0
+V0011,variant,variant|iphone 15 pro|base,M0011,标准版,iphone 15 pro,,,,price_main#近年来热销150款手机#R33,2026-10-03T13:48:22,rules-1.0.0
+V0012,variant,variant|三星galaxy s24 ultra|base,M0012,标准版,三星galaxy s24 ultra,,,,price_main#近年来热销150款手机#R37,2026-10-03T13:48:22,rules-1.0.0
+V0013,variant,variant|三星galaxy s25 ultra|base,M0013,标准版,三星galaxy s25 ultra,,,,price_main#近年来热销150款手机#R40,2026-10-03T13:48:22,rules-1.0.0
+V0014,variant,variant|三星galaxy s26 ultra|base,M0014,标准版,三星galaxy s26 ultra,,,,price_main#近年来热销150款手机#R43,2026-10-03T13:48:22,rules-1.0.0
+V0015,variant,variant|三星galaxy a56|base,M0015,标准版,三星galaxy a56,,,,price_main#近年来热销150款手机#R46,2026-10-03T13:48:22,rules-1.0.0
+V0016,variant,variant|华为mate 60 pro|base,M0016,标准版,华为mate 60 pro,,,,price_main#近年来热销150款手机#R48,2026-10-03T13:48:22,rules-1.0.0
+V0017,variant,variant|华为mate 80|base,M0017,标准版,华为mate 80,,,,price_main#近年来热销150款手机#R51,2026-10-03T13:48:22,rules-1.0.0
+V0018,variant,variant|华为mate 70|base,M0018,标准版,华为mate 70,,,,price_main#近年来热销150款手机#R54,2026-10-03T13:48:22,rules-1.0.0
+V0019,variant,variant|redmi k80|base,M0019,标准版,redmi k80,,,,price_main#近年来热销150款手机#R57,2026-10-03T13:48:22,rules-1.0.0
+V0020,variant,variant|荣耀x50|base,M0020,标准版,荣耀x50,,,,price_main#近年来热销150款手机#R62,2026-10-03T13:48:22,rules-1.0.0
+V0021,variant,variant|荣耀x70|base,M0021,标准版,荣耀x70,,,,price_main#近年来热销150款手机#R66,2026-10-03T13:48:22,rules-1.0.0
+V0022,variant,variant|小米15|base,M0022,标准版,小米15,,,,price_main#近年来热销150款手机#R70,2026-10-03T13:48:22,rules-1.0.0
+V0023,variant,variant|小米14|base,M0023,标准版,小米14,,,,price_main#近年来热销150款手机#R74,2026-10-03T13:48:22,rules-1.0.0
+V0024,variant,variant|iphone 13|base,M0024,标准版,iphone 13,,,,price_main#近年来热销150款手机#R78,2026-10-03T13:48:22,rules-1.0.0
+V0025,variant,variant|iphone 13 pro|base,M0025,标准版,iphone 13 pro,,,,price_main#近年来热销150款手机#R81,2026-10-03T13:48:22,rules-1.0.0
+V0026,variant,variant|iphone 13 pro max|base,M0026,标准版,iphone 13 pro max,,,,price_main#近年来热销150款手机#R85,2026-10-03T13:48:22,rules-1.0.0
+V0027,variant,variant|iphone 12|base,M0027,标准版,iphone 12,,,,price_main#近年来热销150款手机#R89,2026-10-03T13:48:22,rules-1.0.0
+V0028,variant,variant|iphone 12 pro|base,M0028,标准版,iphone 12 pro,,,,price_main#近年来热销150款手机#R92,2026-10-03T13:48:22,rules-1.0.0
+V0029,variant,variant|iphone 15 plus|base,M0029,标准版,iphone 15 plus,,,,price_main#近年来热销150款手机#R95,2026-10-03T13:48:22,rules-1.0.0
+V0030,variant,variant|iphone 16 plus|base,M0030,标准版,iphone 16 plus,,,,price_main#近年来热销150款手机#R98,2026-10-03T13:48:22,rules-1.0.0
+V0031,variant,variant|iphone se 3|base,M0031,标准版,iphone se 3,,,,price_main#近年来热销150款手机#R101,2026-10-03T13:48:22,rules-1.0.0
+V0032,variant,variant|iphone air|base,M0032,标准版,iphone air,,,,price_main#近年来热销150款手机#R104,2026-10-03T13:48:22,rules-1.0.0
+V0033,variant,variant|iphone 14 plus|base,M0033,标准版,iphone 14 plus,,,,price_main#近年来热销150款手机#R107,2026-10-03T13:48:22,rules-1.0.0
+V0034,variant,variant|三星galaxy s24|base,M0034,标准版,三星galaxy s24,,,,price_main#近年来热销150款手机#R110,2026-10-03T13:48:22,rules-1.0.0
+V0035,variant,variant|三星galaxy s24+|base,M0035,标准版,三星galaxy s24+,,,,price_main#近年来热销150款手机#R113,2026-10-03T13:48:22,rules-1.0.0
+V0036,variant,variant|三星galaxy s25|base,M0036,标准版,三星galaxy s25,,,,price_main#近年来热销150款手机#R115,2026-10-03T13:48:22,rules-1.0.0
+V0037,variant,variant|三星galaxy s25+|base,M0037,标准版,三星galaxy s25+,,,,price_main#近年来热销150款手机#R117,2026-10-03T13:48:22,rules-1.0.0
+V0038,variant,variant|三星galaxy s23 ultra|base,M0038,标准版,三星galaxy s23 ultra,,,,price_main#近年来热销150款手机#R119,2026-10-03T13:48:22,rules-1.0.0
+V0039,variant,variant|三星galaxy s23|base,M0039,标准版,三星galaxy s23,,,,price_main#近年来热销150款手机#R123,2026-10-03T13:48:22,rules-1.0.0
+V0040,variant,variant|三星galaxy a55|base,M0040,标准版,三星galaxy a55,,,,price_main#近年来热销150款手机#R126,2026-10-03T13:48:22,rules-1.0.0
+V0041,variant,variant|三星galaxy z fold6|base,M0041,标准版,三星galaxy z fold6,,,,price_main#近年来热销150款手机#R128,2026-10-03T13:48:22,rules-1.0.0
+V0042,variant,variant|三星galaxy z flip6|base,M0042,标准版,三星galaxy z flip6,,,,price_main#近年来热销150款手机#R130,2026-10-03T13:48:22,rules-1.0.0
+V0043,variant,variant|三星galaxy z fold5|base,M0043,标准版,三星galaxy z fold5,,,,price_main#近年来热销150款手机#R132,2026-10-03T13:48:22,rules-1.0.0
+V0044,variant,variant|三星galaxy z flip5|base,M0044,标准版,三星galaxy z flip5,,,,price_main#近年来热销150款手机#R134,2026-10-03T13:48:22,rules-1.0.0
+V0045,variant,variant|三星galaxy s26|base,M0045,标准版,三星galaxy s26,,,,price_main#近年来热销150款手机#R136,2026-10-03T13:48:22,rules-1.0.0
+V0046,variant,variant|华为mate 70 pro|base,M0046,标准版,华为mate 70 pro,,,,price_main#近年来热销150款手机#R137,2026-10-03T13:48:22,rules-1.0.0
+V0047,variant,variant|华为mate 70 pro+|base,M0047,标准版,华为mate 70 pro+,,,,price_main#近年来热销150款手机#R140,2026-10-03T13:48:22,rules-1.0.0
+V0048,variant,variant|华为mate 70 rs 非凡大师|base,M0048,标准版,华为mate 70 rs 非凡大师,,,,price_main#近年来热销150款手机#R142,2026-10-03T13:48:22,rules-1.0.0
+V0049,variant,variant|华为mate 80 pro|base,M0049,标准版,华为mate 80 pro,,,,price_main#近年来热销150款手机#R144,2026-10-03T13:48:22,rules-1.0.0
+V0050,variant,variant|华为mate 80 pro max|base,M0050,标准版,华为mate 80 pro max,,,,price_main#近年来热销150款手机#R148,2026-10-03T13:48:22,rules-1.0.0
+V0051,variant,variant|华为pura 70|base,M0051,标准版,华为pura 70,,,,price_main#近年来热销150款手机#R150,2026-10-03T13:48:22,rules-1.0.0
+V0052,variant,variant|华为pura 70 pro|base,M0052,标准版,华为pura 70 pro,,,,price_main#近年来热销150款手机#R153,2026-10-03T13:48:22,rules-1.0.0
+V0053,variant,variant|华为pura 70 ultra|base,M0053,标准版,华为pura 70 ultra,,,,price_main#近年来热销150款手机#R156,2026-10-03T13:48:22,rules-1.0.0
+V0054,variant,variant|华为mate 60|base,M0054,标准版,华为mate 60,,,,price_main#近年来热销150款手机#R158,2026-10-03T13:48:22,rules-1.0.0
+V0055,variant,variant|华为mate 60 pro+|base,M0055,标准版,华为mate 60 pro+,,,,price_main#近年来热销150款手机#R161,2026-10-03T13:48:22,rules-1.0.0
+V0056,variant,variant|华为nova 12|base,M0056,标准版,华为nova 12,,,,price_main#近年来热销150款手机#R163,2026-10-03T13:48:22,rules-1.0.0
+V0057,variant,variant|华为nova 12 pro|base,M0057,标准版,华为nova 12 pro,,,,price_main#近年来热销150款手机#R165,2026-10-03T13:48:22,rules-1.0.0
+V0058,variant,variant|华为pura x|base,M0058,标准版,华为pura x,,,,price_main#近年来热销150款手机#R167,2026-10-03T13:48:22,rules-1.0.0
+V0059,variant,variant|华为mate x5|base,M0059,标准版,华为mate x5,,,,price_main#近年来热销150款手机#R169,2026-10-03T13:48:22,rules-1.0.0
+V0060,variant,variant|华为mate x5 典藏版|base,M0060,标准版,华为mate x5 典藏版,,,,price_main#近年来热销150款手机#R172,2026-10-03T13:48:22,rules-1.0.0
+V0061,variant,variant|华为pura 70 pro+|base,M0061,标准版,华为pura 70 pro+,,,,price_main#近年来热销150款手机#R174,2026-10-03T13:48:22,rules-1.0.0
+V0062,variant,variant|华为pura x 典藏版|base,M0062,标准版,华为pura x 典藏版,,,,price_main#近年来热销150款手机#R176,2026-10-03T13:48:22,rules-1.0.0
+V0063,variant,variant|小米13|base,M0063,标准版,小米13,,,,price_main#近年来热销150款手机#R178,2026-10-03T13:48:22,rules-1.0.0
+V0064,variant,variant|小米13 pro|base,M0064,标准版,小米13 pro,,,,price_main#近年来热销150款手机#R182,2026-10-03T13:48:22,rules-1.0.0
+V0065,variant,variant|小米13 ultra|base,M0065,标准版,小米13 ultra,,,,price_main#近年来热销150款手机#R186,2026-10-03T13:48:22,rules-1.0.0
+V0066,variant,variant|小米14 pro|base,M0066,标准版,小米14 pro,,,,price_main#近年来热销150款手机#R189,2026-10-03T13:48:22,rules-1.0.0
+V0067,variant,variant|小米14 ultra|base,M0067,标准版,小米14 ultra,,,,price_main#近年来热销150款手机#R192,2026-10-03T13:48:22,rules-1.0.0
+V0068,variant,variant|小米15 pro|base,M0068,标准版,小米15 pro,,,,price_main#近年来热销150款手机#R195,2026-10-03T13:48:22,rules-1.0.0
+V0069,variant,variant|redmi k60|base,M0069,标准版,redmi k60,,,,price_main#近年来热销150款手机#R198,2026-10-03T13:48:22,rules-1.0.0
+V0070,variant,variant|redmi k60 pro|base,M0070,标准版,redmi k60 pro,,,,price_main#近年来热销150款手机#R203,2026-10-03T13:48:22,rules-1.0.0
+V0071,variant,variant|redmi k70e|base,M0071,标准版,redmi k70e,,,,price_main#近年来热销150款手机#R208,2026-10-03T13:48:22,rules-1.0.0
+V0072,variant,variant|redmi note 13|base,M0072,标准版,redmi note 13,,,,price_main#近年来热销150款手机#R211,2026-10-03T13:48:22,rules-1.0.0
+V0073,variant,variant|redmi note 13 pro+|base,M0073,标准版,redmi note 13 pro+,,,,price_main#近年来热销150款手机#R215,2026-10-03T13:48:22,rules-1.0.0
+V0074,variant,variant|redmi note 14|base,M0074,标准版,redmi note 14,,,,price_main#近年来热销150款手机#R218,2026-10-03T13:48:22,rules-1.0.0
+V0075,variant,variant|redmi note 14 pro|base,M0075,标准版,redmi note 14 pro,,,,price_main#近年来热销150款手机#R221,2026-10-03T13:48:22,rules-1.0.0
+V0076,variant,variant|redmi turbo 3|base,M0076,标准版,redmi turbo 3,,,,price_main#近年来热销150款手机#R224,2026-10-03T13:48:22,rules-1.0.0
+V0077,variant,variant|redmi 12c|base,M0077,标准版,redmi 12c,,,,price_main#近年来热销150款手机#R228,2026-10-03T13:48:22,rules-1.0.0
+V0078,variant,variant|redmi note 12 turbo|base,M0078,标准版,redmi note 12 turbo,,,,price_main#近年来热销150款手机#R231,2026-10-03T13:48:22,rules-1.0.0
+V0079,variant,variant|小米civi 4 pro|base,M0079,标准版,小米civi 4 pro,,,,price_main#近年来热销150款手机#R235,2026-10-03T13:48:22,rules-1.0.0
+V0080,variant,variant|redmi k80 pro|base,M0080,标准版,redmi k80 pro,,,,price_main#近年来热销150款手机#R238,2026-10-03T13:48:22,rules-1.0.0
+V0081,variant,variant|redmi note 15 pro|base,M0081,标准版,redmi note 15 pro,,,,price_main#近年来热销150款手机#R242,2026-10-03T13:48:22,rules-1.0.0
+V0082,variant,variant|redmi 13r|base,M0082,标准版,redmi 13r,,,,price_main#近年来热销150款手机#R245,2026-10-03T13:48:22,rules-1.0.0
+V0083,variant,variant|redmi note 15|base,M0083,标准版,redmi note 15,,,,price_main#近年来热销150款手机#R247,2026-10-03T13:48:22,rules-1.0.0
+V0084,variant,variant|荣耀200|base,M0084,标准版,荣耀200,,,,price_main#近年来热销150款手机#R251,2026-10-03T13:48:22,rules-1.0.0
+V0085,variant,variant|荣耀200 pro|base,M0085,标准版,荣耀200 pro,,,,price_main#近年来热销150款手机#R256,2026-10-03T13:48:22,rules-1.0.0
+V0086,variant,variant|荣耀magic6|base,M0086,标准版,荣耀magic6,,,,price_main#近年来热销150款手机#R260,2026-10-03T13:48:22,rules-1.0.0
+V0087,variant,variant|荣耀magic6 pro|base,M0087,标准版,荣耀magic6 pro,,,,price_main#近年来热销150款手机#R263,2026-10-03T13:48:22,rules-1.0.0
+V0088,variant,variant|荣耀x50 pro|base,M0088,标准版,荣耀x50 pro,,,,price_main#近年来热销150款手机#R266,2026-10-03T13:48:22,rules-1.0.0
+V0089,variant,variant|荣耀90|base,M0089,标准版,荣耀90,,,,price_main#近年来热销150款手机#R267,2026-10-03T13:48:22,rules-1.0.0
+V0090,variant,variant|荣耀90 pro|base,M0090,标准版,荣耀90 pro,,,,price_main#近年来热销150款手机#R270,2026-10-03T13:48:22,rules-1.0.0
+V0091,variant,variant|荣耀畅玩60 plus|base,M0091,标准版,荣耀畅玩60 plus,,,,price_main#近年来热销150款手机#R273,2026-10-03T13:48:22,rules-1.0.0
+V0092,variant,variant|荣耀play9t|base,M0092,标准版,荣耀play9t,,,,price_main#近年来热销150款手机#R275,2026-10-03T13:48:22,rules-1.0.0
+V0093,variant,variant|荣耀x40|base,M0093,标准版,荣耀x40,,,,price_main#近年来热销150款手机#R278,2026-10-03T13:48:22,rules-1.0.0
+V0094,variant,variant|荣耀magic7|base,M0094,标准版,荣耀magic7,,,,price_main#近年来热销150款手机#R282,2026-10-03T13:48:22,rules-1.0.0
+V0095,variant,variant|vivo x200|base,M0095,标准版,vivo x200,,,,price_main#近年来热销150款手机#R286,2026-10-03T13:48:22,rules-1.0.0
+V0096,variant,variant|vivo x200 pro|base,M0096,标准版,vivo x200 pro,,,,price_main#近年来热销150款手机#R290,2026-10-03T13:48:22,rules-1.0.0
+V0097,variant,variant|vivo x200 pro|satellite,M0096,卫星通信版,vivo x200 pro,,,,price_main#近年来热销150款手机#R293,2026-10-03T13:48:22,rules-1.0.0
+V0098,variant,variant|vivo x100 pro|base,M0097,标准版,vivo x100 pro,,,,price_main#近年来热销150款手机#R294,2026-10-03T13:48:22,rules-1.0.0
+V0099,variant,variant|vivo s19|base,M0098,标准版,vivo s19,,,,price_main#近年来热销150款手机#R298,2026-10-03T13:48:22,rules-1.0.0
+V0100,variant,variant|vivo s20|base,M0099,标准版,vivo s20,,,,price_main#近年来热销150款手机#R302,2026-10-03T13:48:22,rules-1.0.0
+V0101,variant,variant|vivo y200|base,M0100,标准版,vivo y200,,,,price_main#近年来热销150款手机#R306,2026-10-03T13:48:22,rules-1.0.0
+V0102,variant,variant|iqoo 12|base,M0101,标准版,iqoo 12,,,,price_main#近年来热销150款手机#R310,2026-10-03T13:48:22,rules-1.0.0
+V0103,variant,variant|iqoo 13|base,M0102,标准版,iqoo 13,,,,price_main#近年来热销150款手机#R313,2026-10-03T13:48:22,rules-1.0.0
+V0104,variant,variant|iqoo neo9|base,M0103,标准版,iqoo neo9,,,,price_main#近年来热销150款手机#R318,2026-10-03T13:48:22,rules-1.0.0
+V0105,variant,variant|iqoo neo10 pro|base,M0104,标准版,iqoo neo10 pro,,,,price_main#近年来热销150款手机#R322,2026-10-03T13:48:22,rules-1.0.0
+V0106,variant,variant|vivo y100|base,M0105,标准版,vivo y100,,,,price_main#近年来热销150款手机#R327,2026-10-03T13:48:22,rules-1.0.0
+V0107,variant,variant|vivo x200 pro mini|base,M0106,标准版,vivo x200 pro mini,,,,price_main#近年来热销150款手机#R331,2026-10-03T13:48:22,rules-1.0.0
+V0108,variant,variant|vivo x200 ultra|base,M0107,标准版,vivo x200 ultra,,,,price_main#近年来热销150款手机#R335,2026-10-03T13:48:22,rules-1.0.0
+V0109,variant,variant|vivo x200 ultra|satellite,M0107,卫星通信版,vivo x200 ultra,,,,price_main#近年来热销150款手机#R337,2026-10-03T13:48:22,rules-1.0.0
+V0110,variant,variant|oppo find x8|base,M0108,标准版,oppo find x8,,,,price_main#近年来热销150款手机#R338,2026-10-03T13:48:22,rules-1.0.0
+V0111,variant,variant|oppo find x8 pro|base,M0109,标准版,oppo find x8 pro,,,,price_main#近年来热销150款手机#R343,2026-10-03T13:48:22,rules-1.0.0
+V0112,variant,variant|oppo find x8 pro|satellite,M0109,卫星通信版,oppo find x8 pro,,,,price_main#近年来热销150款手机#R347,2026-10-03T13:48:22,rules-1.0.0
+V0113,variant,variant|oppo find x7|base,M0110,标准版,oppo find x7,,,,price_main#近年来热销150款手机#R348,2026-10-03T13:48:22,rules-1.0.0
+V0114,variant,variant|oppo reno 12|base,M0111,标准版,oppo reno 12,,,,price_main#近年来热销150款手机#R352,2026-10-03T13:48:22,rules-1.0.0
+V0115,variant,variant|oppo reno 12 pro|base,M0112,标准版,oppo reno 12 pro,,,,price_main#近年来热销150款手机#R356,2026-10-03T13:48:22,rules-1.0.0
+V0116,variant,variant|oppo reno 13|base,M0113,标准版,oppo reno 13,,,,price_main#近年来热销150款手机#R359,2026-10-03T13:48:22,rules-1.0.0
+V0117,variant,variant|oppo find x7 ultra|base,M0114,标准版,oppo find x7 ultra,,,,price_main#近年来热销150款手机#R364,2026-10-03T13:48:22,rules-1.0.0
+V0118,variant,variant|一加12|base,M0115,标准版,一加12,,,,price_main#近年来热销150款手机#R367,2026-10-03T13:48:22,rules-1.0.0
+V0119,variant,variant|一加13|base,M0116,标准版,一加13,,,,price_main#近年来热销150款手机#R371,2026-10-03T13:48:22,rules-1.0.0
+V0120,variant,variant|一加ace 2|base,M0117,标准版,一加ace 2,,,,price_main#近年来热销150款手机#R375,2026-10-03T13:48:22,rules-1.0.0
+V0121,variant,variant|一加ace 2 pro|base,M0118,标准版,一加ace 2 pro,,,,price_main#近年来热销150款手机#R378,2026-10-03T13:48:22,rules-1.0.0
+V0122,variant,variant|一加ace 3 pro|base,M0119,标准版,一加ace 3 pro,,,,price_main#近年来热销150款手机#R381,2026-10-03T13:48:22,rules-1.0.0
+V0123,variant,variant|realme gt5|base,M0120,标准版,realme gt5,,,,price_main#近年来热销150款手机#R385,2026-10-03T13:48:22,rules-1.0.0
+V0124,variant,variant|realme gt5 pro|base,M0121,标准版,realme gt5 pro,,,,price_main#近年来热销150款手机#R388,2026-10-03T13:48:22,rules-1.0.0
+V0125,variant,variant|realme neo7|base,M0122,标准版,realme neo7,,,,price_main#近年来热销150款手机#R392,2026-10-03T13:48:22,rules-1.0.0
+V0126,variant,variant|一加ace 5|base,M0123,标准版,一加ace 5,,,,price_main#近年来热销150款手机#R397,2026-10-03T13:48:22,rules-1.0.0
+V0127,variant,variant|realme gt neo6|base,M0124,标准版,realme gt neo6,,,,price_main#近年来热销150款手机#R402,2026-10-03T13:48:22,rules-1.0.0
+V0128,variant,variant|vivo y300i|base,M0125,标准版,vivo y300i,,,,price_main#近年来热销150款手机#R406,2026-10-03T13:48:22,rules-1.0.0
+V0129,variant,variant|vivo y37|base,M0126,标准版,vivo y37,,,,price_main#近年来热销150款手机#R410,2026-10-03T13:48:22,rules-1.0.0
+V0130,variant,variant|redmi 14r|base,M0127,标准版,redmi 14r,,,,price_main#近年来热销150款手机#R415,2026-10-03T13:48:22,rules-1.0.0
+V0131,variant,variant|vivo y36|base,M0128,标准版,vivo y36,,,,price_main#近年来热销150款手机#R419,2026-10-03T13:48:22,rules-1.0.0
+V0132,variant,variant|vivo y35+|base,M0129,标准版,vivo y35+,,,,price_main#近年来热销150款手机#R424,2026-10-03T13:48:22,rules-1.0.0
+V0133,variant,variant|vivo y200i|base,M0130,标准版,vivo y200i,,,,price_main#近年来热销150款手机#R425,2026-10-03T13:48:22,rules-1.0.0
+V0134,variant,variant|oppo a2|base,M0131,标准版,oppo a2,,,,price_main#近年来热销150款手机#R428,2026-10-03T13:48:22,rules-1.0.0
+V0135,variant,variant|oppo a3x|base,M0132,标准版,oppo a3x,,,,price_main#近年来热销150款手机#R430,2026-10-03T13:48:22,rules-1.0.0
+V0136,variant,variant|华为nova 13|base,M0133,标准版,华为nova 13,,,,price_main#近年来热销150款手机#R434,2026-10-03T13:48:22,rules-1.0.0
+V0137,variant,variant|redmi k70|base,M0134,标准版,redmi k70,,,,price_main#近年来热销150款手机#R437,2026-10-03T13:48:22,rules-1.0.0
+V0138,variant,variant|redmi k70 至尊版|base,M0135,标准版,redmi k70 至尊版,,,,price_main#近年来热销150款手机#R441,2026-10-03T13:48:22,rules-1.0.0
+V0139,variant,variant|华为nova 12 活力版|base,M0136,标准版,华为nova 12 活力版,,,,price_main#近年来热销150款手机#R446,2026-10-03T13:48:22,rules-1.0.0
+V0140,variant,variant|redmi note 13 pro|base,M0137,标准版,redmi note 13 pro,,,,price_main#近年来热销150款手机#R448,2026-10-03T13:48:22,rules-1.0.0
+V0141,variant,variant|荣耀畅玩50|base,M0138,标准版,荣耀畅玩50,,,,price_main#近年来热销150款手机#R453,2026-10-03T13:48:22,rules-1.0.0
+V0142,variant,variant|荣耀x60|base,M0139,标准版,荣耀x60,,,,price_main#近年来热销150款手机#R455,2026-10-03T13:48:22,rules-1.0.0
+V0143,variant,variant|redmi turbo 4 pro|base,M0140,标准版,redmi turbo 4 pro,,,,price_main#近年来热销150款手机#R459,2026-10-03T13:48:22,rules-1.0.0
+V0144,variant,variant|荣耀400|base,M0141,标准版,荣耀400,,,,price_main#近年来热销150款手机#R464,2026-10-03T13:48:22,rules-1.0.0
+V0145,variant,variant|oppo a2m|base,M0142,标准版,oppo a2m,,,,price_main#近年来热销150款手机#R467,2026-10-03T13:48:22,rules-1.0.0
+V0146,variant,variant|一加ace 3|base,M0143,标准版,一加ace 3,,,,price_main#近年来热销150款手机#R470,2026-10-03T13:48:22,rules-1.0.0
+V0147,variant,variant|荣耀100|base,M0144,标准版,荣耀100,,,,price_main#近年来热销150款手机#R473,2026-10-03T13:48:22,rules-1.0.0
+V0148,variant,variant|vivo x100|base,M0145,标准版,vivo x100,,,,price_main#近年来热销150款手机#R476,2026-10-03T13:48:22,rules-1.0.0
+V0149,variant,variant|redmi 14c 4g|base,M0146,标准版,redmi 14c 4g,,,,price_main#近年来热销150款手机#R481,2026-10-03T13:48:22,rules-1.0.0
+V0150,variant,variant|redmi 13c 5g|base,M0147,标准版,redmi 13c 5g,,,,price_main#近年来热销150款手机#R484,2026-10-03T13:48:22,rules-1.0.0
+S0001,sku,sku|iphone 15|base|6GB|128GB,V0001,iPhone 15 标准版 6GB/128GB,iphone 15,6GB,128GB,,price_main#近年来热销150款手机#R2,2026-10-03T13:48:22,rules-1.0.0
+S0002,sku,sku|iphone 15|base|6GB|256GB,V0001,iPhone 15 标准版 6GB/256GB,iphone 15,6GB,256GB,,price_main#近年来热销150款手机#R3,2026-10-03T13:48:22,rules-1.0.0
+S0003,sku,sku|iphone 15|base|6GB|512GB,V0001,iPhone 15 标准版 6GB/512GB,iphone 15,6GB,512GB,,price_main#近年来热销150款手机#R4,2026-10-03T13:48:22,rules-1.0.0
+S0004,sku,sku|iphone 16 pro max|base|8GB|256GB,V0002,iPhone 16 Pro Max 标准版 8GB/256GB,iphone 16 pro max,8GB,256GB,,price_main#近年来热销150款手机#R5,2026-10-03T13:48:22,rules-1.0.0
+S0005,sku,sku|iphone 16 pro max|base|8GB|512GB,V0002,iPhone 16 Pro Max 标准版 8GB/512GB,iphone 16 pro max,8GB,512GB,,price_main#近年来热销150款手机#R6,2026-10-03T13:48:22,rules-1.0.0
+S0006,sku,sku|iphone 16 pro max|base|8GB|1TB,V0002,iPhone 16 Pro Max 标准版 8GB/1TB,iphone 16 pro max,8GB,1TB,,price_main#近年来热销150款手机#R7,2026-10-03T13:48:22,rules-1.0.0
+S0007,sku,sku|iphone 16 pro|base|8GB|128GB,V0003,iPhone 16 Pro 标准版 8GB/128GB,iphone 16 pro,8GB,128GB,,price_main#近年来热销150款手机#R8,2026-10-03T13:48:22,rules-1.0.0
+S0008,sku,sku|iphone 16 pro|base|8GB|256GB,V0003,iPhone 16 Pro 标准版 8GB/256GB,iphone 16 pro,8GB,256GB,,price_main#近年来热销150款手机#R9,2026-10-03T13:48:22,rules-1.0.0
+S0009,sku,sku|iphone 16 pro|base|8GB|512GB,V0003,iPhone 16 Pro 标准版 8GB/512GB,iphone 16 pro,8GB,512GB,,price_main#近年来热销150款手机#R10,2026-10-03T13:48:22,rules-1.0.0
+S0010,sku,sku|iphone 16 pro|base|8GB|1TB,V0003,iPhone 16 Pro 标准版 8GB/1TB,iphone 16 pro,8GB,1TB,,price_main#近年来热销150款手机#R11,2026-10-03T13:48:22,rules-1.0.0
+S0011,sku,sku|iphone 16|base|8GB|128GB,V0004,iPhone 16 标准版 8GB/128GB,iphone 16,8GB,128GB,,price_main#近年来热销150款手机#R12,2026-10-03T13:48:22,rules-1.0.0
+S0012,sku,sku|iphone 16|base|8GB|256GB,V0004,iPhone 16 标准版 8GB/256GB,iphone 16,8GB,256GB,,price_main#近年来热销150款手机#R13,2026-10-03T13:48:22,rules-1.0.0
+S0013,sku,sku|iphone 16|base|8GB|512GB,V0004,iPhone 16 标准版 8GB/512GB,iphone 16,8GB,512GB,,price_main#近年来热销150款手机#R14,2026-10-03T13:48:22,rules-1.0.0
+S0014,sku,sku|iphone 15 pro max|base|8GB|256GB,V0005,iPhone 15 Pro Max 标准版 8GB/256GB,iphone 15 pro max,8GB,256GB,,price_main#近年来热销150款手机#R15,2026-10-03T13:48:22,rules-1.0.0
+S0015,sku,sku|iphone 15 pro max|base|8GB|512GB,V0005,iPhone 15 Pro Max 标准版 8GB/512GB,iphone 15 pro max,8GB,512GB,,price_main#近年来热销150款手机#R16,2026-10-03T13:48:22,rules-1.0.0
+S0016,sku,sku|iphone 15 pro max|base|8GB|1TB,V0005,iPhone 15 Pro Max 标准版 8GB/1TB,iphone 15 pro max,8GB,1TB,,price_main#近年来热销150款手机#R17,2026-10-03T13:48:22,rules-1.0.0
+S0017,sku,sku|iphone 17 pro max|base|12GB|256GB,V0006,iPhone 17 Pro Max 标准版 12GB/256GB,iphone 17 pro max,12GB,256GB,,price_main#近年来热销150款手机#R18,2026-10-03T13:48:22,rules-1.0.0
+S0018,sku,sku|iphone 17 pro max|base|12GB|512GB,V0006,iPhone 17 Pro Max 标准版 12GB/512GB,iphone 17 pro max,12GB,512GB,,price_main#近年来热销150款手机#R19,2026-10-03T13:48:22,rules-1.0.0
+S0019,sku,sku|iphone 17 pro max|base|12GB|1TB,V0006,iPhone 17 Pro Max 标准版 12GB/1TB,iphone 17 pro max,12GB,1TB,,price_main#近年来热销150款手机#R20,2026-10-03T13:48:22,rules-1.0.0
+S0020,sku,sku|iphone 17 pro max|base|12GB|2TB,V0006,iPhone 17 Pro Max 标准版 12GB/2TB,iphone 17 pro max,12GB,2TB,,price_main#近年来热销150款手机#R21,2026-10-03T13:48:22,rules-1.0.0
+S0021,sku,sku|iphone 17|base|8GB|256GB,V0007,iPhone 17 标准版 8GB/256GB,iphone 17,8GB,256GB,,price_main#近年来热销150款手机#R22,2026-10-03T13:48:22,rules-1.0.0
+S0022,sku,sku|iphone 17|base|8GB|512GB,V0007,iPhone 17 标准版 8GB/512GB,iphone 17,8GB,512GB,,price_main#近年来热销150款手机#R23,2026-10-03T13:48:22,rules-1.0.0
+S0023,sku,sku|iphone 17 pro|base|12GB|256GB,V0008,iPhone 17 Pro 标准版 12GB/256GB,iphone 17 pro,12GB,256GB,,price_main#近年来热销150款手机#R24,2026-10-03T13:48:22,rules-1.0.0
+S0024,sku,sku|iphone 17 pro|base|12GB|512GB,V0008,iPhone 17 Pro 标准版 12GB/512GB,iphone 17 pro,12GB,512GB,,price_main#近年来热销150款手机#R25,2026-10-03T13:48:22,rules-1.0.0
+S0025,sku,sku|iphone 17 pro|base|12GB|1TB,V0008,iPhone 17 Pro 标准版 12GB/1TB,iphone 17 pro,12GB,1TB,,price_main#近年来热销150款手机#R26,2026-10-03T13:48:22,rules-1.0.0
+S0026,sku,sku|iphone 14|base|6GB|128GB,V0009,iPhone 14 标准版 6GB/128GB,iphone 14,6GB,128GB,,price_main#近年来热销150款手机#R27,2026-10-03T13:48:22,rules-1.0.0
+S0027,sku,sku|iphone 14|base|6GB|256GB,V0009,iPhone 14 标准版 6GB/256GB,iphone 14,6GB,256GB,,price_main#近年来热销150款手机#R28,2026-10-03T13:48:22,rules-1.0.0
+S0028,sku,sku|iphone 14|base|6GB|512GB,V0009,iPhone 14 标准版 6GB/512GB,iphone 14,6GB,512GB,,price_main#近年来热销150款手机#R29,2026-10-03T13:48:22,rules-1.0.0
+S0029,sku,sku|iphone 16e|base|8GB|128GB,V0010,iPhone 16e 标准版 8GB/128GB,iphone 16e,8GB,128GB,,price_main#近年来热销150款手机#R30,2026-10-03T13:48:22,rules-1.0.0
+S0030,sku,sku|iphone 16e|base|8GB|256GB,V0010,iPhone 16e 标准版 8GB/256GB,iphone 16e,8GB,256GB,,price_main#近年来热销150款手机#R31,2026-10-03T13:48:22,rules-1.0.0
+S0031,sku,sku|iphone 16e|base|8GB|512GB,V0010,iPhone 16e 标准版 8GB/512GB,iphone 16e,8GB,512GB,,price_main#近年来热销150款手机#R32,2026-10-03T13:48:22,rules-1.0.0
+S0032,sku,sku|iphone 15 pro|base|8GB|128GB,V0011,iPhone 15 Pro 标准版 8GB/128GB,iphone 15 pro,8GB,128GB,,price_main#近年来热销150款手机#R33,2026-10-03T13:48:22,rules-1.0.0
+S0033,sku,sku|iphone 15 pro|base|8GB|256GB,V0011,iPhone 15 Pro 标准版 8GB/256GB,iphone 15 pro,8GB,256GB,,price_main#近年来热销150款手机#R34,2026-10-03T13:48:22,rules-1.0.0
+S0034,sku,sku|iphone 15 pro|base|8GB|512GB,V0011,iPhone 15 Pro 标准版 8GB/512GB,iphone 15 pro,8GB,512GB,,price_main#近年来热销150款手机#R35,2026-10-03T13:48:22,rules-1.0.0
+S0035,sku,sku|iphone 15 pro|base|8GB|1TB,V0011,iPhone 15 Pro 标准版 8GB/1TB,iphone 15 pro,8GB,1TB,,price_main#近年来热销150款手机#R36,2026-10-03T13:48:22,rules-1.0.0
+S0036,sku,sku|三星galaxy s24 ultra|base|12GB|256GB,V0012,三星Galaxy S24 Ultra 标准版 12GB/256GB,三星galaxy s24 ultra,12GB,256GB,,price_main#近年来热销150款手机#R37,2026-10-03T13:48:22,rules-1.0.0
+S0037,sku,sku|三星galaxy s24 ultra|base|12GB|512GB,V0012,三星Galaxy S24 Ultra 标准版 12GB/512GB,三星galaxy s24 ultra,12GB,512GB,,price_main#近年来热销150款手机#R38,2026-10-03T13:48:22,rules-1.0.0
+S0038,sku,sku|三星galaxy s24 ultra|base|12GB|1TB,V0012,三星Galaxy S24 Ultra 标准版 12GB/1TB,三星galaxy s24 ultra,12GB,1TB,,price_main#近年来热销150款手机#R39,2026-10-03T13:48:22,rules-1.0.0
+S0039,sku,sku|三星galaxy s25 ultra|base|12GB|256GB,V0013,三星Galaxy S25 Ultra 标准版 12GB/256GB,三星galaxy s25 ultra,12GB,256GB,,price_main#近年来热销150款手机#R40,2026-10-03T13:48:22,rules-1.0.0
+S0040,sku,sku|三星galaxy s25 ultra|base|12GB|512GB,V0013,三星Galaxy S25 Ultra 标准版 12GB/512GB,三星galaxy s25 ultra,12GB,512GB,,price_main#近年来热销150款手机#R41,2026-10-03T13:48:22,rules-1.0.0
+S0041,sku,sku|三星galaxy s25 ultra|base|16GB|1TB,V0013,三星Galaxy S25 Ultra 标准版 16GB/1TB,三星galaxy s25 ultra,16GB,1TB,,price_main#近年来热销150款手机#R42,2026-10-03T13:48:22,rules-1.0.0
+S0042,sku,sku|三星galaxy s26 ultra|base|12GB|256GB,V0014,三星Galaxy S26 Ultra 标准版 12GB/256GB,三星galaxy s26 ultra,12GB,256GB,,price_main#近年来热销150款手机#R43,2026-10-03T13:48:22,rules-1.0.0
+S0043,sku,sku|三星galaxy s26 ultra|base|12GB|512GB,V0014,三星Galaxy S26 Ultra 标准版 12GB/512GB,三星galaxy s26 ultra,12GB,512GB,,price_main#近年来热销150款手机#R44,2026-10-03T13:48:22,rules-1.0.0
+S0044,sku,sku|三星galaxy s26 ultra|base|16GB|1TB,V0014,三星Galaxy S26 Ultra 标准版 16GB/1TB,三星galaxy s26 ultra,16GB,1TB,,price_main#近年来热销150款手机#R45,2026-10-03T13:48:22,rules-1.0.0
+S0045,sku,sku|三星galaxy a56|base|8GB|256GB,V0015,三星Galaxy A56 标准版 8GB/256GB,三星galaxy a56,8GB,256GB,,price_main#近年来热销150款手机#R46,2026-10-03T13:48:22,rules-1.0.0
+S0046,sku,sku|三星galaxy a56|base|12GB|256GB,V0015,三星Galaxy A56 标准版 12GB/256GB,三星galaxy a56,12GB,256GB,,price_main#近年来热销150款手机#R47,2026-10-03T13:48:22,rules-1.0.0
+S0047,sku,sku|华为mate 60 pro|base|12GB|256GB,V0016,华为Mate 60 Pro 标准版 12GB/256GB,华为mate 60 pro,12GB,256GB,,price_main#近年来热销150款手机#R48,2026-10-03T13:48:22,rules-1.0.0
+S0048,sku,sku|华为mate 60 pro|base|12GB|512GB,V0016,华为Mate 60 Pro 标准版 12GB/512GB,华为mate 60 pro,12GB,512GB,,price_main#近年来热销150款手机#R49,2026-10-03T13:48:22,rules-1.0.0
+S0049,sku,sku|华为mate 60 pro|base|12GB|1TB,V0016,华为Mate 60 Pro 标准版 12GB/1TB,华为mate 60 pro,12GB,1TB,,price_main#近年来热销150款手机#R50,2026-10-03T13:48:22,rules-1.0.0
+S0050,sku,sku|华为mate 80|base|12GB|256GB,V0017,华为Mate 80 标准版 12GB/256GB,华为mate 80,12GB,256GB,,price_main#近年来热销150款手机#R51,2026-10-03T13:48:22,rules-1.0.0
+S0051,sku,sku|华为mate 80|base|12GB|512GB,V0017,华为Mate 80 标准版 12GB/512GB,华为mate 80,12GB,512GB,,price_main#近年来热销150款手机#R52,2026-10-03T13:48:22,rules-1.0.0
+S0052,sku,sku|华为mate 80|base|16GB|512GB,V0017,华为Mate 80 标准版 16GB/512GB,华为mate 80,16GB,512GB,,price_main#近年来热销150款手机#R53,2026-10-03T13:48:22,rules-1.0.0
+S0053,sku,sku|华为mate 70|base|12GB|256GB,V0018,华为Mate 70 标准版 12GB/256GB,华为mate 70,12GB,256GB,,price_main#近年来热销150款手机#R54,2026-10-03T13:48:22,rules-1.0.0
+S0054,sku,sku|华为mate 70|base|12GB|512GB,V0018,华为Mate 70 标准版 12GB/512GB,华为mate 70,12GB,512GB,,price_main#近年来热销150款手机#R55,2026-10-03T13:48:22,rules-1.0.0
+S0055,sku,sku|华为mate 70|base|12GB|1TB,V0018,华为Mate 70 标准版 12GB/1TB,华为mate 70,12GB,1TB,,price_main#近年来热销150款手机#R56,2026-10-03T13:48:22,rules-1.0.0
+S0056,sku,sku|redmi k80|base|12GB|256GB,V0019,Redmi K80 标准版 12GB/256GB,redmi k80,12GB,256GB,,price_main#近年来热销150款手机#R57,2026-10-03T13:48:22,rules-1.0.0
+S0057,sku,sku|redmi k80|base|16GB|256GB,V0019,Redmi K80 标准版 16GB/256GB,redmi k80,16GB,256GB,,price_main#近年来热销150款手机#R58,2026-10-03T13:48:22,rules-1.0.0
+S0058,sku,sku|redmi k80|base|12GB|512GB,V0019,Redmi K80 标准版 12GB/512GB,redmi k80,12GB,512GB,,price_main#近年来热销150款手机#R59,2026-10-03T13:48:22,rules-1.0.0
+S0059,sku,sku|redmi k80|base|16GB|512GB,V0019,Redmi K80 标准版 16GB/512GB,redmi k80,16GB,512GB,,price_main#近年来热销150款手机#R60,2026-10-03T13:48:22,rules-1.0.0
+S0060,sku,sku|redmi k80|base|16GB|1TB,V0019,Redmi K80 标准版 16GB/1TB,redmi k80,16GB,1TB,,price_main#近年来热销150款手机#R61,2026-10-03T13:48:22,rules-1.0.0
+S0061,sku,sku|荣耀x50|base|8GB|128GB,V0020,荣耀X50 标准版 8GB/128GB,荣耀x50,8GB,128GB,,price_main#近年来热销150款手机#R62,2026-10-03T13:48:22,rules-1.0.0
+S0062,sku,sku|荣耀x50|base|8GB|256GB,V0020,荣耀X50 标准版 8GB/256GB,荣耀x50,8GB,256GB,,price_main#近年来热销150款手机#R63,2026-10-03T13:48:22,rules-1.0.0
+S0063,sku,sku|荣耀x50|base|12GB|256GB,V0020,荣耀X50 标准版 12GB/256GB,荣耀x50,12GB,256GB,,price_main#近年来热销150款手机#R64,2026-10-03T13:48:22,rules-1.0.0
+S0064,sku,sku|荣耀x50|base|16GB|512GB,V0020,荣耀X50 标准版 16GB/512GB,荣耀x50,16GB,512GB,,price_main#近年来热销150款手机#R65,2026-10-03T13:48:22,rules-1.0.0
+S0065,sku,sku|荣耀x70|base|8GB|128GB,V0021,荣耀X70 标准版 8GB/128GB,荣耀x70,8GB,128GB,,price_main#近年来热销150款手机#R66,2026-10-03T13:48:22,rules-1.0.0
+S0066,sku,sku|荣耀x70|base|8GB|256GB,V0021,荣耀X70 标准版 8GB/256GB,荣耀x70,8GB,256GB,,price_main#近年来热销150款手机#R67,2026-10-03T13:48:22,rules-1.0.0
+S0067,sku,sku|荣耀x70|base|12GB|256GB,V0021,荣耀X70 标准版 12GB/256GB,荣耀x70,12GB,256GB,,price_main#近年来热销150款手机#R68,2026-10-03T13:48:22,rules-1.0.0
+S0068,sku,sku|荣耀x70|base|12GB|512GB,V0021,荣耀X70 标准版 12GB/512GB,荣耀x70,12GB,512GB,,price_main#近年来热销150款手机#R69,2026-10-03T13:48:22,rules-1.0.0
+S0069,sku,sku|小米15|base|12GB|256GB,V0022,小米15 标准版 12GB/256GB,小米15,12GB,256GB,,price_main#近年来热销150款手机#R70,2026-10-03T13:48:22,rules-1.0.0
+S0070,sku,sku|小米15|base|12GB|512GB,V0022,小米15 标准版 12GB/512GB,小米15,12GB,512GB,,price_main#近年来热销150款手机#R71,2026-10-03T13:48:22,rules-1.0.0
+S0071,sku,sku|小米15|base|16GB|512GB,V0022,小米15 标准版 16GB/512GB,小米15,16GB,512GB,,price_main#近年来热销150款手机#R72,2026-10-03T13:48:22,rules-1.0.0
+S0072,sku,sku|小米15|base|16GB|1TB,V0022,小米15 标准版 16GB/1TB,小米15,16GB,1TB,,price_main#近年来热销150款手机#R73,2026-10-03T13:48:22,rules-1.0.0
+S0073,sku,sku|小米14|base|8GB|256GB,V0023,小米14 标准版 8GB/256GB,小米14,8GB,256GB,,price_main#近年来热销150款手机#R74,2026-10-03T13:48:22,rules-1.0.0
+S0074,sku,sku|小米14|base|12GB|256GB,V0023,小米14 标准版 12GB/256GB,小米14,12GB,256GB,,price_main#近年来热销150款手机#R75,2026-10-03T13:48:22,rules-1.0.0
+S0075,sku,sku|小米14|base|16GB|512GB,V0023,小米14 标准版 16GB/512GB,小米14,16GB,512GB,,price_main#近年来热销150款手机#R76,2026-10-03T13:48:22,rules-1.0.0
+S0076,sku,sku|小米14|base|16GB|1TB,V0023,小米14 标准版 16GB/1TB,小米14,16GB,1TB,,price_main#近年来热销150款手机#R77,2026-10-03T13:48:22,rules-1.0.0
+S0077,sku,sku|iphone 13|base|4GB|128GB,V0024,iPhone 13 标准版 4GB/128GB,iphone 13,4GB,128GB,,price_main#近年来热销150款手机#R78,2026-10-03T13:48:22,rules-1.0.0
+S0078,sku,sku|iphone 13|base|4GB|256GB,V0024,iPhone 13 标准版 4GB/256GB,iphone 13,4GB,256GB,,price_main#近年来热销150款手机#R79,2026-10-03T13:48:22,rules-1.0.0
+S0079,sku,sku|iphone 13|base|4GB|512GB,V0024,iPhone 13 标准版 4GB/512GB,iphone 13,4GB,512GB,,price_main#近年来热销150款手机#R80,2026-10-03T13:48:22,rules-1.0.0
+S0080,sku,sku|iphone 13 pro|base|6GB|128GB,V0025,iPhone 13 Pro 标准版 6GB/128GB,iphone 13 pro,6GB,128GB,,price_main#近年来热销150款手机#R81,2026-10-03T13:48:22,rules-1.0.0
+S0081,sku,sku|iphone 13 pro|base|6GB|256GB,V0025,iPhone 13 Pro 标准版 6GB/256GB,iphone 13 pro,6GB,256GB,,price_main#近年来热销150款手机#R82,2026-10-03T13:48:22,rules-1.0.0
+S0082,sku,sku|iphone 13 pro|base|6GB|512GB,V0025,iPhone 13 Pro 标准版 6GB/512GB,iphone 13 pro,6GB,512GB,,price_main#近年来热销150款手机#R83,2026-10-03T13:48:22,rules-1.0.0
+S0083,sku,sku|iphone 13 pro|base|6GB|1TB,V0025,iPhone 13 Pro 标准版 6GB/1TB,iphone 13 pro,6GB,1TB,,price_main#近年来热销150款手机#R84,2026-10-03T13:48:22,rules-1.0.0
+S0084,sku,sku|iphone 13 pro max|base|6GB|128GB,V0026,iPhone 13 Pro Max 标准版 6GB/128GB,iphone 13 pro max,6GB,128GB,,price_main#近年来热销150款手机#R85,2026-10-03T13:48:22,rules-1.0.0
+S0085,sku,sku|iphone 13 pro max|base|6GB|256GB,V0026,iPhone 13 Pro Max 标准版 6GB/256GB,iphone 13 pro max,6GB,256GB,,price_main#近年来热销150款手机#R86,2026-10-03T13:48:22,rules-1.0.0
+S0086,sku,sku|iphone 13 pro max|base|6GB|512GB,V0026,iPhone 13 Pro Max 标准版 6GB/512GB,iphone 13 pro max,6GB,512GB,,price_main#近年来热销150款手机#R87,2026-10-03T13:48:22,rules-1.0.0
+S0087,sku,sku|iphone 13 pro max|base|6GB|1TB,V0026,iPhone 13 Pro Max 标准版 6GB/1TB,iphone 13 pro max,6GB,1TB,,price_main#近年来热销150款手机#R88,2026-10-03T13:48:22,rules-1.0.0
+S0088,sku,sku|iphone 12|base|4GB|64GB,V0027,iPhone 12 标准版 4GB/64GB,iphone 12,4GB,64GB,,price_main#近年来热销150款手机#R89,2026-10-03T13:48:22,rules-1.0.0
+S0089,sku,sku|iphone 12|base|4GB|128GB,V0027,iPhone 12 标准版 4GB/128GB,iphone 12,4GB,128GB,,price_main#近年来热销150款手机#R90,2026-10-03T13:48:22,rules-1.0.0
+S0090,sku,sku|iphone 12|base|4GB|256GB,V0027,iPhone 12 标准版 4GB/256GB,iphone 12,4GB,256GB,,price_main#近年来热销150款手机#R91,2026-10-03T13:48:22,rules-1.0.0
+S0091,sku,sku|iphone 12 pro|base|6GB|128GB,V0028,iPhone 12 Pro 标准版 6GB/128GB,iphone 12 pro,6GB,128GB,,price_main#近年来热销150款手机#R92,2026-10-03T13:48:22,rules-1.0.0
+S0092,sku,sku|iphone 12 pro|base|6GB|256GB,V0028,iPhone 12 Pro 标准版 6GB/256GB,iphone 12 pro,6GB,256GB,,price_main#近年来热销150款手机#R93,2026-10-03T13:48:22,rules-1.0.0
+S0093,sku,sku|iphone 12 pro|base|6GB|512GB,V0028,iPhone 12 Pro 标准版 6GB/512GB,iphone 12 pro,6GB,512GB,,price_main#近年来热销150款手机#R94,2026-10-03T13:48:22,rules-1.0.0
+S0094,sku,sku|iphone 15 plus|base|6GB|128GB,V0029,iPhone 15 Plus 标准版 6GB/128GB,iphone 15 plus,6GB,128GB,,price_main#近年来热销150款手机#R95,2026-10-03T13:48:22,rules-1.0.0
+S0095,sku,sku|iphone 15 plus|base|6GB|256GB,V0029,iPhone 15 Plus 标准版 6GB/256GB,iphone 15 plus,6GB,256GB,,price_main#近年来热销150款手机#R96,2026-10-03T13:48:22,rules-1.0.0
+S0096,sku,sku|iphone 15 plus|base|6GB|512GB,V0029,iPhone 15 Plus 标准版 6GB/512GB,iphone 15 plus,6GB,512GB,,price_main#近年来热销150款手机#R97,2026-10-03T13:48:22,rules-1.0.0
+S0097,sku,sku|iphone 16 plus|base|8GB|128GB,V0030,iPhone 16 Plus 标准版 8GB/128GB,iphone 16 plus,8GB,128GB,,price_main#近年来热销150款手机#R98,2026-10-03T13:48:22,rules-1.0.0
+S0098,sku,sku|iphone 16 plus|base|8GB|256GB,V0030,iPhone 16 Plus 标准版 8GB/256GB,iphone 16 plus,8GB,256GB,,price_main#近年来热销150款手机#R99,2026-10-03T13:48:22,rules-1.0.0
+S0099,sku,sku|iphone 16 plus|base|8GB|512GB,V0030,iPhone 16 Plus 标准版 8GB/512GB,iphone 16 plus,8GB,512GB,,price_main#近年来热销150款手机#R100,2026-10-03T13:48:22,rules-1.0.0
+S0100,sku,sku|iphone se 3|base|4GB|64GB,V0031,iPhone SE 3 标准版 4GB/64GB,iphone se 3,4GB,64GB,,price_main#近年来热销150款手机#R101,2026-10-03T13:48:22,rules-1.0.0
+S0101,sku,sku|iphone se 3|base|4GB|128GB,V0031,iPhone SE 3 标准版 4GB/128GB,iphone se 3,4GB,128GB,,price_main#近年来热销150款手机#R102,2026-10-03T13:48:22,rules-1.0.0
+S0102,sku,sku|iphone se 3|base|4GB|256GB,V0031,iPhone SE 3 标准版 4GB/256GB,iphone se 3,4GB,256GB,,price_main#近年来热销150款手机#R103,2026-10-03T13:48:22,rules-1.0.0
+S0103,sku,sku|iphone air|base|12GB|256GB,V0032,iPhone Air 标准版 12GB/256GB,iphone air,12GB,256GB,,price_main#近年来热销150款手机#R104,2026-10-03T13:48:22,rules-1.0.0
+S0104,sku,sku|iphone air|base|12GB|512GB,V0032,iPhone Air 标准版 12GB/512GB,iphone air,12GB,512GB,,price_main#近年来热销150款手机#R105,2026-10-03T13:48:22,rules-1.0.0
+S0105,sku,sku|iphone air|base|12GB|1TB,V0032,iPhone Air 标准版 12GB/1TB,iphone air,12GB,1TB,,price_main#近年来热销150款手机#R106,2026-10-03T13:48:22,rules-1.0.0
+S0106,sku,sku|iphone 14 plus|base|6GB|128GB,V0033,iPhone 14 Plus 标准版 6GB/128GB,iphone 14 plus,6GB,128GB,,price_main#近年来热销150款手机#R107,2026-10-03T13:48:22,rules-1.0.0
+S0107,sku,sku|iphone 14 plus|base|6GB|256GB,V0033,iPhone 14 Plus 标准版 6GB/256GB,iphone 14 plus,6GB,256GB,,price_main#近年来热销150款手机#R108,2026-10-03T13:48:22,rules-1.0.0
+S0108,sku,sku|iphone 14 plus|base|6GB|512GB,V0033,iPhone 14 Plus 标准版 6GB/512GB,iphone 14 plus,6GB,512GB,,price_main#近年来热销150款手机#R109,2026-10-03T13:48:22,rules-1.0.0
+S0109,sku,sku|三星galaxy s24|base|8GB|256GB,V0034,三星Galaxy S24 标准版 8GB/256GB,三星galaxy s24,8GB,256GB,,price_main#近年来热销150款手机#R110,2026-10-03T13:48:22,rules-1.0.0
+S0110,sku,sku|三星galaxy s24|base|12GB|256GB,V0034,三星Galaxy S24 标准版 12GB/256GB,三星galaxy s24,12GB,256GB,,price_main#近年来热销150款手机#R111,2026-10-03T13:48:22,rules-1.0.0
+S0111,sku,sku|三星galaxy s24|base|8GB|512GB,V0034,三星Galaxy S24 标准版 8GB/512GB,三星galaxy s24,8GB,512GB,,price_main#近年来热销150款手机#R112,2026-10-03T13:48:22,rules-1.0.0
+S0112,sku,sku|三星galaxy s24+|base|12GB|256GB,V0035,三星Galaxy S24+ 标准版 12GB/256GB,三星galaxy s24+,12GB,256GB,,price_main#近年来热销150款手机#R113,2026-10-03T13:48:22,rules-1.0.0
+S0113,sku,sku|三星galaxy s24+|base|12GB|512GB,V0035,三星Galaxy S24+ 标准版 12GB/512GB,三星galaxy s24+,12GB,512GB,,price_main#近年来热销150款手机#R114,2026-10-03T13:48:22,rules-1.0.0
+S0114,sku,sku|三星galaxy s25|base|12GB|256GB,V0036,三星Galaxy S25 标准版 12GB/256GB,三星galaxy s25,12GB,256GB,,price_main#近年来热销150款手机#R115,2026-10-03T13:48:22,rules-1.0.0
+S0115,sku,sku|三星galaxy s25|base|12GB|512GB,V0036,三星Galaxy S25 标准版 12GB/512GB,三星galaxy s25,12GB,512GB,,price_main#近年来热销150款手机#R116,2026-10-03T13:48:22,rules-1.0.0
+S0116,sku,sku|三星galaxy s25+|base|12GB|256GB,V0037,三星Galaxy S25+ 标准版 12GB/256GB,三星galaxy s25+,12GB,256GB,,price_main#近年来热销150款手机#R117,2026-10-03T13:48:22,rules-1.0.0
+S0117,sku,sku|三星galaxy s25+|base|12GB|512GB,V0037,三星Galaxy S25+ 标准版 12GB/512GB,三星galaxy s25+,12GB,512GB,,price_main#近年来热销150款手机#R118,2026-10-03T13:48:22,rules-1.0.0
+S0118,sku,sku|三星galaxy s23 ultra|base|8GB|256GB,V0038,三星Galaxy S23 Ultra 标准版 8GB/256GB,三星galaxy s23 ultra,8GB,256GB,,price_main#近年来热销150款手机#R119,2026-10-03T13:48:22,rules-1.0.0
+S0119,sku,sku|三星galaxy s23 ultra|base|12GB|256GB,V0038,三星Galaxy S23 Ultra 标准版 12GB/256GB,三星galaxy s23 ultra,12GB,256GB,,price_main#近年来热销150款手机#R120,2026-10-03T13:48:22,rules-1.0.0
+S0120,sku,sku|三星galaxy s23 ultra|base|12GB|512GB,V0038,三星Galaxy S23 Ultra 标准版 12GB/512GB,三星galaxy s23 ultra,12GB,512GB,,price_main#近年来热销150款手机#R121,2026-10-03T13:48:22,rules-1.0.0
+S0121,sku,sku|三星galaxy s23 ultra|base|12GB|1TB,V0038,三星Galaxy S23 Ultra 标准版 12GB/1TB,三星galaxy s23 ultra,12GB,1TB,,price_main#近年来热销150款手机#R122,2026-10-03T13:48:22,rules-1.0.0
+S0122,sku,sku|三星galaxy s23|base|8GB|128GB,V0039,三星Galaxy S23 标准版 8GB/128GB,三星galaxy s23,8GB,128GB,,price_main#近年来热销150款手机#R123,2026-10-03T13:48:22,rules-1.0.0
+S0123,sku,sku|三星galaxy s23|base|8GB|256GB,V0039,三星Galaxy S23 标准版 8GB/256GB,三星galaxy s23,8GB,256GB,,price_main#近年来热销150款手机#R124,2026-10-03T13:48:22,rules-1.0.0
+S0124,sku,sku|三星galaxy s23|base|8GB|512GB,V0039,三星Galaxy S23 标准版 8GB/512GB,三星galaxy s23,8GB,512GB,,price_main#近年来热销150款手机#R125,2026-10-03T13:48:22,rules-1.0.0
+S0125,sku,sku|三星galaxy a55|base|8GB|256GB,V0040,三星Galaxy A55 标准版 8GB/256GB,三星galaxy a55,8GB,256GB,,price_main#近年来热销150款手机#R126,2026-10-03T13:48:22,rules-1.0.0
+S0126,sku,sku|三星galaxy a55|base|12GB|256GB,V0040,三星Galaxy A55 标准版 12GB/256GB,三星galaxy a55,12GB,256GB,,price_main#近年来热销150款手机#R127,2026-10-03T13:48:22,rules-1.0.0
+S0127,sku,sku|三星galaxy z fold6|base|12GB|512GB,V0041,三星Galaxy Z Fold6 标准版 12GB/512GB,三星galaxy z fold6,12GB,512GB,,price_main#近年来热销150款手机#R128,2026-10-03T13:48:22,rules-1.0.0
+S0128,sku,sku|三星galaxy z fold6|base|12GB|1TB,V0041,三星Galaxy Z Fold6 标准版 12GB/1TB,三星galaxy z fold6,12GB,1TB,,price_main#近年来热销150款手机#R129,2026-10-03T13:48:22,rules-1.0.0
+S0129,sku,sku|三星galaxy z flip6|base|12GB|256GB,V0042,三星Galaxy Z Flip6 标准版 12GB/256GB,三星galaxy z flip6,12GB,256GB,,price_main#近年来热销150款手机#R130,2026-10-03T13:48:22,rules-1.0.0
+S0130,sku,sku|三星galaxy z flip6|base|12GB|512GB,V0042,三星Galaxy Z Flip6 标准版 12GB/512GB,三星galaxy z flip6,12GB,512GB,,price_main#近年来热销150款手机#R131,2026-10-03T13:48:22,rules-1.0.0
+S0131,sku,sku|三星galaxy z fold5|base|12GB|512GB,V0043,三星Galaxy Z Fold5 标准版 12GB/512GB,三星galaxy z fold5,12GB,512GB,,price_main#近年来热销150款手机#R132,2026-10-03T13:48:22,rules-1.0.0
+S0132,sku,sku|三星galaxy z fold5|base|12GB|1TB,V0043,三星Galaxy Z Fold5 标准版 12GB/1TB,三星galaxy z fold5,12GB,1TB,,price_main#近年来热销150款手机#R133,2026-10-03T13:48:22,rules-1.0.0
+S0133,sku,sku|三星galaxy z flip5|base|8GB|256GB,V0044,三星Galaxy Z Flip5 标准版 8GB/256GB,三星galaxy z flip5,8GB,256GB,,price_main#近年来热销150款手机#R134,2026-10-03T13:48:22,rules-1.0.0
+S0134,sku,sku|三星galaxy z flip5|base|8GB|512GB,V0044,三星Galaxy Z Flip5 标准版 8GB/512GB,三星galaxy z flip5,8GB,512GB,,price_main#近年来热销150款手机#R135,2026-10-03T13:48:22,rules-1.0.0
+S0135,sku,sku|三星galaxy s26|base|12GB|256GB,V0045,三星Galaxy S26 标准版 12GB/256GB,三星galaxy s26,12GB,256GB,,price_main#近年来热销150款手机#R136,2026-10-03T13:48:22,rules-1.0.0
+S0136,sku,sku|华为mate 70 pro|base|12GB|256GB,V0046,华为Mate 70 Pro 标准版 12GB/256GB,华为mate 70 pro,12GB,256GB,,price_main#近年来热销150款手机#R137,2026-10-03T13:48:22,rules-1.0.0
+S0137,sku,sku|华为mate 70 pro|base|12GB|512GB,V0046,华为Mate 70 Pro 标准版 12GB/512GB,华为mate 70 pro,12GB,512GB,,price_main#近年来热销150款手机#R138,2026-10-03T13:48:22,rules-1.0.0
+S0138,sku,sku|华为mate 70 pro|base|12GB|1TB,V0046,华为Mate 70 Pro 标准版 12GB/1TB,华为mate 70 pro,12GB,1TB,,price_main#近年来热销150款手机#R139,2026-10-03T13:48:22,rules-1.0.0
+S0139,sku,sku|华为mate 70 pro+|base|16GB|512GB,V0047,华为Mate 70 Pro+ 标准版 16GB/512GB,华为mate 70 pro+,16GB,512GB,,price_main#近年来热销150款手机#R140,2026-10-03T13:48:22,rules-1.0.0
+S0140,sku,sku|华为mate 70 pro+|base|16GB|1TB,V0047,华为Mate 70 Pro+ 标准版 16GB/1TB,华为mate 70 pro+,16GB,1TB,,price_main#近年来热销150款手机#R141,2026-10-03T13:48:22,rules-1.0.0
+S0141,sku,sku|华为mate 70 rs 非凡大师|base|16GB|512GB,V0048,华为Mate 70 RS 非凡大师 标准版 16GB/512GB,华为mate 70 rs 非凡大师,16GB,512GB,,price_main#近年来热销150款手机#R142,2026-10-03T13:48:22,rules-1.0.0
+S0142,sku,sku|华为mate 70 rs 非凡大师|base|16GB|1TB,V0048,华为Mate 70 RS 非凡大师 标准版 16GB/1TB,华为mate 70 rs 非凡大师,16GB,1TB,,price_main#近年来热销150款手机#R143,2026-10-03T13:48:22,rules-1.0.0
+S0143,sku,sku|华为mate 80 pro|base|12GB|256GB,V0049,华为Mate 80 Pro 标准版 12GB/256GB,华为mate 80 pro,12GB,256GB,,price_main#近年来热销150款手机#R144,2026-10-03T13:48:22,rules-1.0.0
+S0144,sku,sku|华为mate 80 pro|base|12GB|512GB,V0049,华为Mate 80 Pro 标准版 12GB/512GB,华为mate 80 pro,12GB,512GB,,price_main#近年来热销150款手机#R145,2026-10-03T13:48:22,rules-1.0.0
+S0145,sku,sku|华为mate 80 pro|base|16GB|512GB,V0049,华为Mate 80 Pro 标准版 16GB/512GB,华为mate 80 pro,16GB,512GB,,price_main#近年来热销150款手机#R146,2026-10-03T13:48:22,rules-1.0.0
+S0146,sku,sku|华为mate 80 pro|base|16GB|1TB,V0049,华为Mate 80 Pro 标准版 16GB/1TB,华为mate 80 pro,16GB,1TB,,price_main#近年来热销150款手机#R147,2026-10-03T13:48:22,rules-1.0.0
+S0147,sku,sku|华为mate 80 pro max|base|16GB|512GB,V0050,华为Mate 80 Pro Max 标准版 16GB/512GB,华为mate 80 pro max,16GB,512GB,,price_main#近年来热销150款手机#R148,2026-10-03T13:48:22,rules-1.0.0
+S0148,sku,sku|华为mate 80 pro max|base|16GB|1TB,V0050,华为Mate 80 Pro Max 标准版 16GB/1TB,华为mate 80 pro max,16GB,1TB,,price_main#近年来热销150款手机#R149,2026-10-03T13:48:22,rules-1.0.0
+S0149,sku,sku|华为pura 70|base|12GB|256GB,V0051,华为Pura 70 标准版 12GB/256GB,华为pura 70,12GB,256GB,,price_main#近年来热销150款手机#R150,2026-10-03T13:48:22,rules-1.0.0
+S0150,sku,sku|华为pura 70|base|12GB|512GB,V0051,华为Pura 70 标准版 12GB/512GB,华为pura 70,12GB,512GB,,price_main#近年来热销150款手机#R151,2026-10-03T13:48:22,rules-1.0.0
+S0151,sku,sku|华为pura 70|base|12GB|1TB,V0051,华为Pura 70 标准版 12GB/1TB,华为pura 70,12GB,1TB,,price_main#近年来热销150款手机#R152,2026-10-03T13:48:22,rules-1.0.0
+S0152,sku,sku|华为pura 70 pro|base|12GB|256GB,V0052,华为Pura 70 Pro 标准版 12GB/256GB,华为pura 70 pro,12GB,256GB,,price_main#近年来热销150款手机#R153,2026-10-03T13:48:22,rules-1.0.0
+S0153,sku,sku|华为pura 70 pro|base|12GB|512GB,V0052,华为Pura 70 Pro 标准版 12GB/512GB,华为pura 70 pro,12GB,512GB,,price_main#近年来热销150款手机#R154,2026-10-03T13:48:22,rules-1.0.0
+S0154,sku,sku|华为pura 70 pro|base|12GB|1TB,V0052,华为Pura 70 Pro 标准版 12GB/1TB,华为pura 70 pro,12GB,1TB,,price_main#近年来热销150款手机#R155,2026-10-03T13:48:22,rules-1.0.0
+S0155,sku,sku|华为pura 70 ultra|base|16GB|512GB,V0053,华为Pura 70 Ultra 标准版 16GB/512GB,华为pura 70 ultra,16GB,512GB,,price_main#近年来热销150款手机#R156,2026-10-03T13:48:22,rules-1.0.0
+S0156,sku,sku|华为pura 70 ultra|base|16GB|1TB,V0053,华为Pura 70 Ultra 标准版 16GB/1TB,华为pura 70 ultra,16GB,1TB,,price_main#近年来热销150款手机#R157,2026-10-03T13:48:22,rules-1.0.0
+S0157,sku,sku|华为mate 60|base|12GB|256GB,V0054,华为Mate 60 标准版 12GB/256GB,华为mate 60,12GB,256GB,,price_main#近年来热销150款手机#R158,2026-10-03T13:48:22,rules-1.0.0
+S0158,sku,sku|华为mate 60|base|12GB|512GB,V0054,华为Mate 60 标准版 12GB/512GB,华为mate 60,12GB,512GB,,price_main#近年来热销150款手机#R159,2026-10-03T13:48:22,rules-1.0.0
+S0159,sku,sku|华为mate 60|base|12GB|1TB,V0054,华为Mate 60 标准版 12GB/1TB,华为mate 60,12GB,1TB,,price_main#近年来热销150款手机#R160,2026-10-03T13:48:22,rules-1.0.0
+S0160,sku,sku|华为mate 60 pro+|base|16GB|512GB,V0055,华为Mate 60 Pro+ 标准版 16GB/512GB,华为mate 60 pro+,16GB,512GB,,price_main#近年来热销150款手机#R161,2026-10-03T13:48:22,rules-1.0.0
+S0161,sku,sku|华为mate 60 pro+|base|16GB|1TB,V0055,华为Mate 60 Pro+ 标准版 16GB/1TB,华为mate 60 pro+,16GB,1TB,,price_main#近年来热销150款手机#R162,2026-10-03T13:48:22,rules-1.0.0
+S0162,sku,sku|华为nova 12|base|8GB|256GB,V0056,华为nova 12 标准版 8GB/256GB,华为nova 12,8GB,256GB,,price_main#近年来热销150款手机#R163,2026-10-03T13:48:22,rules-1.0.0
+S0163,sku,sku|华为nova 12|base|8GB|512GB,V0056,华为nova 12 标准版 8GB/512GB,华为nova 12,8GB,512GB,,price_main#近年来热销150款手机#R164,2026-10-03T13:48:22,rules-1.0.0
+S0164,sku,sku|华为nova 12 pro|base|12GB|256GB,V0057,华为nova 12 Pro 标准版 12GB/256GB,华为nova 12 pro,12GB,256GB,,price_main#近年来热销150款手机#R165,2026-10-03T13:48:22,rules-1.0.0
+S0165,sku,sku|华为nova 12 pro|base|12GB|512GB,V0057,华为nova 12 Pro 标准版 12GB/512GB,华为nova 12 pro,12GB,512GB,,price_main#近年来热销150款手机#R166,2026-10-03T13:48:22,rules-1.0.0
+S0166,sku,sku|华为pura x|base|12GB|256GB,V0058,华为Pura X 标准版 12GB/256GB,华为pura x,12GB,256GB,,price_main#近年来热销150款手机#R167,2026-10-03T13:48:22,rules-1.0.0
+S0167,sku,sku|华为pura x|base|12GB|512GB,V0058,华为Pura X 标准版 12GB/512GB,华为pura x,12GB,512GB,,price_main#近年来热销150款手机#R168,2026-10-03T13:48:22,rules-1.0.0
+S0168,sku,sku|华为mate x5|base|12GB|256GB,V0059,华为Mate X5 标准版 12GB/256GB,华为mate x5,12GB,256GB,,price_main#近年来热销150款手机#R169,2026-10-03T13:48:22,rules-1.0.0
+S0169,sku,sku|华为mate x5|base|12GB|512GB,V0059,华为Mate X5 标准版 12GB/512GB,华为mate x5,12GB,512GB,,price_main#近年来热销150款手机#R170,2026-10-03T13:48:22,rules-1.0.0
+S0170,sku,sku|华为mate x5|base|16GB|512GB,V0059,华为Mate X5 标准版 16GB/512GB,华为mate x5,16GB,512GB,,price_main#近年来热销150款手机#R171,2026-10-03T13:48:22,rules-1.0.0
+S0171,sku,sku|华为mate x5 典藏版|base|16GB|512GB,V0060,华为Mate X5 典藏版 标准版 16GB/512GB,华为mate x5 典藏版,16GB,512GB,,price_main#近年来热销150款手机#R172,2026-10-03T13:48:22,rules-1.0.0
+S0172,sku,sku|华为mate x5 典藏版|base|16GB|1TB,V0060,华为Mate X5 典藏版 标准版 16GB/1TB,华为mate x5 典藏版,16GB,1TB,,price_main#近年来热销150款手机#R173,2026-10-03T13:48:22,rules-1.0.0
+S0173,sku,sku|华为pura 70 pro+|base|16GB|512GB,V0061,华为Pura 70 Pro+ 标准版 16GB/512GB,华为pura 70 pro+,16GB,512GB,,price_main#近年来热销150款手机#R174,2026-10-03T13:48:22,rules-1.0.0
+S0174,sku,sku|华为pura 70 pro+|base|16GB|1TB,V0061,华为Pura 70 Pro+ 标准版 16GB/1TB,华为pura 70 pro+,16GB,1TB,,price_main#近年来热销150款手机#R175,2026-10-03T13:48:22,rules-1.0.0
+S0175,sku,sku|华为pura x 典藏版|base|16GB|512GB,V0062,华为Pura X 典藏版 标准版 16GB/512GB,华为pura x 典藏版,16GB,512GB,,price_main#近年来热销150款手机#R176,2026-10-03T13:48:22,rules-1.0.0
+S0176,sku,sku|华为pura x 典藏版|base|16GB|1TB,V0062,华为Pura X 典藏版 标准版 16GB/1TB,华为pura x 典藏版,16GB,1TB,,price_main#近年来热销150款手机#R177,2026-10-03T13:48:22,rules-1.0.0
+S0177,sku,sku|小米13|base|8GB|128GB,V0063,小米13 标准版 8GB/128GB,小米13,8GB,128GB,,price_main#近年来热销150款手机#R178,2026-10-03T13:48:22,rules-1.0.0
+S0178,sku,sku|小米13|base|8GB|256GB,V0063,小米13 标准版 8GB/256GB,小米13,8GB,256GB,,price_main#近年来热销150款手机#R179,2026-10-03T13:48:22,rules-1.0.0
+S0179,sku,sku|小米13|base|12GB|256GB,V0063,小米13 标准版 12GB/256GB,小米13,12GB,256GB,,price_main#近年来热销150款手机#R180,2026-10-03T13:48:22,rules-1.0.0
+S0180,sku,sku|小米13|base|12GB|512GB,V0063,小米13 标准版 12GB/512GB,小米13,12GB,512GB,,price_main#近年来热销150款手机#R181,2026-10-03T13:48:22,rules-1.0.0
+S0181,sku,sku|小米13 pro|base|8GB|128GB,V0064,小米13 Pro 标准版 8GB/128GB,小米13 pro,8GB,128GB,,price_main#近年来热销150款手机#R182,2026-10-03T13:48:22,rules-1.0.0
+S0182,sku,sku|小米13 pro|base|8GB|256GB,V0064,小米13 Pro 标准版 8GB/256GB,小米13 pro,8GB,256GB,,price_main#近年来热销150款手机#R183,2026-10-03T13:48:22,rules-1.0.0
+S0183,sku,sku|小米13 pro|base|12GB|256GB,V0064,小米13 Pro 标准版 12GB/256GB,小米13 pro,12GB,256GB,,price_main#近年来热销150款手机#R184,2026-10-03T13:48:22,rules-1.0.0
+S0184,sku,sku|小米13 pro|base|12GB|512GB,V0064,小米13 Pro 标准版 12GB/512GB,小米13 pro,12GB,512GB,,price_main#近年来热销150款手机#R185,2026-10-03T13:48:22,rules-1.0.0
+S0185,sku,sku|小米13 ultra|base|12GB|256GB,V0065,小米13 Ultra 标准版 12GB/256GB,小米13 ultra,12GB,256GB,,price_main#近年来热销150款手机#R186,2026-10-03T13:48:22,rules-1.0.0
+S0186,sku,sku|小米13 ultra|base|16GB|512GB,V0065,小米13 Ultra 标准版 16GB/512GB,小米13 ultra,16GB,512GB,,price_main#近年来热销150款手机#R187,2026-10-03T13:48:22,rules-1.0.0
+S0187,sku,sku|小米13 ultra|base|16GB|1TB,V0065,小米13 Ultra 标准版 16GB/1TB,小米13 ultra,16GB,1TB,,price_main#近年来热销150款手机#R188,2026-10-03T13:48:22,rules-1.0.0
+S0188,sku,sku|小米14 pro|base|12GB|256GB,V0066,小米14 Pro 标准版 12GB/256GB,小米14 pro,12GB,256GB,,price_main#近年来热销150款手机#R189,2026-10-03T13:48:22,rules-1.0.0
+S0189,sku,sku|小米14 pro|base|16GB|512GB,V0066,小米14 Pro 标准版 16GB/512GB,小米14 pro,16GB,512GB,,price_main#近年来热销150款手机#R190,2026-10-03T13:48:22,rules-1.0.0
+S0190,sku,sku|小米14 pro|base|16GB|1TB,V0066,小米14 Pro 标准版 16GB/1TB,小米14 pro,16GB,1TB,,price_main#近年来热销150款手机#R191,2026-10-03T13:48:22,rules-1.0.0
+S0191,sku,sku|小米14 ultra|base|12GB|256GB,V0067,小米14 Ultra 标准版 12GB/256GB,小米14 ultra,12GB,256GB,,price_main#近年来热销150款手机#R192,2026-10-03T13:48:22,rules-1.0.0
+S0192,sku,sku|小米14 ultra|base|16GB|512GB,V0067,小米14 Ultra 标准版 16GB/512GB,小米14 ultra,16GB,512GB,,price_main#近年来热销150款手机#R193,2026-10-03T13:48:22,rules-1.0.0
+S0193,sku,sku|小米14 ultra|base|16GB|1TB,V0067,小米14 Ultra 标准版 16GB/1TB,小米14 ultra,16GB,1TB,,price_main#近年来热销150款手机#R194,2026-10-03T13:48:22,rules-1.0.0
+S0194,sku,sku|小米15 pro|base|12GB|256GB,V0068,小米15 Pro 标准版 12GB/256GB,小米15 pro,12GB,256GB,,price_main#近年来热销150款手机#R195,2026-10-03T13:48:22,rules-1.0.0
+S0195,sku,sku|小米15 pro|base|16GB|512GB,V0068,小米15 Pro 标准版 16GB/512GB,小米15 pro,16GB,512GB,,price_main#近年来热销150款手机#R196,2026-10-03T13:48:22,rules-1.0.0
+S0196,sku,sku|小米15 pro|base|16GB|1TB,V0068,小米15 Pro 标准版 16GB/1TB,小米15 pro,16GB,1TB,,price_main#近年来热销150款手机#R197,2026-10-03T13:48:22,rules-1.0.0
+S0197,sku,sku|redmi k60|base|8GB|128GB,V0069,Redmi K60 标准版 8GB/128GB,redmi k60,8GB,128GB,,price_main#近年来热销150款手机#R198,2026-10-03T13:48:22,rules-1.0.0
+S0198,sku,sku|redmi k60|base|8GB|256GB,V0069,Redmi K60 标准版 8GB/256GB,redmi k60,8GB,256GB,,price_main#近年来热销150款手机#R199,2026-10-03T13:48:22,rules-1.0.0
+S0199,sku,sku|redmi k60|base|12GB|256GB,V0069,Redmi K60 标准版 12GB/256GB,redmi k60,12GB,256GB,,price_main#近年来热销150款手机#R200,2026-10-03T13:48:22,rules-1.0.0
+S0200,sku,sku|redmi k60|base|12GB|512GB,V0069,Redmi K60 标准版 12GB/512GB,redmi k60,12GB,512GB,,price_main#近年来热销150款手机#R201,2026-10-03T13:48:22,rules-1.0.0
+S0201,sku,sku|redmi k60|base|16GB|512GB,V0069,Redmi K60 标准版 16GB/512GB,redmi k60,16GB,512GB,,price_main#近年来热销150款手机#R202,2026-10-03T13:48:22,rules-1.0.0
+S0202,sku,sku|redmi k60 pro|base|8GB|128GB,V0070,Redmi K60 Pro 标准版 8GB/128GB,redmi k60 pro,8GB,128GB,,price_main#近年来热销150款手机#R203,2026-10-03T13:48:22,rules-1.0.0
+S0203,sku,sku|redmi k60 pro|base|8GB|256GB,V0070,Redmi K60 Pro 标准版 8GB/256GB,redmi k60 pro,8GB,256GB,,price_main#近年来热销150款手机#R204,2026-10-03T13:48:22,rules-1.0.0
+S0204,sku,sku|redmi k60 pro|base|12GB|256GB,V0070,Redmi K60 Pro 标准版 12GB/256GB,redmi k60 pro,12GB,256GB,,price_main#近年来热销150款手机#R205,2026-10-03T13:48:22,rules-1.0.0
+S0205,sku,sku|redmi k60 pro|base|12GB|512GB,V0070,Redmi K60 Pro 标准版 12GB/512GB,redmi k60 pro,12GB,512GB,,price_main#近年来热销150款手机#R206,2026-10-03T13:48:22,rules-1.0.0
+S0206,sku,sku|redmi k60 pro|base|16GB|512GB,V0070,Redmi K60 Pro 标准版 16GB/512GB,redmi k60 pro,16GB,512GB,,price_main#近年来热销150款手机#R207,2026-10-03T13:48:22,rules-1.0.0
+S0207,sku,sku|redmi k70e|base|12GB|256GB,V0071,Redmi K70E 标准版 12GB/256GB,redmi k70e,12GB,256GB,,price_main#近年来热销150款手机#R208,2026-10-03T13:48:22,rules-1.0.0
+S0208,sku,sku|redmi k70e|base|12GB|512GB,V0071,Redmi K70E 标准版 12GB/512GB,redmi k70e,12GB,512GB,,price_main#近年来热销150款手机#R209,2026-10-03T13:48:22,rules-1.0.0
+S0209,sku,sku|redmi k70e|base|16GB|1TB,V0071,Redmi K70E 标准版 16GB/1TB,redmi k70e,16GB,1TB,,price_main#近年来热销150款手机#R210,2026-10-03T13:48:22,rules-1.0.0
+S0210,sku,sku|redmi note 13|base|6GB|128GB,V0072,Redmi Note 13 标准版 6GB/128GB,redmi note 13,6GB,128GB,,price_main#近年来热销150款手机#R211,2026-10-03T13:48:22,rules-1.0.0
+S0211,sku,sku|redmi note 13|base|8GB|128GB,V0072,Redmi Note 13 标准版 8GB/128GB,redmi note 13,8GB,128GB,,price_main#近年来热销150款手机#R212,2026-10-03T13:48:22,rules-1.0.0
+S0212,sku,sku|redmi note 13|base|8GB|256GB,V0072,Redmi Note 13 标准版 8GB/256GB,redmi note 13,8GB,256GB,,price_main#近年来热销150款手机#R213,2026-10-03T13:48:22,rules-1.0.0
+S0213,sku,sku|redmi note 13|base|12GB|256GB,V0072,Redmi Note 13 标准版 12GB/256GB,redmi note 13,12GB,256GB,,price_main#近年来热销150款手机#R214,2026-10-03T13:48:22,rules-1.0.0
+S0214,sku,sku|redmi note 13 pro+|base|12GB|256GB,V0073,Redmi Note 13 Pro+ 标准版 12GB/256GB,redmi note 13 pro+,12GB,256GB,,price_main#近年来热销150款手机#R215,2026-10-03T13:48:22,rules-1.0.0
+S0215,sku,sku|redmi note 13 pro+|base|12GB|512GB,V0073,Redmi Note 13 Pro+ 标准版 12GB/512GB,redmi note 13 pro+,12GB,512GB,,price_main#近年来热销150款手机#R216,2026-10-03T13:48:22,rules-1.0.0
+S0216,sku,sku|redmi note 13 pro+|base|16GB|512GB,V0073,Redmi Note 13 Pro+ 标准版 16GB/512GB,redmi note 13 pro+,16GB,512GB,,price_main#近年来热销150款手机#R217,2026-10-03T13:48:22,rules-1.0.0
+S0217,sku,sku|redmi note 14|base|8GB|128GB,V0074,Redmi Note 14 标准版 8GB/128GB,redmi note 14,8GB,128GB,,price_main#近年来热销150款手机#R218,2026-10-03T13:48:22,rules-1.0.0
+S0218,sku,sku|redmi note 14|base|8GB|256GB,V0074,Redmi Note 14 标准版 8GB/256GB,redmi note 14,8GB,256GB,,price_main#近年来热销150款手机#R219,2026-10-03T13:48:22,rules-1.0.0
+S0219,sku,sku|redmi note 14|base|12GB|256GB,V0074,Redmi Note 14 标准版 12GB/256GB,redmi note 14,12GB,256GB,,price_main#近年来热销150款手机#R220,2026-10-03T13:48:22,rules-1.0.0
+S0220,sku,sku|redmi note 14 pro|base|8GB|256GB,V0075,Redmi Note 14 Pro 标准版 8GB/256GB,redmi note 14 pro,8GB,256GB,,price_main#近年来热销150款手机#R221,2026-10-03T13:48:22,rules-1.0.0
+S0221,sku,sku|redmi note 14 pro|base|12GB|256GB,V0075,Redmi Note 14 Pro 标准版 12GB/256GB,redmi note 14 pro,12GB,256GB,,price_main#近年来热销150款手机#R222,2026-10-03T13:48:22,rules-1.0.0
+S0222,sku,sku|redmi note 14 pro|base|12GB|512GB,V0075,Redmi Note 14 Pro 标准版 12GB/512GB,redmi note 14 pro,12GB,512GB,,price_main#近年来热销150款手机#R223,2026-10-03T13:48:22,rules-1.0.0
+S0223,sku,sku|redmi turbo 3|base|12GB|256GB,V0076,Redmi Turbo 3 标准版 12GB/256GB,redmi turbo 3,12GB,256GB,,price_main#近年来热销150款手机#R224,2026-10-03T13:48:22,rules-1.0.0
+S0224,sku,sku|redmi turbo 3|base|12GB|512GB,V0076,Redmi Turbo 3 标准版 12GB/512GB,redmi turbo 3,12GB,512GB,,price_main#近年来热销150款手机#R225,2026-10-03T13:48:22,rules-1.0.0
+S0225,sku,sku|redmi turbo 3|base|16GB|512GB,V0076,Redmi Turbo 3 标准版 16GB/512GB,redmi turbo 3,16GB,512GB,,price_main#近年来热销150款手机#R226,2026-10-03T13:48:22,rules-1.0.0
+S0226,sku,sku|redmi turbo 3|base|16GB|1TB,V0076,Redmi Turbo 3 标准版 16GB/1TB,redmi turbo 3,16GB,1TB,,price_main#近年来热销150款手机#R227,2026-10-03T13:48:22,rules-1.0.0
+S0227,sku,sku|redmi 12c|base|4GB|64GB,V0077,Redmi 12C 标准版 4GB/64GB,redmi 12c,4GB,64GB,,price_main#近年来热销150款手机#R228,2026-10-03T13:48:22,rules-1.0.0
+S0228,sku,sku|redmi 12c|base|4GB|128GB,V0077,Redmi 12C 标准版 4GB/128GB,redmi 12c,4GB,128GB,,price_main#近年来热销150款手机#R229,2026-10-03T13:48:22,rules-1.0.0
+S0229,sku,sku|redmi 12c|base|6GB|128GB,V0077,Redmi 12C 标准版 6GB/128GB,redmi 12c,6GB,128GB,,price_main#近年来热销150款手机#R230,2026-10-03T13:48:22,rules-1.0.0
+S0230,sku,sku|redmi note 12 turbo|base|8GB|256GB,V0078,Redmi Note 12 Turbo 标准版 8GB/256GB,redmi note 12 turbo,8GB,256GB,,price_main#近年来热销150款手机#R231,2026-10-03T13:48:22,rules-1.0.0
+S0231,sku,sku|redmi note 12 turbo|base|12GB|256GB,V0078,Redmi Note 12 Turbo 标准版 12GB/256GB,redmi note 12 turbo,12GB,256GB,,price_main#近年来热销150款手机#R232,2026-10-03T13:48:22,rules-1.0.0
+S0232,sku,sku|redmi note 12 turbo|base|12GB|512GB,V0078,Redmi Note 12 Turbo 标准版 12GB/512GB,redmi note 12 turbo,12GB,512GB,,price_main#近年来热销150款手机#R233,2026-10-03T13:48:22,rules-1.0.0
+S0233,sku,sku|redmi note 12 turbo|base|16GB|1TB,V0078,Redmi Note 12 Turbo 标准版 16GB/1TB,redmi note 12 turbo,16GB,1TB,,price_main#近年来热销150款手机#R234,2026-10-03T13:48:22,rules-1.0.0
+S0234,sku,sku|小米civi 4 pro|base|12GB|256GB,V0079,小米Civi 4 Pro 标准版 12GB/256GB,小米civi 4 pro,12GB,256GB,,price_main#近年来热销150款手机#R235,2026-10-03T13:48:22,rules-1.0.0
+S0235,sku,sku|小米civi 4 pro|base|12GB|512GB,V0079,小米Civi 4 Pro 标准版 12GB/512GB,小米civi 4 pro,12GB,512GB,,price_main#近年来热销150款手机#R236,2026-10-03T13:48:22,rules-1.0.0
+S0236,sku,sku|小米civi 4 pro|base|16GB|512GB,V0079,小米Civi 4 Pro 标准版 16GB/512GB,小米civi 4 pro,16GB,512GB,,price_main#近年来热销150款手机#R237,2026-10-03T13:48:22,rules-1.0.0
+S0237,sku,sku|redmi k80 pro|base|12GB|256GB,V0080,Redmi K80 Pro 标准版 12GB/256GB,redmi k80 pro,12GB,256GB,,price_main#近年来热销150款手机#R238,2026-10-03T13:48:22,rules-1.0.0
+S0238,sku,sku|redmi k80 pro|base|12GB|512GB,V0080,Redmi K80 Pro 标准版 12GB/512GB,redmi k80 pro,12GB,512GB,,price_main#近年来热销150款手机#R239,2026-10-03T13:48:22,rules-1.0.0
+S0239,sku,sku|redmi k80 pro|base|16GB|512GB,V0080,Redmi K80 Pro 标准版 16GB/512GB,redmi k80 pro,16GB,512GB,,price_main#近年来热销150款手机#R240,2026-10-03T13:48:22,rules-1.0.0
+S0240,sku,sku|redmi k80 pro|base|16GB|1TB,V0080,Redmi K80 Pro 标准版 16GB/1TB,redmi k80 pro,16GB,1TB,,price_main#近年来热销150款手机#R241,2026-10-03T13:48:22,rules-1.0.0
+S0241,sku,sku|redmi note 15 pro|base|8GB|256GB,V0081,Redmi Note 15 Pro 标准版 8GB/256GB,redmi note 15 pro,8GB,256GB,,price_main#近年来热销150款手机#R242,2026-10-03T13:48:22,rules-1.0.0
+S0242,sku,sku|redmi note 15 pro|base|12GB|256GB,V0081,Redmi Note 15 Pro 标准版 12GB/256GB,redmi note 15 pro,12GB,256GB,,price_main#近年来热销150款手机#R243,2026-10-03T13:48:22,rules-1.0.0
+S0243,sku,sku|redmi note 15 pro|base|12GB|512GB,V0081,Redmi Note 15 Pro 标准版 12GB/512GB,redmi note 15 pro,12GB,512GB,,price_main#近年来热销150款手机#R244,2026-10-03T13:48:22,rules-1.0.0
+S0244,sku,sku|redmi 13r|base|4GB|128GB,V0082,Redmi 13R 标准版 4GB/128GB,redmi 13r,4GB,128GB,,price_main#近年来热销150款手机#R245,2026-10-03T13:48:22,rules-1.0.0
+S0245,sku,sku|redmi 13r|base|6GB|128GB,V0082,Redmi 13R 标准版 6GB/128GB,redmi 13r,6GB,128GB,,price_main#近年来热销150款手机#R246,2026-10-03T13:48:22,rules-1.0.0
+S0246,sku,sku|redmi note 15|base|6GB|128GB,V0083,Redmi Note 15 标准版 6GB/128GB,redmi note 15,6GB,128GB,,price_main#近年来热销150款手机#R247,2026-10-03T13:48:22,rules-1.0.0
+S0247,sku,sku|redmi note 15|base|8GB|128GB,V0083,Redmi Note 15 标准版 8GB/128GB,redmi note 15,8GB,128GB,,price_main#近年来热销150款手机#R248,2026-10-03T13:48:22,rules-1.0.0
+S0248,sku,sku|redmi note 15|base|8GB|256GB,V0083,Redmi Note 15 标准版 8GB/256GB,redmi note 15,8GB,256GB,,price_main#近年来热销150款手机#R249,2026-10-03T13:48:22,rules-1.0.0
+S0249,sku,sku|redmi note 15|base|12GB|256GB,V0083,Redmi Note 15 标准版 12GB/256GB,redmi note 15,12GB,256GB,,price_main#近年来热销150款手机#R250,2026-10-03T13:48:22,rules-1.0.0
+S0250,sku,sku|荣耀200|base|8GB|256GB,V0084,荣耀200 标准版 8GB/256GB,荣耀200,8GB,256GB,,price_main#近年来热销150款手机#R251,2026-10-03T13:48:22,rules-1.0.0
+S0251,sku,sku|荣耀200|base|12GB|256GB,V0084,荣耀200 标准版 12GB/256GB,荣耀200,12GB,256GB,,price_main#近年来热销150款手机#R252,2026-10-03T13:48:22,rules-1.0.0
+S0252,sku,sku|荣耀200|base|12GB|512GB,V0084,荣耀200 标准版 12GB/512GB,荣耀200,12GB,512GB,,price_main#近年来热销150款手机#R253,2026-10-03T13:48:22,rules-1.0.0
+S0253,sku,sku|荣耀200|base|16GB|256GB,V0084,荣耀200 标准版 16GB/256GB,荣耀200,16GB,256GB,,price_main#近年来热销150款手机#R254,2026-10-03T13:48:22,rules-1.0.0
+S0254,sku,sku|荣耀200|base|16GB|512GB,V0084,荣耀200 标准版 16GB/512GB,荣耀200,16GB,512GB,,price_main#近年来热销150款手机#R255,2026-10-03T13:48:22,rules-1.0.0
+S0255,sku,sku|荣耀200 pro|base|12GB|256GB,V0085,荣耀200 Pro 标准版 12GB/256GB,荣耀200 pro,12GB,256GB,,price_main#近年来热销150款手机#R256,2026-10-03T13:48:22,rules-1.0.0
+S0256,sku,sku|荣耀200 pro|base|12GB|512GB,V0085,荣耀200 Pro 标准版 12GB/512GB,荣耀200 pro,12GB,512GB,,price_main#近年来热销150款手机#R257,2026-10-03T13:48:22,rules-1.0.0
+S0257,sku,sku|荣耀200 pro|base|16GB|512GB,V0085,荣耀200 Pro 标准版 16GB/512GB,荣耀200 pro,16GB,512GB,,price_main#近年来热销150款手机#R258,2026-10-03T13:48:22,rules-1.0.0
+S0258,sku,sku|荣耀200 pro|base|16GB|1TB,V0085,荣耀200 Pro 标准版 16GB/1TB,荣耀200 pro,16GB,1TB,,price_main#近年来热销150款手机#R259,2026-10-03T13:48:22,rules-1.0.0
+S0259,sku,sku|荣耀magic6|base|12GB|256GB,V0086,荣耀Magic6 标准版 12GB/256GB,荣耀magic6,12GB,256GB,,price_main#近年来热销150款手机#R260,2026-10-03T13:48:22,rules-1.0.0
+S0260,sku,sku|荣耀magic6|base|16GB|256GB,V0086,荣耀Magic6 标准版 16GB/256GB,荣耀magic6,16GB,256GB,,price_main#近年来热销150款手机#R261,2026-10-03T13:48:22,rules-1.0.0
+S0261,sku,sku|荣耀magic6|base|16GB|512GB,V0086,荣耀Magic6 标准版 16GB/512GB,荣耀magic6,16GB,512GB,,price_main#近年来热销150款手机#R262,2026-10-03T13:48:22,rules-1.0.0
+S0262,sku,sku|荣耀magic6 pro|base|12GB|256GB,V0087,荣耀Magic6 Pro 标准版 12GB/256GB,荣耀magic6 pro,12GB,256GB,,price_main#近年来热销150款手机#R263,2026-10-03T13:48:22,rules-1.0.0
+S0263,sku,sku|荣耀magic6 pro|base|16GB|512GB,V0087,荣耀Magic6 Pro 标准版 16GB/512GB,荣耀magic6 pro,16GB,512GB,,price_main#近年来热销150款手机#R264,2026-10-03T13:48:22,rules-1.0.0
+S0264,sku,sku|荣耀magic6 pro|base|16GB|1TB,V0087,荣耀Magic6 Pro 标准版 16GB/1TB,荣耀magic6 pro,16GB,1TB,,price_main#近年来热销150款手机#R265,2026-10-03T13:48:22,rules-1.0.0
+S0265,sku,sku|荣耀x50 pro|base|12GB|256GB,V0088,荣耀X50 Pro 标准版 12GB/256GB,荣耀x50 pro,12GB,256GB,,price_main#近年来热销150款手机#R266,2026-10-03T13:48:22,rules-1.0.0
+S0266,sku,sku|荣耀90|base|12GB|256GB,V0089,荣耀90 标准版 12GB/256GB,荣耀90,12GB,256GB,,price_main#近年来热销150款手机#R267,2026-10-03T13:48:22,rules-1.0.0
+S0267,sku,sku|荣耀90|base|16GB|256GB,V0089,荣耀90 标准版 16GB/256GB,荣耀90,16GB,256GB,,price_main#近年来热销150款手机#R268,2026-10-03T13:48:22,rules-1.0.0
+S0268,sku,sku|荣耀90|base|16GB|512GB,V0089,荣耀90 标准版 16GB/512GB,荣耀90,16GB,512GB,,price_main#近年来热销150款手机#R269,2026-10-03T13:48:22,rules-1.0.0
+S0269,sku,sku|荣耀90 pro|base|12GB|256GB,V0090,荣耀90 Pro 标准版 12GB/256GB,荣耀90 pro,12GB,256GB,,price_main#近年来热销150款手机#R270,2026-10-03T13:48:22,rules-1.0.0
+S0270,sku,sku|荣耀90 pro|base|16GB|256GB,V0090,荣耀90 Pro 标准版 16GB/256GB,荣耀90 pro,16GB,256GB,,price_main#近年来热销150款手机#R271,2026-10-03T13:48:22,rules-1.0.0
+S0271,sku,sku|荣耀90 pro|base|16GB|512GB,V0090,荣耀90 Pro 标准版 16GB/512GB,荣耀90 pro,16GB,512GB,,price_main#近年来热销150款手机#R272,2026-10-03T13:48:22,rules-1.0.0
+S0272,sku,sku|荣耀畅玩60 plus|base|12GB|256GB,V0091,荣耀畅玩60 Plus 标准版 12GB/256GB,荣耀畅玩60 plus,12GB,256GB,,price_main#近年来热销150款手机#R273,2026-10-03T13:48:22,rules-1.0.0
+S0273,sku,sku|荣耀畅玩60 plus|base|12GB|512GB,V0091,荣耀畅玩60 Plus 标准版 12GB/512GB,荣耀畅玩60 plus,12GB,512GB,,price_main#近年来热销150款手机#R274,2026-10-03T13:48:22,rules-1.0.0
+S0274,sku,sku|荣耀play9t|base|8GB|128GB,V0092,荣耀Play9T 标准版 8GB/128GB,荣耀play9t,8GB,128GB,,price_main#近年来热销150款手机#R275,2026-10-03T13:48:22,rules-1.0.0
+S0275,sku,sku|荣耀play9t|base|8GB|256GB,V0092,荣耀Play9T 标准版 8GB/256GB,荣耀play9t,8GB,256GB,,price_main#近年来热销150款手机#R276,2026-10-03T13:48:22,rules-1.0.0
+S0276,sku,sku|荣耀play9t|base|12GB|256GB,V0092,荣耀Play9T 标准版 12GB/256GB,荣耀play9t,12GB,256GB,,price_main#近年来热销150款手机#R277,2026-10-03T13:48:22,rules-1.0.0
+S0277,sku,sku|荣耀x40|base|6GB|128GB,V0093,荣耀X40 标准版 6GB/128GB,荣耀x40,6GB,128GB,,price_main#近年来热销150款手机#R278,2026-10-03T13:48:22,rules-1.0.0
+S0278,sku,sku|荣耀x40|base|8GB|128GB,V0093,荣耀X40 标准版 8GB/128GB,荣耀x40,8GB,128GB,,price_main#近年来热销150款手机#R279,2026-10-03T13:48:22,rules-1.0.0
+S0279,sku,sku|荣耀x40|base|8GB|256GB,V0093,荣耀X40 标准版 8GB/256GB,荣耀x40,8GB,256GB,,price_main#近年来热销150款手机#R280,2026-10-03T13:48:22,rules-1.0.0
+S0280,sku,sku|荣耀x40|base|12GB|256GB,V0093,荣耀X40 标准版 12GB/256GB,荣耀x40,12GB,256GB,,price_main#近年来热销150款手机#R281,2026-10-03T13:48:22,rules-1.0.0
+S0281,sku,sku|荣耀magic7|base|12GB|256GB,V0094,荣耀Magic7 标准版 12GB/256GB,荣耀magic7,12GB,256GB,,price_main#近年来热销150款手机#R282,2026-10-03T13:48:22,rules-1.0.0
+S0282,sku,sku|荣耀magic7|base|12GB|512GB,V0094,荣耀Magic7 标准版 12GB/512GB,荣耀magic7,12GB,512GB,,price_main#近年来热销150款手机#R283,2026-10-03T13:48:22,rules-1.0.0
+S0283,sku,sku|荣耀magic7|base|16GB|512GB,V0094,荣耀Magic7 标准版 16GB/512GB,荣耀magic7,16GB,512GB,,price_main#近年来热销150款手机#R284,2026-10-03T13:48:22,rules-1.0.0
+S0284,sku,sku|荣耀magic7|base|16GB|1TB,V0094,荣耀Magic7 标准版 16GB/1TB,荣耀magic7,16GB,1TB,,price_main#近年来热销150款手机#R285,2026-10-03T13:48:22,rules-1.0.0
+S0285,sku,sku|vivo x200|base|12GB|256GB,V0095,vivo X200 标准版 12GB/256GB,vivo x200,12GB,256GB,,price_main#近年来热销150款手机#R286,2026-10-03T13:48:22,rules-1.0.0
+S0286,sku,sku|vivo x200|base|12GB|512GB,V0095,vivo X200 标准版 12GB/512GB,vivo x200,12GB,512GB,,price_main#近年来热销150款手机#R287,2026-10-03T13:48:22,rules-1.0.0
+S0287,sku,sku|vivo x200|base|16GB|512GB,V0095,vivo X200 标准版 16GB/512GB,vivo x200,16GB,512GB,,price_main#近年来热销150款手机#R288,2026-10-03T13:48:22,rules-1.0.0
+S0288,sku,sku|vivo x200|base|16GB|1TB,V0095,vivo X200 标准版 16GB/1TB,vivo x200,16GB,1TB,,price_main#近年来热销150款手机#R289,2026-10-03T13:48:22,rules-1.0.0
+S0289,sku,sku|vivo x200 pro|base|12GB|256GB,V0096,vivo X200 Pro 标准版 12GB/256GB,vivo x200 pro,12GB,256GB,,price_main#近年来热销150款手机#R290,2026-10-03T13:48:22,rules-1.0.0
+S0290,sku,sku|vivo x200 pro|base|16GB|512GB,V0096,vivo X200 Pro 标准版 16GB/512GB,vivo x200 pro,16GB,512GB,,price_main#近年来热销150款手机#R291,2026-10-03T13:48:22,rules-1.0.0
+S0291,sku,sku|vivo x200 pro|base|16GB|1TB,V0096,vivo X200 Pro 标准版 16GB/1TB,vivo x200 pro,16GB,1TB,,price_main#近年来热销150款手机#R292,2026-10-03T13:48:22,rules-1.0.0
+S0292,sku,sku|vivo x200 pro|satellite|16GB|1TB,V0097,vivo X200 Pro 卫星通信版 16GB/1TB,vivo x200 pro,16GB,1TB,,price_main#近年来热销150款手机#R293,2026-10-03T13:48:22,rules-1.0.0
+S0293,sku,sku|vivo x100 pro|base|12GB|256GB,V0098,vivo X100 Pro 标准版 12GB/256GB,vivo x100 pro,12GB,256GB,,price_main#近年来热销150款手机#R294,2026-10-03T13:48:22,rules-1.0.0
+S0294,sku,sku|vivo x100 pro|base|16GB|256GB,V0098,vivo X100 Pro 标准版 16GB/256GB,vivo x100 pro,16GB,256GB,,price_main#近年来热销150款手机#R295,2026-10-03T13:48:22,rules-1.0.0
+S0295,sku,sku|vivo x100 pro|base|16GB|512GB,V0098,vivo X100 Pro 标准版 16GB/512GB,vivo x100 pro,16GB,512GB,,price_main#近年来热销150款手机#R296,2026-10-03T13:48:22,rules-1.0.0
+S0296,sku,sku|vivo x100 pro|base|16GB|1TB,V0098,vivo X100 Pro 标准版 16GB/1TB,vivo x100 pro,16GB,1TB,,price_main#近年来热销150款手机#R297,2026-10-03T13:48:22,rules-1.0.0
+S0297,sku,sku|vivo s19|base|8GB|256GB,V0099,vivo S19 标准版 8GB/256GB,vivo s19,8GB,256GB,,price_main#近年来热销150款手机#R298,2026-10-03T13:48:22,rules-1.0.0
+S0298,sku,sku|vivo s19|base|12GB|256GB,V0099,vivo S19 标准版 12GB/256GB,vivo s19,12GB,256GB,,price_main#近年来热销150款手机#R299,2026-10-03T13:48:22,rules-1.0.0
+S0299,sku,sku|vivo s19|base|12GB|512GB,V0099,vivo S19 标准版 12GB/512GB,vivo s19,12GB,512GB,,price_main#近年来热销150款手机#R300,2026-10-03T13:48:22,rules-1.0.0
+S0300,sku,sku|vivo s19|base|16GB|512GB,V0099,vivo S19 标准版 16GB/512GB,vivo s19,16GB,512GB,,price_main#近年来热销150款手机#R301,2026-10-03T13:48:22,rules-1.0.0
+S0301,sku,sku|vivo s20|base|8GB|256GB,V0100,vivo S20 标准版 8GB/256GB,vivo s20,8GB,256GB,,price_main#近年来热销150款手机#R302,2026-10-03T13:48:22,rules-1.0.0
+S0302,sku,sku|vivo s20|base|12GB|256GB,V0100,vivo S20 标准版 12GB/256GB,vivo s20,12GB,256GB,,price_main#近年来热销150款手机#R303,2026-10-03T13:48:22,rules-1.0.0
+S0303,sku,sku|vivo s20|base|12GB|512GB,V0100,vivo S20 标准版 12GB/512GB,vivo s20,12GB,512GB,,price_main#近年来热销150款手机#R304,2026-10-03T13:48:22,rules-1.0.0
+S0304,sku,sku|vivo s20|base|16GB|512GB,V0100,vivo S20 标准版 16GB/512GB,vivo s20,16GB,512GB,,price_main#近年来热销150款手机#R305,2026-10-03T13:48:22,rules-1.0.0
+S0305,sku,sku|vivo y200|base|8GB|128GB,V0101,vivo Y200 标准版 8GB/128GB,vivo y200,8GB,128GB,,price_main#近年来热销150款手机#R306,2026-10-03T13:48:22,rules-1.0.0
+S0306,sku,sku|vivo y200|base|8GB|256GB,V0101,vivo Y200 标准版 8GB/256GB,vivo y200,8GB,256GB,,price_main#近年来热销150款手机#R307,2026-10-03T13:48:22,rules-1.0.0
+S0307,sku,sku|vivo y200|base|12GB|256GB,V0101,vivo Y200 标准版 12GB/256GB,vivo y200,12GB,256GB,,price_main#近年来热销150款手机#R308,2026-10-03T13:48:22,rules-1.0.0
+S0308,sku,sku|vivo y200|base|12GB|512GB,V0101,vivo Y200 标准版 12GB/512GB,vivo y200,12GB,512GB,,price_main#近年来热销150款手机#R309,2026-10-03T13:48:22,rules-1.0.0
+S0309,sku,sku|iqoo 12|base|12GB|256GB,V0102,iQOO 12 标准版 12GB/256GB,iqoo 12,12GB,256GB,,price_main#近年来热销150款手机#R310,2026-10-03T13:48:22,rules-1.0.0
+S0310,sku,sku|iqoo 12|base|16GB|512GB,V0102,iQOO 12 标准版 16GB/512GB,iqoo 12,16GB,512GB,,price_main#近年来热销150款手机#R311,2026-10-03T13:48:22,rules-1.0.0
+S0311,sku,sku|iqoo 12|base|16GB|1TB,V0102,iQOO 12 标准版 16GB/1TB,iqoo 12,16GB,1TB,,price_main#近年来热销150款手机#R312,2026-10-03T13:48:22,rules-1.0.0
+S0312,sku,sku|iqoo 13|base|12GB|256GB,V0103,iQOO 13 标准版 12GB/256GB,iqoo 13,12GB,256GB,,price_main#近年来热销150款手机#R313,2026-10-03T13:48:22,rules-1.0.0
+S0313,sku,sku|iqoo 13|base|12GB|512GB,V0103,iQOO 13 标准版 12GB/512GB,iqoo 13,12GB,512GB,,price_main#近年来热销150款手机#R314,2026-10-03T13:48:22,rules-1.0.0
+S0314,sku,sku|iqoo 13|base|16GB|256GB,V0103,iQOO 13 标准版 16GB/256GB,iqoo 13,16GB,256GB,,price_main#近年来热销150款手机#R315,2026-10-03T13:48:22,rules-1.0.0
+S0315,sku,sku|iqoo 13|base|16GB|512GB,V0103,iQOO 13 标准版 16GB/512GB,iqoo 13,16GB,512GB,,price_main#近年来热销150款手机#R316,2026-10-03T13:48:22,rules-1.0.0
+S0316,sku,sku|iqoo 13|base|16GB|1TB,V0103,iQOO 13 标准版 16GB/1TB,iqoo 13,16GB,1TB,,price_main#近年来热销150款手机#R317,2026-10-03T13:48:22,rules-1.0.0
+S0317,sku,sku|iqoo neo9|base|12GB|256GB,V0104,iQOO Neo9 标准版 12GB/256GB,iqoo neo9,12GB,256GB,,price_main#近年来热销150款手机#R318,2026-10-03T13:48:22,rules-1.0.0
+S0318,sku,sku|iqoo neo9|base|16GB|256GB,V0104,iQOO Neo9 标准版 16GB/256GB,iqoo neo9,16GB,256GB,,price_main#近年来热销150款手机#R319,2026-10-03T13:48:22,rules-1.0.0
+S0319,sku,sku|iqoo neo9|base|16GB|512GB,V0104,iQOO Neo9 标准版 16GB/512GB,iqoo neo9,16GB,512GB,,price_main#近年来热销150款手机#R320,2026-10-03T13:48:22,rules-1.0.0
+S0320,sku,sku|iqoo neo9|base|16GB|1TB,V0104,iQOO Neo9 标准版 16GB/1TB,iqoo neo9,16GB,1TB,,price_main#近年来热销150款手机#R321,2026-10-03T13:48:22,rules-1.0.0
+S0321,sku,sku|iqoo neo10 pro|base|12GB|256GB,V0105,iQOO Neo10 Pro 标准版 12GB/256GB,iqoo neo10 pro,12GB,256GB,,price_main#近年来热销150款手机#R322,2026-10-03T13:48:22,rules-1.0.0
+S0322,sku,sku|iqoo neo10 pro|base|12GB|512GB,V0105,iQOO Neo10 Pro 标准版 12GB/512GB,iqoo neo10 pro,12GB,512GB,,price_main#近年来热销150款手机#R323,2026-10-03T13:48:22,rules-1.0.0
+S0323,sku,sku|iqoo neo10 pro|base|16GB|256GB,V0105,iQOO Neo10 Pro 标准版 16GB/256GB,iqoo neo10 pro,16GB,256GB,,price_main#近年来热销150款手机#R324,2026-10-03T13:48:22,rules-1.0.0
+S0324,sku,sku|iqoo neo10 pro|base|16GB|512GB,V0105,iQOO Neo10 Pro 标准版 16GB/512GB,iqoo neo10 pro,16GB,512GB,,price_main#近年来热销150款手机#R325,2026-10-03T13:48:22,rules-1.0.0
+S0325,sku,sku|iqoo neo10 pro|base|16GB|1TB,V0105,iQOO Neo10 Pro 标准版 16GB/1TB,iqoo neo10 pro,16GB,1TB,,price_main#近年来热销150款手机#R326,2026-10-03T13:48:22,rules-1.0.0
+S0326,sku,sku|vivo y100|base|8GB|128GB,V0106,vivo Y100 标准版 8GB/128GB,vivo y100,8GB,128GB,,price_main#近年来热销150款手机#R327,2026-10-03T13:48:22,rules-1.0.0
+S0327,sku,sku|vivo y100|base|8GB|256GB,V0106,vivo Y100 标准版 8GB/256GB,vivo y100,8GB,256GB,,price_main#近年来热销150款手机#R328,2026-10-03T13:48:22,rules-1.0.0
+S0328,sku,sku|vivo y100|base|12GB|256GB,V0106,vivo Y100 标准版 12GB/256GB,vivo y100,12GB,256GB,,price_main#近年来热销150款手机#R329,2026-10-03T13:48:22,rules-1.0.0
+S0329,sku,sku|vivo y100|base|12GB|512GB,V0106,vivo Y100 标准版 12GB/512GB,vivo y100,12GB,512GB,,price_main#近年来热销150款手机#R330,2026-10-03T13:48:22,rules-1.0.0
+S0330,sku,sku|vivo x200 pro mini|base|12GB|256GB,V0107,vivo X200 Pro Mini 标准版 12GB/256GB,vivo x200 pro mini,12GB,256GB,,price_main#近年来热销150款手机#R331,2026-10-03T13:48:22,rules-1.0.0
+S0331,sku,sku|vivo x200 pro mini|base|12GB|512GB,V0107,vivo X200 Pro Mini 标准版 12GB/512GB,vivo x200 pro mini,12GB,512GB,,price_main#近年来热销150款手机#R332,2026-10-03T13:48:22,rules-1.0.0
+S0332,sku,sku|vivo x200 pro mini|base|16GB|512GB,V0107,vivo X200 Pro Mini 标准版 16GB/512GB,vivo x200 pro mini,16GB,512GB,,price_main#近年来热销150款手机#R333,2026-10-03T13:48:22,rules-1.0.0
+S0333,sku,sku|vivo x200 pro mini|base|16GB|1TB,V0107,vivo X200 Pro Mini 标准版 16GB/1TB,vivo x200 pro mini,16GB,1TB,,price_main#近年来热销150款手机#R334,2026-10-03T13:48:22,rules-1.0.0
+S0334,sku,sku|vivo x200 ultra|base|12GB|256GB,V0108,vivo X200 Ultra 标准版 12GB/256GB,vivo x200 ultra,12GB,256GB,,price_main#近年来热销150款手机#R335,2026-10-03T13:48:22,rules-1.0.0
+S0335,sku,sku|vivo x200 ultra|base|16GB|512GB,V0108,vivo X200 Ultra 标准版 16GB/512GB,vivo x200 ultra,16GB,512GB,,price_main#近年来热销150款手机#R336,2026-10-03T13:48:22,rules-1.0.0
+S0336,sku,sku|vivo x200 ultra|satellite|16GB|1TB,V0109,vivo X200 Ultra 卫星通信版 16GB/1TB,vivo x200 ultra,16GB,1TB,,price_main#近年来热销150款手机#R337,2026-10-03T13:48:22,rules-1.0.0
+S0337,sku,sku|oppo find x8|base|12GB|256GB,V0110,OPPO Find X8 标准版 12GB/256GB,oppo find x8,12GB,256GB,,price_main#近年来热销150款手机#R338,2026-10-03T13:48:22,rules-1.0.0
+S0338,sku,sku|oppo find x8|base|16GB|256GB,V0110,OPPO Find X8 标准版 16GB/256GB,oppo find x8,16GB,256GB,,price_main#近年来热销150款手机#R339,2026-10-03T13:48:22,rules-1.0.0
+S0339,sku,sku|oppo find x8|base|12GB|512GB,V0110,OPPO Find X8 标准版 12GB/512GB,oppo find x8,12GB,512GB,,price_main#近年来热销150款手机#R340,2026-10-03T13:48:22,rules-1.0.0
+S0340,sku,sku|oppo find x8|base|16GB|512GB,V0110,OPPO Find X8 标准版 16GB/512GB,oppo find x8,16GB,512GB,,price_main#近年来热销150款手机#R341,2026-10-03T13:48:22,rules-1.0.0
+S0341,sku,sku|oppo find x8|base|16GB|1TB,V0110,OPPO Find X8 标准版 16GB/1TB,oppo find x8,16GB,1TB,,price_main#近年来热销150款手机#R342,2026-10-03T13:48:22,rules-1.0.0
+S0342,sku,sku|oppo find x8 pro|base|12GB|256GB,V0111,OPPO Find X8 Pro 标准版 12GB/256GB,oppo find x8 pro,12GB,256GB,,price_main#近年来热销150款手机#R343,2026-10-03T13:48:22,rules-1.0.0
+S0343,sku,sku|oppo find x8 pro|base|12GB|512GB,V0111,OPPO Find X8 Pro 标准版 12GB/512GB,oppo find x8 pro,12GB,512GB,,price_main#近年来热销150款手机#R344,2026-10-03T13:48:22,rules-1.0.0
+S0344,sku,sku|oppo find x8 pro|base|16GB|512GB,V0111,OPPO Find X8 Pro 标准版 16GB/512GB,oppo find x8 pro,16GB,512GB,,price_main#近年来热销150款手机#R345,2026-10-03T13:48:22,rules-1.0.0
+S0345,sku,sku|oppo find x8 pro|base|16GB|1TB,V0111,OPPO Find X8 Pro 标准版 16GB/1TB,oppo find x8 pro,16GB,1TB,,price_main#近年来热销150款手机#R346,2026-10-03T13:48:22,rules-1.0.0
+S0346,sku,sku|oppo find x8 pro|satellite|16GB|1TB,V0112,OPPO Find X8 Pro 卫星通信版 16GB/1TB,oppo find x8 pro,16GB,1TB,,price_main#近年来热销150款手机#R347,2026-10-03T13:48:22,rules-1.0.0
+S0347,sku,sku|oppo find x7|base|12GB|256GB,V0113,OPPO Find X7 标准版 12GB/256GB,oppo find x7,12GB,256GB,,price_main#近年来热销150款手机#R348,2026-10-03T13:48:22,rules-1.0.0
+S0348,sku,sku|oppo find x7|base|16GB|256GB,V0113,OPPO Find X7 标准版 16GB/256GB,oppo find x7,16GB,256GB,,price_main#近年来热销150款手机#R349,2026-10-03T13:48:22,rules-1.0.0
+S0349,sku,sku|oppo find x7|base|16GB|512GB,V0113,OPPO Find X7 标准版 16GB/512GB,oppo find x7,16GB,512GB,,price_main#近年来热销150款手机#R350,2026-10-03T13:48:22,rules-1.0.0
+S0350,sku,sku|oppo find x7|base|16GB|1TB,V0113,OPPO Find X7 标准版 16GB/1TB,oppo find x7,16GB,1TB,,price_main#近年来热销150款手机#R351,2026-10-03T13:48:22,rules-1.0.0
+S0351,sku,sku|oppo reno 12|base|12GB|256GB,V0114,OPPO Reno 12 标准版 12GB/256GB,oppo reno 12,12GB,256GB,,price_main#近年来热销150款手机#R352,2026-10-03T13:48:22,rules-1.0.0
+S0352,sku,sku|oppo reno 12|base|12GB|512GB,V0114,OPPO Reno 12 标准版 12GB/512GB,oppo reno 12,12GB,512GB,,price_main#近年来热销150款手机#R353,2026-10-03T13:48:22,rules-1.0.0
+S0353,sku,sku|oppo reno 12|base|16GB|256GB,V0114,OPPO Reno 12 标准版 16GB/256GB,oppo reno 12,16GB,256GB,,price_main#近年来热销150款手机#R354,2026-10-03T13:48:22,rules-1.0.0
+S0354,sku,sku|oppo reno 12|base|16GB|512GB,V0114,OPPO Reno 12 标准版 16GB/512GB,oppo reno 12,16GB,512GB,,price_main#近年来热销150款手机#R355,2026-10-03T13:48:22,rules-1.0.0
+S0355,sku,sku|oppo reno 12 pro|base|12GB|256GB,V0115,OPPO Reno 12 Pro 标准版 12GB/256GB,oppo reno 12 pro,12GB,256GB,,price_main#近年来热销150款手机#R356,2026-10-03T13:48:22,rules-1.0.0
+S0356,sku,sku|oppo reno 12 pro|base|16GB|256GB,V0115,OPPO Reno 12 Pro 标准版 16GB/256GB,oppo reno 12 pro,16GB,256GB,,price_main#近年来热销150款手机#R357,2026-10-03T13:48:22,rules-1.0.0
+S0357,sku,sku|oppo reno 12 pro|base|16GB|512GB,V0115,OPPO Reno 12 Pro 标准版 16GB/512GB,oppo reno 12 pro,16GB,512GB,,price_main#近年来热销150款手机#R358,2026-10-03T13:48:22,rules-1.0.0
+S0358,sku,sku|oppo reno 13|base|12GB|256GB,V0116,OPPO Reno 13 标准版 12GB/256GB,oppo reno 13,12GB,256GB,,price_main#近年来热销150款手机#R359,2026-10-03T13:48:22,rules-1.0.0
+S0359,sku,sku|oppo reno 13|base|12GB|512GB,V0116,OPPO Reno 13 标准版 12GB/512GB,oppo reno 13,12GB,512GB,,price_main#近年来热销150款手机#R360,2026-10-03T13:48:22,rules-1.0.0
+S0360,sku,sku|oppo reno 13|base|16GB|256GB,V0116,OPPO Reno 13 标准版 16GB/256GB,oppo reno 13,16GB,256GB,,price_main#近年来热销150款手机#R361,2026-10-03T13:48:22,rules-1.0.0
+S0361,sku,sku|oppo reno 13|base|16GB|512GB,V0116,OPPO Reno 13 标准版 16GB/512GB,oppo reno 13,16GB,512GB,,price_main#近年来热销150款手机#R362,2026-10-03T13:48:22,rules-1.0.0
+S0362,sku,sku|oppo reno 13|base|16GB|1TB,V0116,OPPO Reno 13 标准版 16GB/1TB,oppo reno 13,16GB,1TB,,price_main#近年来热销150款手机#R363,2026-10-03T13:48:22,rules-1.0.0
+S0363,sku,sku|oppo find x7 ultra|base|12GB|256GB,V0117,OPPO Find X7 Ultra 标准版 12GB/256GB,oppo find x7 ultra,12GB,256GB,,price_main#近年来热销150款手机#R364,2026-10-03T13:48:22,rules-1.0.0
+S0364,sku,sku|oppo find x7 ultra|base|16GB|256GB,V0117,OPPO Find X7 Ultra 标准版 16GB/256GB,oppo find x7 ultra,16GB,256GB,,price_main#近年来热销150款手机#R365,2026-10-03T13:48:22,rules-1.0.0
+S0365,sku,sku|oppo find x7 ultra|base|16GB|512GB,V0117,OPPO Find X7 Ultra 标准版 16GB/512GB,oppo find x7 ultra,16GB,512GB,,price_main#近年来热销150款手机#R366,2026-10-03T13:48:22,rules-1.0.0
+S0366,sku,sku|一加12|base|12GB|256GB,V0118,一加12 标准版 12GB/256GB,一加12,12GB,256GB,,price_main#近年来热销150款手机#R367,2026-10-03T13:48:22,rules-1.0.0
+S0367,sku,sku|一加12|base|16GB|512GB,V0118,一加12 标准版 16GB/512GB,一加12,16GB,512GB,,price_main#近年来热销150款手机#R368,2026-10-03T13:48:22,rules-1.0.0
+S0368,sku,sku|一加12|base|16GB|1TB,V0118,一加12 标准版 16GB/1TB,一加12,16GB,1TB,,price_main#近年来热销150款手机#R369,2026-10-03T13:48:22,rules-1.0.0
+S0369,sku,sku|一加12|base|24GB|1TB,V0118,一加12 标准版 24GB/1TB,一加12,24GB,1TB,,price_main#近年来热销150款手机#R370,2026-10-03T13:48:22,rules-1.0.0
+S0370,sku,sku|一加13|base|12GB|256GB,V0119,一加13 标准版 12GB/256GB,一加13,12GB,256GB,,price_main#近年来热销150款手机#R371,2026-10-03T13:48:22,rules-1.0.0
+S0371,sku,sku|一加13|base|12GB|512GB,V0119,一加13 标准版 12GB/512GB,一加13,12GB,512GB,,price_main#近年来热销150款手机#R372,2026-10-03T13:48:22,rules-1.0.0
+S0372,sku,sku|一加13|base|16GB|512GB,V0119,一加13 标准版 16GB/512GB,一加13,16GB,512GB,,price_main#近年来热销150款手机#R373,2026-10-03T13:48:22,rules-1.0.0
+S0373,sku,sku|一加13|base|24GB|1TB,V0119,一加13 标准版 24GB/1TB,一加13,24GB,1TB,,price_main#近年来热销150款手机#R374,2026-10-03T13:48:22,rules-1.0.0
+S0374,sku,sku|一加ace 2|base|12GB|256GB,V0120,一加Ace 2 标准版 12GB/256GB,一加ace 2,12GB,256GB,,price_main#近年来热销150款手机#R375,2026-10-03T13:48:22,rules-1.0.0
+S0375,sku,sku|一加ace 2|base|16GB|256GB,V0120,一加Ace 2 标准版 16GB/256GB,一加ace 2,16GB,256GB,,price_main#近年来热销150款手机#R376,2026-10-03T13:48:22,rules-1.0.0
+S0376,sku,sku|一加ace 2|base|16GB|512GB,V0120,一加Ace 2 标准版 16GB/512GB,一加ace 2,16GB,512GB,,price_main#近年来热销150款手机#R377,2026-10-03T13:48:22,rules-1.0.0
+S0377,sku,sku|一加ace 2 pro|base|12GB|256GB,V0121,一加Ace 2 Pro 标准版 12GB/256GB,一加ace 2 pro,12GB,256GB,,price_main#近年来热销150款手机#R378,2026-10-03T13:48:22,rules-1.0.0
+S0378,sku,sku|一加ace 2 pro|base|16GB|512GB,V0121,一加Ace 2 Pro 标准版 16GB/512GB,一加ace 2 pro,16GB,512GB,,price_main#近年来热销150款手机#R379,2026-10-03T13:48:22,rules-1.0.0
+S0379,sku,sku|一加ace 2 pro|base|24GB|1TB,V0121,一加Ace 2 Pro 标准版 24GB/1TB,一加ace 2 pro,24GB,1TB,,price_main#近年来热销150款手机#R380,2026-10-03T13:48:22,rules-1.0.0
+S0380,sku,sku|一加ace 3 pro|base|12GB|256GB,V0122,一加Ace 3 Pro 标准版 12GB/256GB,一加ace 3 pro,12GB,256GB,,price_main#近年来热销150款手机#R381,2026-10-03T13:48:22,rules-1.0.0
+S0381,sku,sku|一加ace 3 pro|base|16GB|256GB,V0122,一加Ace 3 Pro 标准版 16GB/256GB,一加ace 3 pro,16GB,256GB,,price_main#近年来热销150款手机#R382,2026-10-03T13:48:22,rules-1.0.0
+S0382,sku,sku|一加ace 3 pro|base|16GB|512GB,V0122,一加Ace 3 Pro 标准版 16GB/512GB,一加ace 3 pro,16GB,512GB,,price_main#近年来热销150款手机#R383,2026-10-03T13:48:22,rules-1.0.0
+S0383,sku,sku|一加ace 3 pro|base|24GB|1TB,V0122,一加Ace 3 Pro 标准版 24GB/1TB,一加ace 3 pro,24GB,1TB,,price_main#近年来热销150款手机#R384,2026-10-03T13:48:22,rules-1.0.0
+S0384,sku,sku|realme gt5|base|12GB|256GB,V0123,realme GT5 标准版 12GB/256GB,realme gt5,12GB,256GB,,price_main#近年来热销150款手机#R385,2026-10-03T13:48:22,rules-1.0.0
+S0385,sku,sku|realme gt5|base|16GB|512GB,V0123,realme GT5 标准版 16GB/512GB,realme gt5,16GB,512GB,,price_main#近年来热销150款手机#R386,2026-10-03T13:48:22,rules-1.0.0
+S0386,sku,sku|realme gt5|base|24GB|1TB,V0123,realme GT5 标准版 24GB/1TB,realme gt5,24GB,1TB,,price_main#近年来热销150款手机#R387,2026-10-03T13:48:22,rules-1.0.0
+S0387,sku,sku|realme gt5 pro|base|12GB|256GB,V0124,realme GT5 Pro 标准版 12GB/256GB,realme gt5 pro,12GB,256GB,,price_main#近年来热销150款手机#R388,2026-10-03T13:48:22,rules-1.0.0
+S0388,sku,sku|realme gt5 pro|base|16GB|256GB,V0124,realme GT5 Pro 标准版 16GB/256GB,realme gt5 pro,16GB,256GB,,price_main#近年来热销150款手机#R389,2026-10-03T13:48:22,rules-1.0.0
+S0389,sku,sku|realme gt5 pro|base|16GB|512GB,V0124,realme GT5 Pro 标准版 16GB/512GB,realme gt5 pro,16GB,512GB,,price_main#近年来热销150款手机#R390,2026-10-03T13:48:22,rules-1.0.0
+S0390,sku,sku|realme gt5 pro|base|16GB|1TB,V0124,realme GT5 Pro 标准版 16GB/1TB,realme gt5 pro,16GB,1TB,,price_main#近年来热销150款手机#R391,2026-10-03T13:48:22,rules-1.0.0
+S0391,sku,sku|realme neo7|base|12GB|256GB,V0125,realme Neo7 标准版 12GB/256GB,realme neo7,12GB,256GB,,price_main#近年来热销150款手机#R392,2026-10-03T13:48:22,rules-1.0.0
+S0392,sku,sku|realme neo7|base|16GB|256GB,V0125,realme Neo7 标准版 16GB/256GB,realme neo7,16GB,256GB,,price_main#近年来热销150款手机#R393,2026-10-03T13:48:22,rules-1.0.0
+S0393,sku,sku|realme neo7|base|12GB|512GB,V0125,realme Neo7 标准版 12GB/512GB,realme neo7,12GB,512GB,,price_main#近年来热销150款手机#R394,2026-10-03T13:48:22,rules-1.0.0
+S0394,sku,sku|realme neo7|base|16GB|512GB,V0125,realme Neo7 标准版 16GB/512GB,realme neo7,16GB,512GB,,price_main#近年来热销150款手机#R395,2026-10-03T13:48:22,rules-1.0.0
+S0395,sku,sku|realme neo7|base|16GB|1TB,V0125,realme Neo7 标准版 16GB/1TB,realme neo7,16GB,1TB,,price_main#近年来热销150款手机#R396,2026-10-03T13:48:22,rules-1.0.0
+S0396,sku,sku|一加ace 5|base|12GB|256GB,V0126,一加Ace 5 标准版 12GB/256GB,一加ace 5,12GB,256GB,,price_main#近年来热销150款手机#R397,2026-10-03T13:48:22,rules-1.0.0
+S0397,sku,sku|一加ace 5|base|16GB|256GB,V0126,一加Ace 5 标准版 16GB/256GB,一加ace 5,16GB,256GB,,price_main#近年来热销150款手机#R398,2026-10-03T13:48:22,rules-1.0.0
+S0398,sku,sku|一加ace 5|base|12GB|512GB,V0126,一加Ace 5 标准版 12GB/512GB,一加ace 5,12GB,512GB,,price_main#近年来热销150款手机#R399,2026-10-03T13:48:22,rules-1.0.0
+S0399,sku,sku|一加ace 5|base|16GB|512GB,V0126,一加Ace 5 标准版 16GB/512GB,一加ace 5,16GB,512GB,,price_main#近年来热销150款手机#R400,2026-10-03T13:48:22,rules-1.0.0
+S0400,sku,sku|一加ace 5|base|16GB|1TB,V0126,一加Ace 5 标准版 16GB/1TB,一加ace 5,16GB,1TB,,price_main#近年来热销150款手机#R401,2026-10-03T13:48:22,rules-1.0.0
+S0401,sku,sku|realme gt neo6|base|12GB|256GB,V0127,realme GT Neo6 标准版 12GB/256GB,realme gt neo6,12GB,256GB,,price_main#近年来热销150款手机#R402,2026-10-03T13:48:22,rules-1.0.0
+S0402,sku,sku|realme gt neo6|base|16GB|256GB,V0127,realme GT Neo6 标准版 16GB/256GB,realme gt neo6,16GB,256GB,,price_main#近年来热销150款手机#R403,2026-10-03T13:48:22,rules-1.0.0
+S0403,sku,sku|realme gt neo6|base|16GB|512GB,V0127,realme GT Neo6 标准版 16GB/512GB,realme gt neo6,16GB,512GB,,price_main#近年来热销150款手机#R404,2026-10-03T13:48:22,rules-1.0.0
+S0404,sku,sku|realme gt neo6|base|16GB|1TB,V0127,realme GT Neo6 标准版 16GB/1TB,realme gt neo6,16GB,1TB,,price_main#近年来热销150款手机#R405,2026-10-03T13:48:22,rules-1.0.0
+S0405,sku,sku|vivo y300i|base|8GB|128GB,V0128,vivo Y300i 标准版 8GB/128GB,vivo y300i,8GB,128GB,,price_main#近年来热销150款手机#R406,2026-10-03T13:48:22,rules-1.0.0
+S0406,sku,sku|vivo y300i|base|8GB|256GB,V0128,vivo Y300i 标准版 8GB/256GB,vivo y300i,8GB,256GB,,price_main#近年来热销150款手机#R407,2026-10-03T13:48:22,rules-1.0.0
+S0407,sku,sku|vivo y300i|base|12GB|256GB,V0128,vivo Y300i 标准版 12GB/256GB,vivo y300i,12GB,256GB,,price_main#近年来热销150款手机#R408,2026-10-03T13:48:22,rules-1.0.0
+S0408,sku,sku|vivo y300i|base|12GB|512GB,V0128,vivo Y300i 标准版 12GB/512GB,vivo y300i,12GB,512GB,,price_main#近年来热销150款手机#R409,2026-10-03T13:48:22,rules-1.0.0
+S0409,sku,sku|vivo y37|base|4GB|128GB,V0129,vivo Y37 标准版 4GB/128GB,vivo y37,4GB,128GB,,price_main#近年来热销150款手机#R410,2026-10-03T13:48:22,rules-1.0.0
+S0410,sku,sku|vivo y37|base|6GB|128GB,V0129,vivo Y37 标准版 6GB/128GB,vivo y37,6GB,128GB,,price_main#近年来热销150款手机#R411,2026-10-03T13:48:22,rules-1.0.0
+S0411,sku,sku|vivo y37|base|8GB|128GB,V0129,vivo Y37 标准版 8GB/128GB,vivo y37,8GB,128GB,,price_main#近年来热销150款手机#R412,2026-10-03T13:48:22,rules-1.0.0
+S0412,sku,sku|vivo y37|base|8GB|256GB,V0129,vivo Y37 标准版 8GB/256GB,vivo y37,8GB,256GB,,price_main#近年来热销150款手机#R413,2026-10-03T13:48:22,rules-1.0.0
+S0413,sku,sku|vivo y37|base|12GB|256GB,V0129,vivo Y37 标准版 12GB/256GB,vivo y37,12GB,256GB,,price_main#近年来热销150款手机#R414,2026-10-03T13:48:22,rules-1.0.0
+S0414,sku,sku|redmi 14r|base|4GB|128GB,V0130,Redmi 14R 标准版 4GB/128GB,redmi 14r,4GB,128GB,,price_main#近年来热销150款手机#R415,2026-10-03T13:48:22,rules-1.0.0
+S0415,sku,sku|redmi 14r|base|6GB|128GB,V0130,Redmi 14R 标准版 6GB/128GB,redmi 14r,6GB,128GB,,price_main#近年来热销150款手机#R416,2026-10-03T13:48:22,rules-1.0.0
+S0416,sku,sku|redmi 14r|base|8GB|128GB,V0130,Redmi 14R 标准版 8GB/128GB,redmi 14r,8GB,128GB,,price_main#近年来热销150款手机#R417,2026-10-03T13:48:22,rules-1.0.0
+S0417,sku,sku|redmi 14r|base|8GB|256GB,V0130,Redmi 14R 标准版 8GB/256GB,redmi 14r,8GB,256GB,,price_main#近年来热销150款手机#R418,2026-10-03T13:48:22,rules-1.0.0
+S0418,sku,sku|vivo y36|base|6GB|128GB,V0131,vivo Y36 标准版 6GB/128GB,vivo y36,6GB,128GB,,price_main#近年来热销150款手机#R419,2026-10-03T13:48:22,rules-1.0.0
+S0419,sku,sku|vivo y36|base|8GB|128GB,V0131,vivo Y36 标准版 8GB/128GB,vivo y36,8GB,128GB,,price_main#近年来热销150款手机#R420,2026-10-03T13:48:22,rules-1.0.0
+S0420,sku,sku|vivo y36|base|8GB|256GB,V0131,vivo Y36 标准版 8GB/256GB,vivo y36,8GB,256GB,,price_main#近年来热销150款手机#R421,2026-10-03T13:48:22,rules-1.0.0
+S0421,sku,sku|vivo y36|base|12GB|256GB,V0131,vivo Y36 标准版 12GB/256GB,vivo y36,12GB,256GB,,price_main#近年来热销150款手机#R422,2026-10-03T13:48:22,rules-1.0.0
+S0422,sku,sku|vivo y36|base|12GB|512GB,V0131,vivo Y36 标准版 12GB/512GB,vivo y36,12GB,512GB,,price_main#近年来热销150款手机#R423,2026-10-03T13:48:22,rules-1.0.0
+S0423,sku,sku|vivo y35+|base|8GB|256GB,V0132,vivo Y35+ 标准版 8GB/256GB,vivo y35+,8GB,256GB,,price_main#近年来热销150款手机#R424,2026-10-03T13:48:22,rules-1.0.0
+S0424,sku,sku|vivo y200i|base|8GB|256GB,V0133,vivo Y200i 标准版 8GB/256GB,vivo y200i,8GB,256GB,,price_main#近年来热销150款手机#R425,2026-10-03T13:48:22,rules-1.0.0
+S0425,sku,sku|vivo y200i|base|12GB|256GB,V0133,vivo Y200i 标准版 12GB/256GB,vivo y200i,12GB,256GB,,price_main#近年来热销150款手机#R426,2026-10-03T13:48:22,rules-1.0.0
+S0426,sku,sku|vivo y200i|base|12GB|512GB,V0133,vivo Y200i 标准版 12GB/512GB,vivo y200i,12GB,512GB,,price_main#近年来热销150款手机#R427,2026-10-03T13:48:22,rules-1.0.0
+S0427,sku,sku|oppo a2|base|12GB|256GB,V0134,OPPO A2 标准版 12GB/256GB,oppo a2,12GB,256GB,,price_main#近年来热销150款手机#R428,2026-10-03T13:48:22,rules-1.0.0
+S0428,sku,sku|oppo a2|base|12GB|512GB,V0134,OPPO A2 标准版 12GB/512GB,oppo a2,12GB,512GB,,price_main#近年来热销150款手机#R429,2026-10-03T13:48:22,rules-1.0.0
+S0429,sku,sku|oppo a3x|base|4GB|128GB,V0135,OPPO A3x 标准版 4GB/128GB,oppo a3x,4GB,128GB,,price_main#近年来热销150款手机#R430,2026-10-03T13:48:22,rules-1.0.0
+S0430,sku,sku|oppo a3x|base|6GB|128GB,V0135,OPPO A3x 标准版 6GB/128GB,oppo a3x,6GB,128GB,,price_main#近年来热销150款手机#R431,2026-10-03T13:48:22,rules-1.0.0
+S0431,sku,sku|oppo a3x|base|8GB|256GB,V0135,OPPO A3x 标准版 8GB/256GB,oppo a3x,8GB,256GB,,price_main#近年来热销150款手机#R432,2026-10-03T13:48:22,rules-1.0.0
+S0432,sku,sku|oppo a3x|base|8GB|512GB,V0135,OPPO A3x 标准版 8GB/512GB,oppo a3x,8GB,512GB,,price_main#近年来热销150款手机#R433,2026-10-03T13:48:22,rules-1.0.0
+S0433,sku,sku|华为nova 13|base|12GB|256GB,V0136,华为nova 13 标准版 12GB/256GB,华为nova 13,12GB,256GB,,price_main#近年来热销150款手机#R434,2026-10-03T13:48:22,rules-1.0.0
+S0434,sku,sku|华为nova 13|base|12GB|512GB,V0136,华为nova 13 标准版 12GB/512GB,华为nova 13,12GB,512GB,,price_main#近年来热销150款手机#R435,2026-10-03T13:48:22,rules-1.0.0
+S0435,sku,sku|华为nova 13|base|12GB|1TB,V0136,华为nova 13 标准版 12GB/1TB,华为nova 13,12GB,1TB,,price_main#近年来热销150款手机#R436,2026-10-03T13:48:22,rules-1.0.0
+S0436,sku,sku|redmi k70|base|12GB|256GB,V0137,Redmi K70 标准版 12GB/256GB,redmi k70,12GB,256GB,,price_main#近年来热销150款手机#R437,2026-10-03T13:48:22,rules-1.0.0
+S0437,sku,sku|redmi k70|base|16GB|256GB,V0137,Redmi K70 标准版 16GB/256GB,redmi k70,16GB,256GB,,price_main#近年来热销150款手机#R438,2026-10-03T13:48:22,rules-1.0.0
+S0438,sku,sku|redmi k70|base|16GB|512GB,V0137,Redmi K70 标准版 16GB/512GB,redmi k70,16GB,512GB,,price_main#近年来热销150款手机#R439,2026-10-03T13:48:22,rules-1.0.0
+S0439,sku,sku|redmi k70|base|16GB|1TB,V0137,Redmi K70 标准版 16GB/1TB,redmi k70,16GB,1TB,,price_main#近年来热销150款手机#R440,2026-10-03T13:48:22,rules-1.0.0
+S0440,sku,sku|redmi k70 至尊版|base|12GB|256GB,V0138,Redmi K70 至尊版 标准版 12GB/256GB,redmi k70 至尊版,12GB,256GB,,price_main#近年来热销150款手机#R441,2026-10-03T13:48:22,rules-1.0.0
+S0441,sku,sku|redmi k70 至尊版|base|12GB|512GB,V0138,Redmi K70 至尊版 标准版 12GB/512GB,redmi k70 至尊版,12GB,512GB,,price_main#近年来热销150款手机#R442,2026-10-03T13:48:22,rules-1.0.0
+S0442,sku,sku|redmi k70 至尊版|base|16GB|512GB,V0138,Redmi K70 至尊版 标准版 16GB/512GB,redmi k70 至尊版,16GB,512GB,,price_main#近年来热销150款手机#R443,2026-10-03T13:48:22,rules-1.0.0
+S0443,sku,sku|redmi k70 至尊版|base|16GB|1TB,V0138,Redmi K70 至尊版 标准版 16GB/1TB,redmi k70 至尊版,16GB,1TB,,price_main#近年来热销150款手机#R444,2026-10-03T13:48:22,rules-1.0.0
+S0444,sku,sku|redmi k70 至尊版|base|24GB|1TB,V0138,Redmi K70 至尊版 标准版 24GB/1TB,redmi k70 至尊版,24GB,1TB,,price_main#近年来热销150款手机#R445,2026-10-03T13:48:22,rules-1.0.0
+S0445,sku,sku|华为nova 12 活力版|base|8GB|256GB,V0139,华为nova 12 活力版 标准版 8GB/256GB,华为nova 12 活力版,8GB,256GB,,price_main#近年来热销150款手机#R446,2026-10-03T13:48:22,rules-1.0.0
+S0446,sku,sku|华为nova 12 活力版|base|8GB|512GB,V0139,华为nova 12 活力版 标准版 8GB/512GB,华为nova 12 活力版,8GB,512GB,,price_main#近年来热销150款手机#R447,2026-10-03T13:48:22,rules-1.0.0
+S0447,sku,sku|redmi note 13 pro|base|8GB|128GB,V0140,Redmi Note 13 Pro 标准版 8GB/128GB,redmi note 13 pro,8GB,128GB,,price_main#近年来热销150款手机#R448,2026-10-03T13:48:22,rules-1.0.0
+S0448,sku,sku|redmi note 13 pro|base|8GB|256GB,V0140,Redmi Note 13 Pro 标准版 8GB/256GB,redmi note 13 pro,8GB,256GB,,price_main#近年来热销150款手机#R449,2026-10-03T13:48:22,rules-1.0.0
+S0449,sku,sku|redmi note 13 pro|base|12GB|256GB,V0140,Redmi Note 13 Pro 标准版 12GB/256GB,redmi note 13 pro,12GB,256GB,,price_main#近年来热销150款手机#R450,2026-10-03T13:48:22,rules-1.0.0
+S0450,sku,sku|redmi note 13 pro|base|12GB|512GB,V0140,Redmi Note 13 Pro 标准版 12GB/512GB,redmi note 13 pro,12GB,512GB,,price_main#近年来热销150款手机#R451,2026-10-03T13:48:22,rules-1.0.0
+S0451,sku,sku|redmi note 13 pro|base|16GB|512GB,V0140,Redmi Note 13 Pro 标准版 16GB/512GB,redmi note 13 pro,16GB,512GB,,price_main#近年来热销150款手机#R452,2026-10-03T13:48:22,rules-1.0.0
+S0452,sku,sku|荣耀畅玩50|base|6GB|128GB,V0141,荣耀畅玩50 标准版 6GB/128GB,荣耀畅玩50,6GB,128GB,,price_main#近年来热销150款手机#R453,2026-10-03T13:48:22,rules-1.0.0
+S0453,sku,sku|荣耀畅玩50|base|8GB|256GB,V0141,荣耀畅玩50 标准版 8GB/256GB,荣耀畅玩50,8GB,256GB,,price_main#近年来热销150款手机#R454,2026-10-03T13:48:22,rules-1.0.0
+S0454,sku,sku|荣耀x60|base|8GB|128GB,V0142,荣耀X60 标准版 8GB/128GB,荣耀x60,8GB,128GB,,price_main#近年来热销150款手机#R455,2026-10-03T13:48:22,rules-1.0.0
+S0455,sku,sku|荣耀x60|base|8GB|256GB,V0142,荣耀X60 标准版 8GB/256GB,荣耀x60,8GB,256GB,,price_main#近年来热销150款手机#R456,2026-10-03T13:48:22,rules-1.0.0
+S0456,sku,sku|荣耀x60|base|12GB|256GB,V0142,荣耀X60 标准版 12GB/256GB,荣耀x60,12GB,256GB,,price_main#近年来热销150款手机#R457,2026-10-03T13:48:22,rules-1.0.0
+S0457,sku,sku|荣耀x60|base|12GB|512GB,V0142,荣耀X60 标准版 12GB/512GB,荣耀x60,12GB,512GB,,price_main#近年来热销150款手机#R458,2026-10-03T13:48:22,rules-1.0.0
+S0458,sku,sku|redmi turbo 4 pro|base|12GB|256GB,V0143,Redmi Turbo 4 Pro 标准版 12GB/256GB,redmi turbo 4 pro,12GB,256GB,,price_main#近年来热销150款手机#R459,2026-10-03T13:48:22,rules-1.0.0
+S0459,sku,sku|redmi turbo 4 pro|base|16GB|256GB,V0143,Redmi Turbo 4 Pro 标准版 16GB/256GB,redmi turbo 4 pro,16GB,256GB,,price_main#近年来热销150款手机#R460,2026-10-03T13:48:22,rules-1.0.0
+S0460,sku,sku|redmi turbo 4 pro|base|12GB|512GB,V0143,Redmi Turbo 4 Pro 标准版 12GB/512GB,redmi turbo 4 pro,12GB,512GB,,price_main#近年来热销150款手机#R461,2026-10-03T13:48:22,rules-1.0.0
+S0461,sku,sku|redmi turbo 4 pro|base|16GB|512GB,V0143,Redmi Turbo 4 Pro 标准版 16GB/512GB,redmi turbo 4 pro,16GB,512GB,,price_main#近年来热销150款手机#R462,2026-10-03T13:48:22,rules-1.0.0
+S0462,sku,sku|redmi turbo 4 pro|base|16GB|1TB,V0143,Redmi Turbo 4 Pro 标准版 16GB/1TB,redmi turbo 4 pro,16GB,1TB,,price_main#近年来热销150款手机#R463,2026-10-03T13:48:22,rules-1.0.0
+S0463,sku,sku|荣耀400|base|12GB|256GB,V0144,荣耀400 标准版 12GB/256GB,荣耀400,12GB,256GB,,price_main#近年来热销150款手机#R464,2026-10-03T13:48:22,rules-1.0.0
+S0464,sku,sku|荣耀400|base|12GB|512GB,V0144,荣耀400 标准版 12GB/512GB,荣耀400,12GB,512GB,,price_main#近年来热销150款手机#R465,2026-10-03T13:48:22,rules-1.0.0
+S0465,sku,sku|荣耀400|base|16GB|512GB,V0144,荣耀400 标准版 16GB/512GB,荣耀400,16GB,512GB,,price_main#近年来热销150款手机#R466,2026-10-03T13:48:22,rules-1.0.0
+S0466,sku,sku|oppo a2m|base|6GB|128GB,V0145,OPPO A2m 标准版 6GB/128GB,oppo a2m,6GB,128GB,,price_main#近年来热销150款手机#R467,2026-10-03T13:48:22,rules-1.0.0
+S0467,sku,sku|oppo a2m|base|8GB|256GB,V0145,OPPO A2m 标准版 8GB/256GB,oppo a2m,8GB,256GB,,price_main#近年来热销150款手机#R468,2026-10-03T13:48:22,rules-1.0.0
+S0468,sku,sku|oppo a2m|base|12GB|256GB,V0145,OPPO A2m 标准版 12GB/256GB,oppo a2m,12GB,256GB,,price_main#近年来热销150款手机#R469,2026-10-03T13:48:22,rules-1.0.0
+S0469,sku,sku|一加ace 3|base|12GB|256GB,V0146,一加Ace 3 标准版 12GB/256GB,一加ace 3,12GB,256GB,,price_main#近年来热销150款手机#R470,2026-10-03T13:48:22,rules-1.0.0
+S0470,sku,sku|一加ace 3|base|16GB|512GB,V0146,一加Ace 3 标准版 16GB/512GB,一加ace 3,16GB,512GB,,price_main#近年来热销150款手机#R471,2026-10-03T13:48:22,rules-1.0.0
+S0471,sku,sku|一加ace 3|base|16GB|1TB,V0146,一加Ace 3 标准版 16GB/1TB,一加ace 3,16GB,1TB,,price_main#近年来热销150款手机#R472,2026-10-03T13:48:22,rules-1.0.0
+S0472,sku,sku|荣耀100|base|12GB|256GB,V0147,荣耀100 标准版 12GB/256GB,荣耀100,12GB,256GB,,price_main#近年来热销150款手机#R473,2026-10-03T13:48:22,rules-1.0.0
+S0473,sku,sku|荣耀100|base|16GB|256GB,V0147,荣耀100 标准版 16GB/256GB,荣耀100,16GB,256GB,,price_main#近年来热销150款手机#R474,2026-10-03T13:48:22,rules-1.0.0
+S0474,sku,sku|荣耀100|base|16GB|512GB,V0147,荣耀100 标准版 16GB/512GB,荣耀100,16GB,512GB,,price_main#近年来热销150款手机#R475,2026-10-03T13:48:22,rules-1.0.0
+S0475,sku,sku|vivo x100|base|12GB|256GB,V0148,vivo X100 标准版 12GB/256GB,vivo x100,12GB,256GB,,price_main#近年来热销150款手机#R476,2026-10-03T13:48:22,rules-1.0.0
+S0476,sku,sku|vivo x100|base|16GB|256GB,V0148,vivo X100 标准版 16GB/256GB,vivo x100,16GB,256GB,,price_main#近年来热销150款手机#R477,2026-10-03T13:48:22,rules-1.0.0
+S0477,sku,sku|vivo x100|base|16GB|512GB,V0148,vivo X100 标准版 16GB/512GB,vivo x100,16GB,512GB,,price_main#近年来热销150款手机#R478,2026-10-03T13:48:22,rules-1.0.0
+S0478,sku,sku|vivo x100|base|16GB|1TB,V0148,vivo X100 标准版 16GB/1TB,vivo x100,16GB,1TB,,price_main#近年来热销150款手机#R479,2026-10-03T13:48:22,rules-1.0.0
+S0479,sku,sku|vivo x100|base|16GB|1TB (LPDDR5T),V0148,vivo X100 标准版 16GB/1TB (LPDDR5T),vivo x100,16GB,1TB (LPDDR5T),,price_main#近年来热销150款手机#R480,2026-10-03T13:48:22,rules-1.0.0
+S0480,sku,sku|redmi 14c 4g|base|4GB|64GB,V0149,Redmi 14C 4G 标准版 4GB/64GB,redmi 14c 4g,4GB,64GB,,price_main#近年来热销150款手机#R481,2026-10-03T13:48:22,rules-1.0.0
+S0481,sku,sku|redmi 14c 4g|base|6GB|128GB,V0149,Redmi 14C 4G 标准版 6GB/128GB,redmi 14c 4g,6GB,128GB,,price_main#近年来热销150款手机#R482,2026-10-03T13:48:22,rules-1.0.0
+S0482,sku,sku|redmi 14c 4g|base|8GB|256GB,V0149,Redmi 14C 4G 标准版 8GB/256GB,redmi 14c 4g,8GB,256GB,,price_main#近年来热销150款手机#R483,2026-10-03T13:48:22,rules-1.0.0
+S0483,sku,sku|redmi 13c 5g|base|4GB|128GB,V0150,Redmi 13C 5G 标准版 4GB/128GB,redmi 13c 5g,4GB,128GB,,price_main#近年来热销150款手机#R484,2026-10-03T13:48:22,rules-1.0.0
+S0484,sku,sku|redmi 13c 5g|base|6GB|128GB,V0150,Redmi 13C 5G 标准版 6GB/128GB,redmi 13c 5g,6GB,128GB,,price_main#近年来热销150款手机#R485,2026-10-03T13:48:22,rules-1.0.0

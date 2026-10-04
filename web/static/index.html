@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>知选 · 手机推荐</title>
+<!-- 内联图标，避免浏览器再去请求 favicon.ico（那个请求必然 404）。 -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23394c46'/%3E%3Crect x='10' y='6' width='12' height='20' rx='3' fill='none' stroke='%23bcd4c8' stroke-width='2'/%3E%3Ccircle cx='16' cy='22' r='1.4' fill='%23bcd4c8'/%3E%3C/svg%3E">
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 24px; background: light-dark(#e9eae5, #10141a); }
+  #zx-premium { max-width: 1200px; margin: 0 auto; }
+  .cursor-interaction { cursor: pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #718b7d; outline-offset: 3px; }
+  @media (max-width: 600px) { body { padding: 0; } }
+</style>
+<!-- 图标加载失败时，分类文字与全部主要功能仍可使用。 -->
+<script defer src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js" onload="lucide.createIcons({attrs:{width:14,height:14}})"></script>
+</head>
+<body>
+<div id="zx-premium">
+<style>
+#zx-premium{--p-bg:light-dark(#f4f3ef,#171b22);--p-panel:light-dark(#fffefa,#222731);--p-ink:light-dark(#222c3b,#f1f0eb);--p-muted:light-dark(#69717b,#b0b8c5);--p-line:light-dark(#dedfd9,#39404c);--p-accent:light-dark(#394c46,#bcd4c8);--p-soft:light-dark(#e9eeea,#2d3d37);--p-hero:light-dark(#e4e9e5,#29352f);--p-gold:light-dark(#82704e,#d3bf94);--p-button:light-dark(#25382f,#c6d9ce);--p-buttonink:light-dark(#fffefa,#172c21);--p-warn:light-dark(#8a5a2b,#e0b083);font:14px/1.55 "Microsoft YaHei",system-ui,sans-serif;background:var(--p-bg);color:var(--p-ink);border-radius:16px;overflow:hidden}
+#zx-premium *{box-sizing:border-box}#zx-premium button,#zx-premium input,#zx-premium select{font:inherit}#zx-premium button{color:var(--p-ink);background:var(--p-panel);border:1px solid var(--p-line);border-radius:7px;padding:9px 13px;min-height:38px}#zx-premium button:hover{background:var(--p-soft)}#zx-premium button:disabled{opacity:.55;cursor:not-allowed}#zx-premium .p-primary{background:var(--p-button);color:var(--p-buttonink);border-color:var(--p-button)}#zx-premium button[aria-pressed="true"],#zx-premium button[aria-selected="true"]{color:var(--p-accent);background:var(--p-soft);border-color:var(--p-accent)}
+/* `!important` 是必须的：`.p-hero{display:grid}`、`.p-bottom{display:flex}` 与
+   `[hidden]` 特异性相同（都是 1 个 id + 1 个类/属性），后面的规则会盖掉
+   `display:none`，导致 hidden 属性对它们完全失效。 */
+#zx-premium [hidden]{display:none !important}
+#zx-premium .p-header{padding:20px 105px 20px 30px;display:flex;gap:28px;align-items:center;flex-wrap:wrap;background:var(--p-panel);border-bottom:1px solid var(--p-line)}#zx-premium .p-brand{font-size:21px;font-weight:500;letter-spacing:3px;white-space:nowrap}#zx-premium .p-brand small{font-size:11px;letter-spacing:2px;color:var(--p-muted);margin-left:9px}#zx-premium .p-nav{display:flex;gap:6px;flex-wrap:wrap}#zx-premium .p-nav button{background:transparent;border:0;padding:6px 10px;font-size:13px}#zx-premium .p-nav button[aria-selected="true"]{color:var(--p-accent);background:var(--p-soft)}
+#zx-premium .p-main{padding:28px 30px}#zx-premium .p-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(220px,.8fr);gap:20px;align-items:center;margin-bottom:25px}#zx-premium .p-eyebrow{color:var(--p-gold);font-size:11px;letter-spacing:2px;margin-bottom:14px}#zx-premium h2{font-size:38px;line-height:1.25;font-weight:500;letter-spacing:-1px;margin:0 0 16px}#zx-premium .p-lead{color:var(--p-muted);margin:0 0 20px;font-size:14px}#zx-premium .p-prompt{background:var(--p-panel);border:1px solid var(--p-line);border-radius:12px;padding:14px}#zx-premium .p-prompt label{color:var(--p-muted);font-size:12px;display:block;margin-bottom:7px}#zx-premium .p-prompt input{font-size:16px;background:transparent;color:var(--p-ink);border:0;width:100%;padding:7px 0;min-width:0}#zx-premium .p-prompt-bottom{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap}#zx-premium .p-small{font-size:12px;color:var(--p-muted)}
+#zx-premium .p-showcase{min-height:284px;border-radius:15px;background:radial-gradient(ellipse at 50% 65%,light-dark(#b9c8bd,#4d6556) 0%,var(--p-hero) 68%);display:flex;align-items:center;justify-content:center;position:relative;isolation:isolate}#zx-premium .p-showcase:after{content:"DESIGNED AROUND YOU";position:absolute;bottom:16px;font-size:10px;letter-spacing:2px;color:var(--p-accent)}#zx-premium .p-art-phone{position:relative;width:98px;height:190px;border:3px solid light-dark(#9fa69d,#bcc2b5);border-radius:19px;background:linear-gradient(120deg,light-dark(#c8cdc1,#758375),light-dark(#eef0e7,#bcc6b5) 45%,light-dark(#8f9e8c,#536651));box-shadow:15px 20px 26px light-dark(#44554433,#00000055);transform:rotate(-12deg)}#zx-premium .p-art-phone:before{content:"";position:absolute;right:-5px;top:56px;width:3px;height:26px;border-radius:2px;background:light-dark(#65735f,#a2b39a)}#zx-premium .p-art-phone.front{margin-left:-26px;margin-top:24px;transform:rotate(12deg);background:linear-gradient(145deg,light-dark(#152b2a,#111d20) 25%,light-dark(#5a7d6b,#628976) 65%,light-dark(#bdcc98,#d3daa6));border-color:light-dark(#555e58,#afb6af)}#zx-premium .p-art-phone.front:after{content:"";position:absolute;top:7px;left:31px;width:30px;height:7px;border-radius:8px;background:light-dark(#10191b,#070d0e)}#zx-premium .p-camera{position:absolute;top:12px;left:9px;display:grid;grid-template-columns:18px 18px;gap:5px;padding:5px;background:light-dark(#b0baaa,#71816e);border-radius:12px}#zx-premium .p-camera span{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,light-dark(#4c686d,#55777f) 15%,light-dark(#1d292d,#1a2328) 35%,light-dark(#4a5554,#bbc6b8) 65%,light-dark(#c8d0bf,#637d63) 70%)}
+#zx-premium .p-divider{height:1px;background:var(--p-line);margin:25px 0}#zx-premium .p-heading{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap;margin-bottom:14px}#zx-premium h3{font-size:20px;font-weight:500;margin:0}#zx-premium .p-mode{display:flex;gap:4px;flex-wrap:wrap}#zx-premium .p-mode button{border:0;background:transparent;font-size:12px;padding:7px 12px}#zx-premium .p-mode button[aria-selected="true"]{background:var(--p-soft);color:var(--p-accent)}#zx-premium .p-categories{display:flex;gap:8px;flex-wrap:wrap}#zx-premium .p-categories button{border-radius:8px;font-size:12px;display:flex;align-items:center;gap:6px}#zx-premium .p-categories svg{width:14px;height:14px}#zx-premium .p-filterline{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:20px 0 16px}#zx-premium .p-filterline select{color:var(--p-ink);background:var(--p-panel);border:1px solid var(--p-line);border-radius:6px;padding:7px 9px;font-size:12px;max-width:100%}#zx-premium .p-filterline input{color:var(--p-ink);background:var(--p-panel);border:1px solid var(--p-line);border-radius:6px;padding:7px 9px;font-size:12px;width:112px}#zx-premium .p-status{color:var(--p-muted);font-size:12px}#zx-premium .p-status strong{color:var(--p-accent);font-weight:500}
+#zx-premium .p-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}#zx-premium .p-card{background:var(--p-panel);border:1px solid var(--p-line);border-radius:12px;overflow:hidden;min-width:0}#zx-premium .p-product{height:125px;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(140deg,var(--p-bg),var(--p-soft));gap:6px}#zx-premium .p-badge{position:absolute;top:12px;left:12px;color:var(--p-accent);font-size:11px;letter-spacing:.5px}#zx-premium .p-rank{position:absolute;top:12px;right:12px;color:var(--p-gold);font-size:11px;letter-spacing:.5px}#zx-premium .p-mini{width:48px;height:94px;border:2px solid light-dark(#6a7771,#c2c8be);border-radius:10px;background:linear-gradient(140deg,var(--p-metal),light-dark(#d7ded2,#879687));position:relative;box-shadow:5px 8px 10px light-dark(#243d2520,#00000044);transform:rotate(-8deg)}#zx-premium .p-mini:before{content:"";display:block;margin:6px;width:18px;height:22px;background:radial-gradient(circle at 30% 30%,light-dark(#24373a,#233136) 0 4px,transparent 5px),radial-gradient(circle at 70% 70%,light-dark(#24373a,#233136) 0 4px,transparent 5px);border:1px solid light-dark(#7c8c7b,#adbaab);border-radius:5px}#zx-premium .p-mini.compact{width:41px;height:79px}
+#zx-premium .p-cardbody{padding:15px}#zx-premium .p-cardtitle{display:flex;justify-content:space-between;gap:9px;align-items:baseline;flex-wrap:wrap}#zx-premium .p-cardtitle h4{font-size:17px;font-weight:500;margin:0}#zx-premium .p-price{font-size:16px;white-space:nowrap}#zx-premium .p-version{font-size:11px;color:var(--p-muted);margin:4px 0 10px}#zx-premium .p-specs{font-size:12px;color:var(--p-ink);margin:0 0 8px}#zx-premium .p-trade{font-size:12px;color:var(--p-muted);margin:0 0 12px;min-height:19px}#zx-premium .p-fit{display:flex;align-items:center;gap:9px;margin:0 0 10px}#zx-premium .p-fit span{font-size:12px;color:var(--p-accent);white-space:nowrap}#zx-premium .p-bar{flex:1;height:4px;border-radius:2px;background:var(--p-line);overflow:hidden}#zx-premium .p-bar i{display:block;height:100%;background:var(--p-accent)}#zx-premium .p-cardactions{display:flex;gap:8px;flex-wrap:wrap}#zx-premium .p-cardactions button{font-size:12px;padding:7px 10px;min-height:34px}#zx-premium .p-detail{border-top:1px dashed var(--p-line);margin-top:12px;padding-top:10px}#zx-premium .p-detail p{font-size:12px;color:var(--p-muted);margin:4px 0}
+#zx-premium .p-bottom{border-top:1px solid var(--p-line);margin-top:20px;padding-top:18px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}#zx-premium .p-bottom strong{font-weight:500}#zx-premium .p-bottom p{margin:3px 0;color:var(--p-muted);font-size:12px}#zx-premium .p-compare-panel{background:var(--p-panel);border:1px solid var(--p-line);border-radius:12px;padding:20px;margin-top:22px}#zx-premium .p-compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:15px}#zx-premium .p-compare-grid h4{font-weight:500;font-size:15px;margin:0 0 8px}#zx-premium .p-compare-grid p{color:var(--p-muted);font-size:12px;margin:5px 0}#zx-premium .p-footnote{margin:19px 0 0;font-size:11px;color:var(--p-muted)}
+/* 推荐结果区 */
+#zx-premium #p-reco{margin:0 0 25px}#zx-premium .p-msg{border:1px solid var(--p-line);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:var(--p-panel)}#zx-premium .p-msg.me{background:var(--p-soft)}#zx-premium .p-msg .p-who{font-size:11px;color:var(--p-muted);letter-spacing:1px;margin-bottom:7px}#zx-premium .p-msg p{margin:6px 0}#zx-premium .p-advice{white-space:pre-wrap}#zx-premium .p-note{font-size:12px;color:var(--p-muted);margin:10px 0 0}#zx-premium .p-warn{font-size:12px;color:var(--p-warn);margin:8px 0 0}#zx-premium .p-err{border:1px solid var(--p-warn);border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:12px}#zx-premium .p-chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}#zx-premium .p-chips button{font-size:12px;padding:6px 11px;min-height:32px}#zx-premium .p-askline{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}#zx-premium .p-askline input{flex:1;min-width:180px;color:var(--p-ink);background:var(--p-bg);border:1px solid var(--p-line);border-radius:7px;padding:9px 11px;font-size:14px}#zx-premium .p-recohead{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin:18px 0 12px}
+/* 快速问答 */
+#zx-premium .p-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}#zx-premium .p-cta button{min-height:40px}
+#zx-premium .p-quiz{background:var(--p-panel);border:1px solid var(--p-line);border-radius:12px;padding:20px;margin-bottom:25px}
+#zx-premium .p-quiz-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+#zx-premium .p-quiz-step{font-size:11px;color:var(--p-gold);letter-spacing:1.5px}
+#zx-premium .p-quiz-dots{display:flex;gap:6px;margin:12px 0 18px}
+#zx-premium .p-quiz-dots i{flex:1;height:2px;background:var(--p-line);border-radius:1px;transition:background .2s}
+#zx-premium .p-quiz-dots i.done{background:var(--p-accent)}
+#zx-premium .p-quiz-q{font-size:22px;font-weight:500;margin:0 0 6px;letter-spacing:-.3px}
+#zx-premium .p-quiz-hint{font-size:12px;color:var(--p-muted);margin:0 0 18px}
+#zx-premium .p-opts{display:grid;gap:10px}
+#zx-premium .p-opt{display:flex;gap:14px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:10px;border:1px solid var(--p-line);background:var(--p-bg);cursor:pointer;transition:border-color .15s,background .15s}
+#zx-premium .p-opt:hover{background:var(--p-soft)}
+#zx-premium .p-opt[aria-pressed="true"]{border-color:var(--p-accent);background:var(--p-soft)}
+#zx-premium .p-opt-key{flex:0 0 22px;height:22px;border-radius:50%;border:1px solid var(--p-line);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--p-muted);margin-top:1px}
+#zx-premium .p-opt[aria-pressed="true"] .p-opt-key{background:var(--p-accent);color:var(--p-panel);border-color:var(--p-accent)}
+#zx-premium .p-opt-body{min-width:0}
+#zx-premium .p-opt-label{font-size:14px;display:block}
+#zx-premium .p-opt-desc{font-size:12px;color:var(--p-muted);margin:3px 0 0}
+#zx-premium .p-quiz-nav{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:20px;align-items:center}
+#zx-premium .p-recap{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+#zx-premium .p-recap span{font-size:11px;color:var(--p-muted);border:1px solid var(--p-line);border-radius:99px;padding:4px 11px}
+#zx-premium .p-recap span b{font-weight:500;color:var(--p-ink)}
+@media(max-width:760px){#zx-premium .p-main{padding:22px}#zx-premium .p-hero{grid-template-columns:minmax(0,1.3fr) minmax(170px,.7fr)}#zx-premium h2{font-size:30px}#zx-premium .p-art-phone{width:80px;height:160px}#zx-premium .p-art-phone.front:after{left:23px}#zx-premium .p-showcase{min-height:270px}#zx-premium .p-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){#zx-premium .p-header{padding-left:18px;gap:12px}#zx-premium .p-main{padding:18px}#zx-premium .p-hero{grid-template-columns:1fr}#zx-premium .p-showcase{min-height:210px;grid-row:2}#zx-premium h2{font-size:31px}#zx-premium .p-heading{align-items:flex-start}#zx-premium .p-compare-grid{grid-template-columns:1fr}#zx-premium .p-brand small{display:none}}
+@media(max-width:380px){#zx-premium .p-grid{grid-template-columns:1fr}#zx-premium .p-header{padding-right:88px}#zx-premium .p-nav{gap:1px}#zx-premium .p-nav button{padding:6px 7px}}
+@media(pointer:coarse){#zx-premium button,#zx-premium .p-cardactions button{min-height:44px}}
+</style>
+<header class="p-header"><div class="p-brand">知选<small>ZHIXUAN</small></div><nav class="p-nav" aria-label="页面导航"><button type="button" class="cursor-interaction" data-nav="smart" aria-selected="true">智能选机</button><button type="button" class="cursor-interaction" data-nav="library" aria-selected="false">手机库</button><button type="button" class="cursor-interaction" data-nav="compare" aria-selected="false">对比 <span id="p-count">0</span></button></nav></header>
+<main class="p-main">
+  <section class="p-hero" id="p-hero">
+    <div><div class="p-eyebrow">A PHONE THAT FITS YOUR LIFE</div><h2>每一种生活，<br>都有适合的手机。</h2><p class="p-lead">从轻巧到高刷，从通勤到长用。<br>把选择交给你的需求。</p><div class="p-prompt"><label for="p-need">说说预算、尺寸，以及你在意的参数</label><input id="p-need" value="预算 4000 以内，想要轻一点的，512G 起步" aria-label="选机需求"><div class="p-prompt-bottom"><span class="p-small" id="p-llm">正在连接推荐服务…</span><button type="button" class="p-primary cursor-interaction" id="p-recommend">寻找适合我的手机 ↗</button></div></div><div class="p-cta"><button type="button" class="cursor-interaction" id="p-quiz-start">快速问答，为你推荐最好的</button><span class="p-small">五道题，不用懂参数</span></div></div>
+    <div class="p-showcase" role="img" aria-label="两部绿色金属质感的概念手机"><div class="p-art-phone"><div class="p-camera"><span></span><span></span><span></span><span></span></div></div><div class="p-art-phone front"></div></div>
+  </section>
+
+  <section id="p-quiz" class="p-quiz" aria-live="polite" hidden></section>
+
+  <section id="p-reco" aria-live="polite" hidden></section>
+
+  <section id="p-discover" aria-label="浏览手机库">
+    <div class="p-heading"><h3 id="p-section-title">找到你的选机方向</h3><div class="p-mode" aria-label="分类方式"><button type="button" class="cursor-interaction" data-mode="form" aria-selected="true">按形态</button><button type="button" class="cursor-interaction" data-mode="budget" aria-selected="false">按预算</button><button type="button" class="cursor-interaction" data-mode="brand" aria-selected="false">按品牌</button></div></div>
+    <div class="p-categories" id="p-categories"></div>
+    <div class="p-filterline"><div class="p-status" id="p-status" aria-live="polite"></div><div class="p-small" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label>预算上限 <input id="p-max" type="number" min="0" step="500" placeholder="不限" aria-label="预算上限（元）"></label><label>排序 <select id="p-sort"><option value="price-asc">价格从低到高</option><option value="price-desc">价格从高到低</option><option value="weight-asc">重量从轻到重</option><option value="screen-desc">屏幕从大到小</option><option value="storage-desc">存储从大到小</option></select></label></div></div>
+    <div class="p-grid" id="p-results"></div>
+    <div class="p-more" id="p-more"><button type="button" class="cursor-interaction" id="p-more-button">查看更多候选 ↓</button></div>
+  </section>
+  <section class="p-compare-panel" id="p-compare-panel" hidden aria-live="polite"></section>
+  <div class="p-bottom" id="p-bottom"><div><strong>选机的最后一步，是看清取舍。</strong><p>把候选加入对比，看看哪一部更符合你的生活。</p></div><button type="button" class="cursor-interaction" id="p-open-compare">查看我的对比 →</button></div>
+  <p class="p-footnote" id="p-footnote">正在载入配置表…</p>
+</main>
+<script>
+(()=>{
+ const root=document.getElementById('zx-premium');
+ const q=s=>root.querySelector(s);
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const num=v=>Number(Number(v).toFixed(2)).toString();
+ const fmt=v=>Number(v).toLocaleString('zh-CN');
+
+ // 分类只按**数据表里真实存在的字段**划分。原始数据没有电池容量、没有折叠
+ // 形态，所以不存在「长续航」「折叠大屏」这类分类——那会是凭空编造。
+ const CATEGORIES={
+  form:[['all','全部','layout-grid'],['compact','小屏（≤6.2″）','smartphone'],['large','大屏（≥6.7″）','tablet-smartphone'],['light','轻薄（≤180g）','feather'],['refresh','高刷（≥120Hz）','gauge'],['storage','大存储（≥512GB）','hard-drive']],
+  budget:[['all','不限预算','wallet'],['b1','2000 元以下',''],['b2','2000—3000 元',''],['b3','3000—4000 元',''],['b4','4000—6000 元',''],['b5','6000 元以上','']]
+ };
+ // 品牌分类在拿到 /api/meta 之后动态补上。
+ const BRAND_TONE={'苹果':'light-dark(#c9bba5,#a79b87)','华为':'light-dark(#a5bba9,#73927d)','小米':'light-dark(#c3a9a3,#96706a)','Redmi':'light-dark(#bdc8a9,#83986b)','荣耀':'light-dark(#a2b8b9,#709196)','OPPO':'light-dark(#b2bbaa,#7c8e73)','vivo':'light-dark(#aab4c6,#74829c)','一加':'light-dark(#c0b9ad,#a0937b)','三星':'light-dark(#9fb2c9,#6c85a3)'};
+ const TONE_FALLBACK='light-dark(#b7aaa3,#937d73)';
+
+ // 追问的快捷回答。键是契约里的字段名，值是 [按钮文字, 回填给模型的整句]。
+ const QUICK={
+  'budget.max':[['3000 元','最多 3000'],['4000 元','最多 4000'],['5000 元','最多 5000'],['6000 元','最多 6000']],
+  'budget.min':[['2000 元起','至少 2000'],['3000 元起','至少 3000']],
+  'min_storage':[['256GB 起','256G 起步就行'],['512GB 起','512G 起步就行'],['1TB','要 1TB 的']],
+  'target_screen':[['小屏 6.1″','想要 6.1 英寸左右的小屏'],['中屏 6.5″','想要 6.5 英寸左右'],['大屏 6.8″','想要 6.8 英寸左右的大屏']],
+  'brands.exclude':[['都不要','这些品牌都不要'],['无所谓','品牌无所谓']]
+ };
+
+ const S={
+  meta:null,phones:[],byName:new Map(),byId:new Map(),
+  nav:'smart',mode:'form',category:'all',sort:'price-asc',
+  maximum:null,selected:[],expanded:new Set(),showAll:false,
+  rec:null,busy:false,error:'',
+  chat:{history:[],asked:[],ask_rounds:0},
+  // 快速问答：题目从 /api/quiz 拿，答案只存选项编号
+  quiz:null,quizOpen:false,quizStep:0,answers:{},quizRec:null,quizBusy:false,quizError:''
+ };
+
+ const budgetMatches=(price,c)=>c==='all'
+  ||(c==='b1'&&price<2000)||(c==='b2'&&price>=2000&&price<3000)
+  ||(c==='b3'&&price>=3000&&price<4000)||(c==='b4'&&price>=4000&&price<=6000)
+  ||(c==='b5'&&price>6000);
+ const formMatches=(p,c)=>c==='all'
+  ||(c==='compact'&&p.screen<=6.2)||(c==='large'&&p.screen>=6.7)
+  ||(c==='light'&&p.weight<=180)||(c==='refresh'&&p.refresh>=120)
+  ||(c==='storage'&&p.storage>=512);
+
+ function categoriesOf(mode){
+  if(mode==='brand') return [['all','全部品牌','users']].concat((S.meta?.brands||[]).map(b=>[b,b,'']));
+  return CATEGORIES[mode]||CATEGORIES.form;
+ }
+ function labelOf(mode,id){const hit=categoriesOf(mode).find(x=>x[0]===id);return hit?hit[1]:'全部';}
+ function matchesCategory(p,mode,c){
+  if(mode==='form') return formMatches(p,c);
+  if(mode==='budget') return budgetMatches(p.price,c);
+  if(mode==='brand') return c==='all'||p.brand===c;
+  return true;
+ }
+
+ // --- 卡片 -----------------------------------------------------------------
+ function specsLine(p){
+  return `${num(p.weight)}g · ${num(p.screen)}″ · ${num(p.refresh)}Hz · ${num(p.storage)}GB`;
+ }
+ function detailHTML(p){
+  const siblings=S.byName.get(p.name)||[];
+  const others=siblings.filter(x=>x.id!==p.id);
+  const rows=[
+   `<p>处理器 ${esc(p.chip)} · 分辨率 ${esc(p.resolution)}</p>`,
+   `<p>后摄 ${esc(p.rear)}</p>`,
+   `<p>前摄 ${esc(p.front)} · 充电 ${esc(p.charging)}</p>`
+  ];
+  if(others.length){
+   rows.push(`<p>同机型其他配置：${others.map(x=>`${esc(x.config)} ¥${fmt(x.price)}`).join('　·　')}</p>`);
+  }
+  rows.push('<p>以上参数仅陈列，不参与评分。现有数据无法评价拍照质量、续航时长与游戏帧率。</p>');
+  return `<div class="p-detail">${rows.join('')}</div>`;
+ }
+ function cardHTML(p,extra={}){
+  const tone=BRAND_TONE[p.brand]||TONE_FALLBACK;
+  const shape=p.screen<=6.2?'compact':'';
+  const rank=extra.rank?`<span class="p-rank">${String(extra.rank).padStart(2,'0')}</span>`:'';
+  const fit=typeof extra.score==='number'
+   ?`<div class="p-fit"><span>匹配度 ${(extra.score*100).toFixed(1)}%</span><div class="p-bar"><i style="width:${(extra.score*100).toFixed(1)}%"></i></div></div>`:'';
+  // 没有真实参数差异（手机库里的卡片）就不显示这一行——`.p-specs` 已经写过
+  // 同一串规格，重复一遍只会显得啰嗦。
+  const reason=extra.reason?`<p class="p-trade">${esc(extra.reason)}</p>`:'';
+  return `<article class="p-card"><div class="p-product"><span class="p-badge">${esc(p.brand)}</span>${rank}<div class="p-mini ${shape}" style="--p-metal:${tone}" aria-hidden="true"></div></div><div class="p-cardbody"><div class="p-cardtitle"><h4>${esc(p.name)}</h4><span class="p-price">¥${fmt(p.price)}</span></div><p class="p-version">${esc(p.config)} · ${esc(p.chip)}</p>${fit}<p class="p-specs">${esc(specsLine(p))}</p>${reason}<div class="p-cardactions"><button type="button" class="cursor-interaction" data-detail="${esc(p.id)}" aria-expanded="${S.expanded.has(p.id)}">${S.expanded.has(p.id)?'收起分析':'选机分析'}</button><button type="button" class="cursor-interaction" data-compare="${esc(p.id)}" aria-pressed="${S.selected.includes(p.id)}">${S.selected.includes(p.id)?'已加入对比':'＋ 对比'}</button></div>${S.expanded.has(p.id)?detailHTML(p):''}</div></article>`;
+ }
+
+ // --- 快速问答 -------------------------------------------------------------
+// 题库来自 /api/quiz，页面不硬编码任何题目——改文案只需改 quiz.py。
+const LETTERS=['A','B','C','D'];
+
+function quizQuestions(){return S.quiz?.questions||[];}
+function quizProgress(){
+ return {answered:Object.keys(S.answers).length,total:quizQuestions().length};
+}
+function quizDone(){const p=quizProgress();return p.total>0&&p.answered>=p.total;}
+
+function quizStepHTML(){
+ const list=quizQuestions();
+ const q=list[S.quizStep];
+ if(!q) return '';
+ const p=quizProgress();
+ const picked=S.answers[q.key];
+ const opts=q.options.map((o,i)=>{
+  const on=Array.isArray(picked)?picked.includes(o.key):picked===o.key;
+  const letter=LETTERS[i]||String(i+1);
+  return `<button type="button" class="p-opt cursor-interaction" data-opt="${esc(o.key)}" aria-pressed="${on}"><span class="p-opt-key">${letter}</span><span class="p-opt-body"><span class="p-opt-label">${esc(o.label)}</span><span class="p-opt-desc">${esc(o.desc)}</span></span></button>`;
+ }).join('');
+ const dots=list.map((item,i)=>`<i class="${i<p.answered?'done':''}"></i>`).join('');
+ const isLast=S.quizStep>=list.length-1;
+ // 选项编号 → 回显文字，让用户随时看得见自己选了什么
+ const recap=Object.entries(S.answers).map(([key,val])=>{
+  const item=list.find(x=>x.key===key); if(!item) return '';
+  const one=(item.options.find(o=>o.key===val)||{}).label||'';
+  return one?`<span><b>${esc(item.title.replace(/？$/,''))}</b> ${esc(one)}</span>`:'';
+ }).filter(Boolean).join('');
+ return `<div class="p-quiz-top"><span class="p-quiz-step">第 ${S.quizStep+1} / ${list.length} 题</span><span class="p-small">已答 ${p.answered} 题</span></div>
+  <div class="p-quiz-dots">${dots}</div>
+  <h3 class="p-quiz-q">${esc(q.title)}</h3><p class="p-quiz-hint">${esc(q.hint||'')}</p>
+  <div class="p-opts">${opts}</div>
+  ${recap?`<div class="p-recap">${recap}</div>`:''}
+  <div class="p-quiz-nav">
+   <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button type="button" class="cursor-interaction" data-quiz="prev"${S.quizStep===0?' disabled':''}>上一题</button>
+    <button type="button" class="cursor-interaction" data-quiz="next"${isLast?' hidden':''}${picked?'':' disabled'}>下一题</button>
+   </div>
+   <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button type="button" class="cursor-interaction" data-quiz="cancel">退出问答</button>
+    <button type="button" class="p-primary cursor-interaction" data-quiz="submit"${quizDone()?'':' disabled'}>看看推荐结果 →</button>
+   </div>
+  </div>`;
+}
+
+function quizResultHTML(){
+ const rec=S.quizRec;
+ const models=rec.models||[];
+ const labels=(rec.answer_labels||[]).map(x=>`<span><b>${esc(x.question.replace(/？$/,''))}</b> ${esc(x.label)}</span>`).join('');
+ const notes=[];
+ if(rec.unsupported&&rec.unsupported.length) notes.push('这几项你提到了，但现有数据覆盖不到，不会用别的参数替代：'+rec.unsupported.join('、'));
+ if(rec.degraded&&rec.degraded.length) notes.push('有无法采用的条件，已忽略：'+rec.degraded.join('；'));
+ if(rec.pending&&rec.pending.length) notes.push('这些我没有可靠依据：'+rec.pending.join('、'));
+ const head=`<div class="p-quiz-top"><span class="p-quiz-step">问答结果</span><span class="p-small">从 ${rec.candidate_configs} 条候选配置里选出 ${models.length} 款</span></div>
+  <div class="p-recap">${labels}</div>
+  <p class="p-note" style="margin-top:12px">以上是你刚才的选择，我会这样理解。机型由本地引擎按这些条件算出。</p>`;
+ const body=models.length
+  ?`<div class="p-msg" style="margin-top:16px"><div class="p-who">知选</div><p class="p-advice">${esc(rec.advice)}</p>${rec.advice_error?`<p class="p-note">（推荐语未由大模型生成，已改用模板文案：${esc(rec.advice_error)}）</p>`:''}</div>
+    ${notes.length?`<div class="p-msg">${notes.map(n=>`<p class="p-warn">${esc(n)}</p>`).join('')}</div>`:''}
+    <div class="p-grid">${models.map((m,i)=>cardHTML({id:m.id,name:m.name,brand:m.brand,config:m.config,chip:m.chip,price:m.price,weight:m.weight,screen:m.screen,refresh:m.refresh,storage:m.storage,resolution:'',rear:'',front:'',charging:''},{rank:i+1,score:m.score,reason:m.reason})).join('')}</div>`
+  :'<div class="p-err" style="margin-top:16px">当前条件下没有候选配置，请回到问答里把预算放宽或降低存储要求。</div>';
+ return `${head}${body}
+  <div class="p-quiz-nav"><button type="button" class="cursor-interaction" data-quiz="restart">重新答一遍</button>
+  <button type="button" class="cursor-interaction" data-quiz="cancel">收起问答</button></div>`;
+}
+
+function renderQuiz(){
+ const box=q('#p-quiz');
+ if(S.nav!=='smart'||!S.quizOpen){box.hidden=true;box.innerHTML='';return;}
+ box.hidden=false;
+ if(S.quizError){box.innerHTML=`<div class="p-err">${esc(S.quizError)}</div><div class="p-quiz-nav"><button type="button" class="cursor-interaction" data-quiz="cancel">退出问答</button></div>`;return;}
+ if(S.quizBusy){box.innerHTML=`<div class="p-quiz-top"><span class="p-quiz-step">快速问答</span></div><p class="p-quiz-hint">正在按你的选择筛选机型…</p>`;return;}
+ box.innerHTML=S.quizRec?quizResultHTML():quizStepHTML();
+}
+
+// --- 推荐结果区 -----------------------------------------------------------
+ function quickChips(field){
+  const items=QUICK[field];
+  if(!items) return '';
+  return `<div class="p-chips">${items.map(([label,say])=>`<button type="button" class="cursor-interaction" data-answer="${esc(say)}">${esc(label)}</button>`).join('')}</div>`;
+ }
+function renderReco(){
+ const box=q('#p-reco');
+ const rec=S.rec;
+ // 切到手机库/对比页时不渲染推荐区。这里必须自己判 nav——`draw()` 虽然先设了
+ // hidden，但本函数在它之后运行，无条件写 hidden=false 会把它盖回去。
+ // 问答模式下的结果由 `#p-quiz` 自己显示，这里让位，避免同一份机型出现两次。
+ if(S.nav!=='smart'||S.quizOpen||(!rec&&!S.busy&&!S.error)){box.hidden=true;box.innerHTML='';return;}
+ box.hidden=false;
+  const parts=[];
+  if(S.error) parts.push(`<div class="p-err">${esc(S.error)}</div>`);
+  if(S.busy) parts.push('<div class="p-msg"><div class="p-who">知选</div><p>正在理解你的需求…</p></div>');
+
+  if(rec){
+   if(rec.stage==='failed'){
+    parts.push(`<div class="p-err">这次没能理解你的需求（${esc(rec.error||'未知原因')}）。换个说法再试一次，或到下面手机库里手动筛选。</div>`);
+   }
+   if(rec.stage==='clarify'){
+    parts.push(`<div class="p-msg"><div class="p-who">知选</div><p class="p-advice">${esc(rec.ask_text)}</p>${(rec.questions||[]).map(item=>quickChips(item.field)).join('')}<div class="p-askline"><input id="p-answer" placeholder="也可以直接补充，例如「最多 4500」" aria-label="补充需求"><button type="button" class="p-primary cursor-interaction" id="p-answer-send">回答</button></div></div>`);
+   }
+   if(rec.stage==='result'){
+    const models=rec.models||[];
+    if(models.length){
+     parts.push(`<div class="p-msg"><div class="p-who">知选</div><p class="p-advice">${esc(rec.advice)}</p>${rec.advice_error?`<p class="p-note">（推荐语未由大模型生成，已改用模板文案：${esc(rec.advice_error)}）</p>`:''}<p class="p-note">匹配度是本次候选集内的相对得分，不是质量评分。机型由本地引擎计算，下面清单与上面的说明一一对应。</p></div>`);
+     const notes=[];
+     if(rec.degraded&&rec.degraded.length) notes.push('模型给的条件里有无法采用的部分，已忽略：'+rec.degraded.join('；'));
+     if(rec.pending&&rec.pending.length) notes.push('下面这些我没有可靠依据：'+rec.pending.join('、'));
+     if(rec.unsupported&&rec.unsupported.length) notes.push('这些需求现有数据覆盖不到，不会用别的指标替代：'+rec.unsupported.join('、'));
+     if(notes.length) parts.push(`<div class="p-msg">${notes.map(n=>`<p class="p-warn">${esc(n)}</p>`).join('')}</div>`);
+     // 用户只说了上限时，滑块下界会落到量程 0，显示「¥0–¥4000」很怪。
+     const budgetText=rec.budget?(rec.budget[0]>0?` · 预算区间 ¥${fmt(rec.budget[0])}–¥${fmt(rec.budget[1])}`:` · 预算 ≤ ¥${fmt(rec.budget[1])}`):'';
+     parts.push(`<div class="p-recohead"><h3>本次推荐</h3><span class="p-small">从 ${rec.candidate_configs} 条候选配置里选出 ${models.length} 款${budgetText}</span></div>`);
+     parts.push(`<div class="p-grid">${models.map((m,i)=>cardHTML({id:m.id,name:m.name,brand:m.brand,config:m.config,chip:m.chip,price:m.price,weight:m.weight,screen:m.screen,refresh:m.refresh,storage:m.storage,resolution:'',rear:'',front:'',charging:''},{rank:i+1,score:m.score,reason:m.reason})).join('')}</div>`);
+    }else{
+     parts.push('<div class="p-err">当前条件下没有候选配置，请放宽预算、品牌或最低存储要求。</div>');
+    }
+    parts.push('<div class="p-askline"><input id="p-answer" placeholder="继续补充，例如「换成 5000 以内、要 512G」" aria-label="继续补充需求"><button type="button" class="p-primary cursor-interaction" id="p-answer-send">再问问</button></div>');
+   }
+  }
+  box.innerHTML=parts.join('');
+ }
+
+ // --- 手机库 ---------------------------------------------------------------
+ function libraryList(){
+  let list=S.phones.filter(p=>(S.maximum===null||p.price<=S.maximum)&&matchesCategory(p,S.mode,S.category));
+  const sort=S.sort;
+  if(sort==='price-asc') list.sort((a,b)=>a.price-b.price||a.name.localeCompare(b.name));
+  if(sort==='price-desc') list.sort((a,b)=>b.price-a.price||a.name.localeCompare(b.name));
+  if(sort==='weight-asc') list.sort((a,b)=>a.weight-b.weight||a.price-b.price);
+  if(sort==='screen-desc') list.sort((a,b)=>b.screen-a.screen||a.price-b.price);
+  if(sort==='storage-desc') list.sort((a,b)=>b.storage-a.storage||a.price-b.price);
+  return list;
+ }
+ function comparison(){
+  const panel=q('#p-compare-panel');
+  panel.hidden=S.nav!=='compare';
+  if(S.nav!=='compare') return;
+  const picked=S.selected.map(id=>S.byId.get(id)).filter(Boolean);
+  const body=picked.length?`<div class="p-compare-grid">${picked.map(p=>`<div><h4>${esc(p.name)} · ¥${fmt(p.price)}</h4><p>${esc(p.config)} · ${esc(p.chip)}</p><p>重量 ${num(p.weight)}g · 屏幕 ${num(p.screen)}″</p><p>刷新率 ${num(p.refresh)}Hz · 存储 ${num(p.storage)}GB</p><p>分辨率 ${esc(p.resolution)}</p><p>后摄 ${esc(p.rear)}</p><p>前摄 ${esc(p.front)}</p><p>充电 ${esc(p.charging)}</p><button type="button" class="cursor-interaction" data-compare="${esc(p.id)}">移出对比</button></div>`).join('')}</div>`:'<p class="p-small">还没有候选。到手机库中，挑选两到三部加入对比。</p>';
+  panel.innerHTML=`<div class="p-heading"><h3>看清每一部的优势与取舍</h3><span class="p-small">已选 ${picked.length}/3 部</span></div>${body}`;
+ }
+
+ function draw(){
+  root.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.nav===S.nav)));
+  root.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===S.mode)));
+ q('#p-count').textContent=S.selected.length;
+ q('#p-hero').hidden=S.nav!=='smart';
+ q('#p-quiz').hidden=S.nav!=='smart'||!S.quizOpen;
+ q('#p-reco').hidden=S.nav!=='smart';
+ // 问答进行中时，首屏与浏览区一起收起，让用户专注答题；
+ // 退出问答（cancel / 收起）再恢复。
+ q('#p-hero').hidden=S.nav!=='smart'||S.quizOpen;
+ q('#p-discover').hidden=S.nav==='compare'||S.quizOpen;
+ q('#p-bottom').hidden=S.nav==='compare'||S.quizOpen;
+ q('#p-section-title').textContent=S.nav==='library'?'探索手机库':'找到你的选机方向';
+
+  q('#p-categories').innerHTML=categoriesOf(S.mode).map(([id,label,icon])=>`<button type="button" class="cursor-interaction" data-category="${esc(id)}" aria-pressed="${S.category===id}">${icon?`<i data-lucide="${icon}" aria-hidden="true"></i>`:''}${esc(label)}</button>`).join('');
+
+  const list=libraryList();
+  const label=labelOf(S.mode,S.category);
+  q('#p-status').innerHTML=`<strong>${esc(label)}</strong>${S.maximum!==null?` · 预算 ≤ ¥${fmt(S.maximum)}`:''} · ${list.length} 条配置`;
+  const visible=S.showAll?list:list.slice(0,12);
+  q('#p-results').innerHTML=visible.length?visible.map(p=>cardHTML(p)).join(''):'<p class="p-small">当前条件下没有候选配置，可以切换分类或提高预算上限。</p>';
+  q('#p-more').hidden=list.length<=12||S.showAll;
+  const maxInput=q('#p-max');
+  if(document.activeElement!==maxInput) maxInput.value=S.maximum===null?'':String(S.maximum);
+
+ renderReco();
+ renderQuiz();
+ comparison();
+ if(typeof lucide!=='undefined') lucide.createIcons({attrs:{width:14,height:14}});
+}
+
+ // --- 推荐调用 -------------------------------------------------------------
+ async function recommend(text){
+  const value=(text||'').trim();
+  if(!value||S.busy) return;
+  S.busy=true; S.error=''; draw();
+  try{
+   const res=await fetch('/api/recommend',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+     text:value,history:S.chat.history,asked:S.chat.asked,
+     ask_rounds:S.chat.ask_rounds,top_n:S.meta?.top_n??5,write:true
+    })
+   });
+   if(!res.ok){
+    const detail=await res.json().catch(()=>({}));
+    throw new Error(detail.error||`服务返回 ${res.status}`);
+   }
+   const data=await res.json();
+   S.rec=data;
+   S.chat.history.push(value);
+   if(data.stage==='clarify'){S.chat.asked=data.asked||[];S.chat.ask_rounds=data.ask_rounds||0;}
+   else{S.chat.asked=[];S.chat.ask_rounds=0;}
+   const input=q('#p-need'); if(input) input.value='';
+  }catch(error){
+   S.error=`推荐服务暂时不可用：${error.message}`;
+  }finally{
+   S.busy=false; draw();
+  }
+ }
+
+// --- 问答调用 -------------------------------------------------------------
+async function quizSubmit(){
+ if(!quizDone()||S.quizBusy) return;
+ S.quizBusy=true; S.quizError=''; S.quizRec=null; draw();
+ try{
+  const res=await fetch('/api/quiz/recommend',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({answers:S.answers,top_n:S.meta?.top_n??5,write:true})
+  });
+  if(!res.ok){
+   const detail=await res.json().catch(()=>({}));
+   throw new Error(detail.error||`服务返回 ${res.status}`);
+  }
+  S.quizRec=await res.json();
+ }catch(error){
+  S.quizError=`推荐服务暂时不可用：${error.message}`;
+ }finally{
+  S.quizBusy=false; draw();
+ }
+}
+
+// --- 事件 -----------------------------------------------------------------
+root.addEventListener('click',event=>{
+ const b=event.target.closest('button'); if(!b) return;
+ if(b.dataset.nav){S.nav=b.dataset.nav;if(S.nav==='library'){S.mode='form';S.category='all';S.showAll=false;}draw();}
+ if(b.dataset.mode){S.mode=b.dataset.mode;S.category='all';S.showAll=false;draw();}
+ if(b.dataset.category){S.category=b.dataset.category;S.showAll=false;draw();}
+ if(b.dataset.detail){const id=b.dataset.detail;S.expanded.has(id)?S.expanded.delete(id):S.expanded.add(id);draw();}
+ if(b.dataset.compare){const id=b.dataset.compare;if(S.selected.includes(id))S.selected=S.selected.filter(x=>x!==id);else if(S.selected.length<3)S.selected.push(id);else S.selected=[...S.selected.slice(1),id];draw();}
+ if(b.dataset.answer){recommend(b.dataset.answer);}
+ if(b.id==='p-answer-send'){const input=q('#p-answer');if(input)recommend(input.value);}
+ if(b.id==='p-more-button'){S.showAll=true;draw();}
+ if(b.id==='p-open-compare'){S.nav='compare';draw();}
+ if(b.id==='p-recommend'){recommend(q('#p-need').value);}
+ // 快速问答
+ if(b.dataset.opt){
+  const list=quizQuestions(); const item=list[S.quizStep]; if(!item) return;
+  S.answers[item.key]=b.dataset.opt;
+  // 选完自动进入下一题，省一次点击；最后一题保持在原地让用户确认。
+  if(S.quizStep<list.length-1) S.quizStep++;
+  draw();
+ }
+ if(b.dataset.quiz){
+  const action=b.dataset.quiz;
+  if(action==='prev') S.quizStep=Math.max(0,S.quizStep-1);
+  if(action==='next') S.quizStep=Math.min(quizQuestions().length-1,S.quizStep+1);
+  if(action==='submit'){quizSubmit();return;}
+  if(action==='restart'){S.answers={};S.quizStep=0;S.quizRec=null;S.quizError='';}
+  if(action==='cancel'){S.quizOpen=false;S.quizRec=null;S.quizError='';}
+  draw();
+ }
+ if(b.id==='p-quiz-start'){
+  S.quizOpen=true; S.quizRec=null; S.quizError=''; S.quizStep=0;
+  // 重开时清空上次答案：留着旧答案会让用户以为这次已经答过了。
+  S.answers={};
+  draw();
+ }
+});
+ q('#p-sort').addEventListener('change',event=>{S.sort=event.target.value;draw();});
+ q('#p-max').addEventListener('input',event=>{
+  const raw=event.target.value.trim();
+  S.maximum=raw===''?null:Math.max(0,Number(raw)||0);
+  S.showAll=false; draw();
+ });
+ q('#p-need').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();recommend(event.target.value);}});
+
+ // --- 启动 -----------------------------------------------------------------
+async function boot(){
+ try{
+  const [metaRes,phonesRes,quizRes]=await Promise.all([fetch('/api/meta'),fetch('/api/phones'),fetch('/api/quiz')]);
+  if(!metaRes.ok||!phonesRes.ok||!quizRes.ok) throw new Error(`服务返回 ${metaRes.status}/${phonesRes.status}/${quizRes.status}`);
+  S.meta=await metaRes.json();
+  const payload=await phonesRes.json();
+  S.phones=payload.phones||[];
+  S.quiz=await quizRes.json();
+  S.byName=new Map();
+  S.byId=new Map();
+  for(const p of S.phones){
+   S.byId.set(p.id,p);
+   if(!S.byName.has(p.name)) S.byName.set(p.name,[]);
+   S.byName.get(p.name).push(p);
+  }
+  q('#p-llm').textContent=S.meta.llm?.message||'';
+  q('#p-footnote').textContent=`数据来自本地配置表 ${S.meta.totals.models} 款机型 / ${S.meta.totals.configs} 条配置 · 价格与参数均为表内记录值 · 推荐由本地 TOPSIS 引擎计算，大模型只负责理解需求与撰写说明 · 数据未覆盖拍照质量、续航时长与游戏帧率，页面不会给出这些结论`;
+  if(!S.meta.llm?.ready){
+   q('#p-recommend').disabled=true;
+   const qs=q('#p-quiz-start'); if(qs) qs.disabled=true;
+   q('#p-llm').textContent=`${S.meta.llm?.message||'未接入大模型'}　下方手机库仍可正常浏览`;
+  }
+ }catch(error){
+  S.error=`配置表加载失败：${error.message}`;
+  q('#p-footnote').textContent='配置表加载失败，请确认服务端已启动。';
+ }
+ draw();
+}
+boot();
+})();
+</script>
+</div>
+
+</body>
+</html>
