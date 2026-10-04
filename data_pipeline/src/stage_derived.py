@@ -361,7 +361,11 @@ def build_derived(cfg, paths, main_rows, camera_rows, aux_rows, model_by_key,
         mid = r["_model_id"]
         cond_raw = (r.get("王者测试条件") or "").strip()
         src_raw = (r.get("游戏数据来源") or "").strip()
-        key = (mid, cond_raw, src_raw)
+        # Preserve differing source measurements as distinct runs. Same conditions do
+        # not prove a repeated observation is the same test or permit taking row one.
+        measurement_signature = tuple(str(r.get(col)) for col in
+            ('王者平均帧率(FPS)', '王者平均功耗(W)', '王者1%Low帧(FPS)', '王者机身最高温度(℃)'))
+        key = (mid, cond_raw, src_raw, measurement_signature)
         if key not in run_index:
             run_seq += 1
             run_id = f"RUN{run_seq:05d}"
@@ -728,6 +732,11 @@ def parse_game_conditions(raw):
             continue
         if re.search(r"\d+\s*帧", p):
             cond["frame_mode"] = p
+            match = re.fullmatch(r'(\d+)\s*帧(?:\+[^；;]+)?', p)
+            if match:
+                cond['fps_target'] = int(match.group(1))
+        elif re.fullmatch(r'渲染分辨率\s*[=:：]\s*\d+\s*[xX×]\s*\d+', p):
+            cond['render_resolution'] = re.split(r'[=:：]', p, maxsplit=1)[1].strip().replace('×','x').replace('X','x')
         elif "画质" in p or p in ("极致", "高清", "均衡", "流畅"):
             cond["quality"] = p
         elif "℃" in p:
@@ -736,6 +745,7 @@ def parse_game_conditions(raw):
             cond["screen_brightness"] = p
         elif re.search(r"iOS|Android|鸿蒙|HarmonyOS|MagicOS|HyperOS|ColorOS|OriginOS|MIUI|One UI", p, re.I):
             cond["os"] = p
+            cond['os_version'] = p
         elif re.match(r"^\d{4}-\d{2}", p):
             cond["run_period"] = p.replace("评测", "")
         elif re.match(r"^\d+V\d+$", p):

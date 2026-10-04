@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 
-RULE_VERSION = "rules-2.1.0"
+RULE_VERSION = "rules-2.2.0"
 
 # ---------------------------------------------------------------- 缺失语义
 

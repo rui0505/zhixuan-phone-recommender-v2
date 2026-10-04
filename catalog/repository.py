@@ -14,6 +14,7 @@ import os
 import sqlite3
 import math
 import hashlib
+from datetime import date
 from numbers import Real
 from pathlib import Path
 
@@ -80,18 +81,24 @@ class CatalogRepository:
                 'sku_ids': matched}
 
     # ------------------------------------------------------------ 目录
-    def load_catalog(self, brand=None, mode="all", min_storage_gb=None, max_price=None):
+    def load_catalog(self, brand=None, mode="all", min_storage_gb=None, max_price=None, *,
+                     min_price=None, excluded_brands=None, price_kind_preference=None):
         """机型目录：一行一个 sku，含机型/版本/配置/选定价格/封面图。"""
         _validate_mode(mode)
         _validate_nonnegative('min_storage_gb', min_storage_gb)
         _validate_nonnegative('max_price', max_price)
+        _validate_nonnegative('min_price', min_price)
+        if min_price is not None and max_price is not None and min_price > max_price:
+            raise ValueError('min_price 不能大于 max_price')
+        _validate_brand_list('excluded_brands', excluded_brands)
         sql = """
         SELECT m.model_id, m.brand, m.display_name, m.release_month,
                v.variant_id, v.variant_name, v.region, v.satellite_support, v.is_default,
                s.sku_id, s.ram_raw, s.ram_gb, s.storage_raw, s.storage_gb, s.memory_type,
                p.price_id, p.amount AS price_cny, p.currency, p.price_kind, p.condition,
                p.is_estimated, p.channel, p.price_note, p.source_sale_status,
-               p.observed_at, p.source_record_id AS price_source_record_id,
+               p.observed_at, p.source_record_id AS price_source_record_id, p.source_id AS price_source_id,
+               s.source_record_id AS sku_source_record_id,
                m.cover_asset_id
         FROM skus s
         JOIN phone_variants v ON v.variant_id = s.variant_id
@@ -103,15 +110,23 @@ class CatalogRepository:
         for r in rows:
             if brand and r["brand"] != brand:
                 continue
+            if excluded_brands and r['brand'] in excluded_brands:
+                continue
             if min_storage_gb and (r["storage_gb"] or 0) < min_storage_gb:
                 continue
             out.append(r)
-        out = _select_single_price(out, mode)
+        out = _select_single_price(out, mode, price_kind_preference)
+        for r in out:
+            if (r.get('price_cny') is not None and (not math.isfinite(r['price_cny'])
+                    or r['price_cny'] < 0 or r.get('currency') != 'CNY')):
+                r['price_cny'] = None  # Never infer exchange rates or replace the chosen snapshot.
         if mode in ("new", "used"):
             # 新机/二手模式：只保留该模式下确有价格的配置，不静默混入另一类
             out = [r for r in out if r.get("price_cny") is not None]
         if max_price is not None:
             out = [r for r in out if r.get("price_cny") is not None and r["price_cny"] <= max_price]
+        if min_price is not None:
+            out = [r for r in out if r.get('price_cny') is not None and r['price_cny'] >= min_price]
         # 一个 sku 只保留一行
         seen, dedup = set(), []
         for r in out:
@@ -119,6 +134,7 @@ class CatalogRepository:
                 continue
             seen.add(r["sku_id"])
             dedup.append(r)
+        dedup.sort(key=lambda r: r['sku_id'])
         return pd.DataFrame(dedup) if pd is not None else dedup
 
     def list_models(self):
@@ -273,11 +289,14 @@ class CatalogRepository:
     # ------------------------------------------------------------ 决策输入
     def build_decision_input(self, metric_keys=None, mode="new", weights=None,
                              max_price=None, min_storage_gb=None, brands=None,
-                             price_kind_preference=None):
+                             price_kind_preference=None, *, min_price=None, excluded_brands=None,
+                             comparison_group_overrides=None):
         """只构建可比输入，不计算 TOPSIS/VIKOR 分数。先检查 decision_status。"""
         from .decision_input import build_decision_input
         return build_decision_input(self, metric_keys, mode, weights, max_price,
-                                    min_storage_gb, brands, price_kind_preference)
+                                    min_storage_gb, brands, price_kind_preference, min_price=min_price,
+                                    excluded_brands=excluded_brands,
+                                    comparison_group_overrides=comparison_group_overrides)
 
     def summary(self) -> dict:
         counts = {}
@@ -301,7 +320,27 @@ def _validate_nonnegative(name, value):
                               or not math.isfinite(value) or value < 0):
         raise ValueError(f'{name} 必须为有限、非负数值')
 
-def _select_single_price(rows, mode):
+def _validate_brand_list(name, value):
+    if value is not None and (not isinstance(value, (list, tuple, set)) or
+                             not all(isinstance(x, str) for x in value)):
+        raise ValueError(f'{name} 必须为品牌名称列表')
+
+
+def known_date_key(value):
+    """ISO date only; unknown is older, month precision remains month precision."""
+    if not isinstance(value, str):
+        return (0, '')
+    try:
+        if len(value) == 7:
+            date.fromisoformat(value + '-01')
+        else:
+            date.fromisoformat(value)
+        return (1, value)
+    except ValueError:
+        return (0, '')
+
+
+def _select_single_price(rows, mode, price_kind_preference=None):
     """同一 sku 在同一模式下只保留一条价格。
 
     模式语义：
@@ -312,12 +351,19 @@ def _select_single_price(rows, mode):
     某模式无符合成色的价格时，价格字段留空并注明原因，不退回其他成色。
     同 kind 下取 observed_at 最新，再按 price_id 升序，保证可复现。
     """
+    _validate_mode(mode)
     if mode == "new":
         priority, allowed = PRICE_PRIORITY_NEW, {"new"}
     elif mode == "used":
         priority, allowed = PRICE_PRIORITY_USED, {"used"}
     else:
         priority, allowed = (PRICE_PRIORITY_NEW + PRICE_PRIORITY_USED), None
+    if price_kind_preference is not None:
+        if (not isinstance(price_kind_preference, (list, tuple)) or not price_kind_preference
+                or not all(isinstance(k, str) and k in priority for k in price_kind_preference)
+                or len(set(price_kind_preference)) != len(price_kind_preference)):
+            raise ValueError('price_kind_preference 必须为当前模式已定义价格口径的无重复列表')
+        priority = list(price_kind_preference) + [k for k in priority if k not in price_kind_preference]
 
     grouped = {}
     for r in rows:
@@ -352,7 +398,7 @@ def _select_single_price(rows, mode):
 
         # 稳定多级排序：价格类型优先级 -> 采集日期（新在前）-> price_id（小在前）
         cands = sorted(cands, key=lambda p: str(p.get("price_id")))
-        cands = sorted(cands, key=lambda p: str(p.get("observed_at") or ""), reverse=True)
+        cands = sorted(cands, key=lambda p: known_date_key(p.get('observed_at')), reverse=True)
         cands = sorted(cands, key=rank_of)
         out.append(cands[0])
     return out
