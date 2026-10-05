@@ -20,7 +20,9 @@ class RankingTests(unittest.TestCase):
         r=rank(self.df,dict(price=0,weight=0,storage=0,refresh=0,screen=1),6.1)
         self.assertEqual(r.iloc[0].screen,6.1)
     def test_singleton(self):
-        self.assertEqual(rank(self.df.head(1),dict(price=1,weight=1,storage=1,refresh=1,screen=1),6.5).iloc[0].score,.5)
+        # New contract: one independent model is not a meaningful relative recommendation.
+        with self.assertRaises(ValueError):
+            rank(self.df.head(1),dict(price=1,weight=1,storage=1,refresh=1,screen=1),6.5)
     def test_zero_weights(self):
         with self.assertRaises(ValueError): rank(self.df,dict.fromkeys(['price','weight','storage','refresh','screen'],0),6.5)
 

@@ -132,7 +132,7 @@ class PreferenceTests(unittest.TestCase):
 
     def test_topsis_direction(self):
         # 仅价格与重量存在差异，使用控制条件验证排序对偏好改变的反应。
-        frame = pd.DataFrame({'id': ['A', 'B'], 'price': [2500., 2000.], 'weight': [170., 200.],
+        frame = pd.DataFrame({'id': ['A', 'B'], '产品名称':['合成机A','合成机B'], 'price': [2500., 2000.], 'weight': [170., 200.],
                               'storage': [256., 256.], 'refresh': [120., 120.], 'screen': [6.5, 6.5]})
         light = dict(price=.01, weight=.99, storage=0, refresh=0, screen=0)
         cheap = dict(price=.99, weight=.01, storage=0, refresh=0, screen=0)

@@ -47,7 +47,8 @@ from bridge import (
     Bridged,
     bridge_contract,
 )
-from engine import rank
+from engine import rank, rank_decision_input
+from catalog.contracts import RankingResult
 from needs_adapter import to_blue_needs
 from needs_extraction import (
     FIELD_PATH_TO_ASK,
@@ -174,6 +175,16 @@ def models_payload(
     先按配置算分，再为每个机型保留最高分配置——用户看的是「机型」，
     不是「配置」，同一机型出现五条会把清单挤爆。
     """
+    if 'sku_id' in result and 'display_name' in result:
+        models=result.drop_duplicates('model_id').head(limit)
+        payload=[]
+        for row in models.to_dict('records'):
+            payload.append({'id':row['sku_id'],'name':row['display_name'],'brand':row.get('brand'),
+                'config':str(row.get('ram_raw') or '缺失')+' / '+str(row.get('storage_raw') or '缺失'),
+                'price':row.get('price_cny'),'score':row['score'],
+                'reason':'当前可比候选集内相对排序；不代表绝对性能',
+                'model_id':row['model_id'],'variant_id':row.get('variant_id'),'price_id':row.get('price_id')})
+        return payload
     models = result.drop_duplicates('产品名称').head(limit)
     payload: list[dict[str, Any]] = []
     for _, row in models.iterrows():
@@ -304,10 +315,12 @@ class Turn:
     models: list[dict[str, Any]] = field(default_factory=list)
     advice: str = ''
     advice_error: str = ''
+    ranking: RankingResult | None = None
+    decision_input: dict | None = None
 
     @property
     def ok(self) -> bool:
-        return self.stage == 'result'
+        return self.stage == 'result' and not self.error
 
     @property
     def advice_from_llm(self) -> bool:
@@ -318,7 +331,17 @@ class Turn:
         data = asdict(self)
         if self.bridged is not None:
             data['bridged'] = asdict(self.bridged)
-        return data
+        return _json_safe(data)
+
+
+def _json_safe(value):
+    import math
+    if isinstance(value,pd.DataFrame):
+        return _json_safe(value.astype(object).where(value.notna(),None).to_dict('records'))
+    if isinstance(value,dict): return {k:_json_safe(v) for k,v in value.items()}
+    if isinstance(value,(list,tuple)): return [_json_safe(v) for v in value]
+    if isinstance(value,float) and not math.isfinite(value): return None
+    return value
 
 
 def _failed(result: Mapping[str, Any], error: str, **extra: Any) -> Turn:
@@ -338,6 +361,7 @@ def handle(
     writer: Any = None,
     classifier: Any = None,
     timeout: float | None = None,
+    decision_builder: Any = None,
 ) -> Turn:
     """处理一轮用户输入，返回 `Turn`。**本函数不抛异常。**
 
@@ -402,7 +426,7 @@ def handle(
         )
 
     # --- 出结果 ---
-    candidates = candidate_frame(df, bridged)
+    candidates = candidate_frame(df, bridged) if decision_builder is None else pd.DataFrame()
     weights = dict(bridged.weights)
     target = bridged.target
     # 只有用户**明确说了**上限才拿来算「比预算低多少」；含糊预算没封顶，
@@ -421,7 +445,25 @@ def handle(
         **common,
     )
 
+    if decision_builder is not None:
+        try:
+            di=decision_builder(dict(result),bridged)
+            ranking=rank_decision_input(di,target_screen=target)
+        except (ValueError,KeyError,TypeError,OverflowError):
+            turn.stage='failed';turn.error='决策输入或排名计算失败，请检查数据与权重；不生成推荐成绩'
+            return turn
+        turn.ranking=ranking;turn.decision_input=di
+        turn.candidate_configs=len(di['candidates'])
+        if ranking.status!='ready':
+            turn.stage=ranking.status;turn.error=ranking.reason;turn.advice=ranking.reason
+            return turn
+        turn.models=models_payload(ranking.ranked,top_n,budget_high)
+        turn.advice=ranking.reason+'\n'+'\n'.join(m['name']+' · '+m['id'] for m in turn.models)
+        turn.advice_error='未请求大模型推荐语；证据模板将在解释层渲染'
+        return turn
+
     if candidates.empty:
+        turn.stage='no_candidates'
         brief = Brief(candidate_configs=0, total_configs=len(df))
         turn.advice = fallback_text(brief)
         turn.advice_error = '没有候选配置，未生成推荐语'
@@ -432,6 +474,7 @@ def handle(
     except ValueError as error:
         # 权重全为零、候选数据有缺失等。这类问题不该让整个服务 500。
         turn.error = str(error)
+        turn.stage = 'failed'
         turn.advice = fallback_text(Brief(candidate_configs=len(candidates),
                                           total_configs=len(df)))
         turn.advice_error = str(error)

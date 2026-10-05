@@ -56,23 +56,86 @@ def load_data(source=SOURCE):
     frame['label'] = frame['产品名称']+' · '+frame['配置']+' · '+frame['id']
     return frame
 
+ALGORITHM_VERSION='topsis-1.0.0'
+
+
+def rank_decision_input(di, *, target_screen=None):
+    """TOPSIS relative to this comparable candidate set; never a universal product score."""
+    import math
+    from numbers import Real
+    from catalog.contracts import RankingResult
+    candidates=di['candidates'].copy()
+    keys=[d['metric_key'] for d in di['criterion_definitions']]
+    if not keys or len(set(keys))!=len(keys): raise ValueError('指标定义为空或重复')
+    weights=di['weights']
+    if set(weights)!=set(keys): raise ValueError('权重与指标定义不一致')
+    if any(isinstance(v,bool) or not isinstance(v,Real) or not math.isfinite(v) or v<0 for v in weights.values()):
+        raise ValueError('权重必须是有限非负数值')
+    scale=max(weights.values())
+    if scale<=0: raise ValueError('至少设置一个大于0的偏好权重')
+    active=[j for j,k in enumerate(keys) if weights[k]>0]
+    matrix=di['X']; masks=di['missing_mask']
+    if len(matrix)!=len(candidates) or len(masks)!=len(candidates) or any(len(r)!=len(keys) for r in matrix+masks):
+        raise ValueError('决策矩阵、缺失标记与候选尺寸不一致')
+    if not candidates.empty and (not {'sku_id','model_id'}.issubset(candidates) or
+            candidates['sku_id'].isna().any() or candidates['model_id'].isna().any() or not candidates['sku_id'].is_unique):
+        raise ValueError('规范 SKU / 独立机型身份缺失或重复')
+    eligible=di['eligible_indices']; backup=di['backup_indices']
+    if (any(type(i) is not int or i<0 or i>=len(candidates) for i in eligible+backup)
+            or len(set(eligible+backup))!=len(candidates) or set(eligible).intersection(backup)):
+        raise ValueError('合格 / 备选索引必须唯一且完整覆盖候选')
+    candidates['input_index']=range(len(candidates))
+    backups=candidates.iloc[backup].copy()
+    active_keys=[keys[j] for j in active]
+    def result(status, ranked, reason):
+        return RankingResult(status,ranked,backups,reason,di.get('dataset_version'),
+                             di.get('feature_rule_version'),ALGORITHM_VERSION,active_keys)
+    status=di['decision_status']
+    if status not in ('ready','requires_target_transform','no_candidates','insufficient_comparable_data'):
+        raise ValueError('未定义的决策状态')
+    for i in eligible:
+        for j in active:
+            v=matrix[i][j]
+            if masks[i][j] or v is None or isinstance(v,bool) or not isinstance(v,Real) or not math.isfinite(v):
+                raise ValueError('合格候选的有效指标存在缺失或非法数值')
+    if status in ('no_candidates','insufficient_comparable_data'):
+        return result(status,candidates.iloc[:0].copy(),di['decision_reason'])
+    if len(set(candidates.iloc[eligible]['model_id']))<2:
+        return result('insufficient_comparable_data',candidates.iloc[:0].copy(),'可比的独立机型少于 2 个；不生成推荐分数')
+    x=np.asarray([[matrix[i][j] for j in active] for i in eligible],dtype=float)
+    directions=[di['criterion_definitions'][j]['direction'] for j in active]
+    for column,direction in enumerate(directions):
+        if direction=='target':
+            if isinstance(target_screen,bool) or not isinstance(target_screen,Real) or not math.isfinite(target_screen) or target_screen<=0:
+                raise ValueError('屏幕目标必须是有限正数，需用户确认')
+            x[:,column]=np.abs(x[:,column]-target_screen)
+            directions[column]='cost'
+        elif direction not in ('cost','benefit'):
+            raise ValueError('未知指标方向')
+    if not np.isfinite(x).all(): raise ValueError('目标转换溢出')
+    # Scale each column before vector normalization; x*x must never overflow.
+    maxima=np.max(np.abs(x),axis=0)
+    scaled=np.divide(x,maxima,out=np.zeros_like(x),where=maxima!=0)
+    norms=np.linalg.norm(scaled,axis=0)
+    normalized=np.divide(scaled,norms,out=np.zeros_like(scaled),where=norms!=0)
+    w=np.asarray([weights[k]/scale for k in active_keys],dtype=float);w/=w.sum()
+    weighted=normalized*w
+    benefit=np.asarray([d=='benefit' for d in directions])
+    high,low=weighted.max(axis=0),weighted.min(axis=0)
+    ideal=np.where(benefit,high,low);worst=np.where(benefit,low,high)
+    positive=np.linalg.norm(weighted-ideal,axis=1);negative=np.linalg.norm(weighted-worst,axis=1)
+    scores=np.divide(negative,positive+negative,out=np.full(len(x),.5),where=(positive+negative)>0)
+    ranked=candidates.iloc[eligible].copy();ranked['score']=scores
+    ranked=ranked.sort_values(['score','sku_id'],ascending=[False,True],kind='stable')
+    tied=bool(np.allclose(scores,scores[0],rtol=0,atol=1e-12))
+    reason='有效维度无区分度，候选并列；ID 次序不是优劣' if tied else 'TOPSIS 当前可比候选集内相对排序；不代表手机绝对性能'
+    return result('ready',ranked,reason)
+
+
 def rank(frame, weights, target):
+    """Legacy offline fixture adapter; production must pass a catalog DecisionInput."""
     if frame.empty: return frame.copy()
-    keys = ['price','weight','storage','refresh','screen']
-    w = np.array([weights[k] for k in keys],dtype=float)
-    if np.any(w<0) or w.sum()<=0: raise ValueError('至少设置一个大于0的偏好权重。')
-    x = frame[keys].to_numpy(dtype=float, copy=True)
-    if not np.isfinite(x).all(): raise ValueError('候选数据存在缺失或无效数值，不能计算。')
-    # Target dimension becomes distance from preferred size; smaller is better.
-    x[:,-1] = np.abs(x[:,-1]-target)
-    norms = np.linalg.norm(x,axis=0)
-    weighted = np.divide(x,norms,out=np.zeros_like(x),where=norms!=0) * (w/w.sum())
-    benefit = np.array([False,False,True,True,False])
-    high, low = weighted.max(axis=0), weighted.min(axis=0)
-    ideal = np.where(benefit,high,low)
-    worst = np.where(benefit,low,high)
-    positive = np.linalg.norm(weighted-ideal,axis=1)
-    negative = np.linalg.norm(weighted-worst,axis=1)
-    score = np.divide(negative,positive+negative,out=np.full(len(x),.5),where=(positive+negative)>1e-12)
-    out = frame.copy(); out['score']=score
-    return out.sort_values(['score','price','id'],ascending=[False,True,True])
+    from catalog.adapter import decision_input_from_frame
+    result=rank_decision_input(decision_input_from_frame(frame,weights),target_screen=target)
+    if result.status!='ready': raise ValueError(result.reason)
+    return result.ranked
