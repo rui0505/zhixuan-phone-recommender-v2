@@ -13,3 +13,4 @@ data_pipeline/config/build_config.local.json
 node_modules/
 *.log
 data/phones.xlsx
+data/release-*/

@@ -1,0 +1,181 @@
+{
+  "status": "PASS",
+  "snapshot_sha256": "8e643da6229333a021214cd4d5d4fd321a9e42c2ff600171be25c677bcdceef2",
+  "dataset_version": "catalog-2026-10-04-v2",
+  "feature_rule_version": "rules-2.2.0",
+  "allowlist": {
+    "phone_models": [
+      "model_id",
+      "brand",
+      "display_name",
+      "display_name_match_key",
+      "release_month",
+      "release_granularity",
+      "first_source_record_id"
+    ],
+    "phone_variants": [
+      "variant_id",
+      "model_id",
+      "variant_name",
+      "name_is_source",
+      "region",
+      "satellite_support",
+      "is_default",
+      "source_record_id"
+    ],
+    "skus": [
+      "sku_id",
+      "variant_id",
+      "model_id",
+      "ram_raw",
+      "ram_gb",
+      "storage_raw",
+      "storage_gb",
+      "memory_type",
+      "source_record_id"
+    ],
+    "price_snapshots": [
+      "price_id",
+      "sku_id",
+      "amount",
+      "currency",
+      "price_raw",
+      "price_kind",
+      "condition",
+      "is_estimated",
+      "channel",
+      "price_note",
+      "qualifiers",
+      "source_sale_status",
+      "observed_at",
+      "observed_at_kind",
+      "source_id",
+      "source_record_id"
+    ],
+    "specifications": [
+      "spec_id",
+      "subject_type",
+      "subject_id",
+      "variant_id",
+      "spec_key",
+      "unit",
+      "value_num",
+      "value_text",
+      "raw_value",
+      "raw_value_type",
+      "source_col",
+      "source_record_id",
+      "source_id",
+      "parse_status",
+      "comparison_group",
+      "rule_version",
+      "note"
+    ],
+    "sources": [
+      "source_id",
+      "source_kind",
+      "url",
+      "url_count",
+      "publisher",
+      "published_at",
+      "published_granularity",
+      "collected_at",
+      "url_is_parseable"
+    ],
+    "spec_provenance": [
+      "spec_id",
+      "source_record_id",
+      "source_col",
+      "source_id"
+    ],
+    "benchmark_runs": [
+      "run_id",
+      "subject_type",
+      "subject_id",
+      "model_id",
+      "variant_id",
+      "sku_id",
+      "benchmark",
+      "institution",
+      "protocol",
+      "protocol_detail",
+      "conditions_json",
+      "run_date",
+      "os_version",
+      "comparison_group",
+      "applicable_scope",
+      "scope_note",
+      "source_id",
+      "source_record_id"
+    ],
+    "metric_observations": [
+      "observation_id",
+      "run_id",
+      "metric_key",
+      "value_num",
+      "unit",
+      "raw_value_type",
+      "missing_reason",
+      "source_col",
+      "source_record_id",
+      "comparison_group",
+      "verification_status"
+    ],
+    "metric_definitions": [
+      "metric_key",
+      "name_cn",
+      "unit",
+      "direction",
+      "comparability_prefix",
+      "value_type",
+      "range_rule",
+      "cross_source_comparable"
+    ],
+    "dataset_releases": [
+      "release_id",
+      "dataset_version",
+      "rule_version",
+      "id_registry_version",
+      "input_hashes_json",
+      "built_at"
+    ],
+    "field_dictionary": [
+      "field_name",
+      "layer",
+      "unit",
+      "description"
+    ]
+  },
+  "table_counts": {
+    "phone_models": 147,
+    "phone_variants": 150,
+    "skus": 484,
+    "price_snapshots": 484,
+    "specifications": 2671,
+    "sources": 477,
+    "spec_provenance": 8712,
+    "benchmark_runs": 207,
+    "metric_observations": 923,
+    "metric_definitions": 19,
+    "dataset_releases": 1,
+    "field_dictionary": 30
+  },
+  "business_comparison": {
+    "status": "PASS",
+    "compared_rows": 14305,
+    "numeric_values_changed": 0
+  },
+  "acceptance": {
+    "machine_acceptance": "PASS",
+    "overall_acceptance": "PENDING",
+    "wps_review": "NOT_CHECKED"
+  },
+  "images": {
+    "published_count": 0,
+    "status": "NOT_PUBLISHED_RIGHTS_PENDING"
+  },
+  "long_excerpts": "NOT_PUBLISHED",
+  "llm_enabled": false,
+  "vikor": "NOT_IMPLEMENTED",
+  "python_version": "3.12"
+}
