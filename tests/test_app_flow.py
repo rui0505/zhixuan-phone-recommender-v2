@@ -25,7 +25,7 @@ BASE = Path(__file__).resolve().parents[1]
 if str(BASE) not in sys.path:
     sys.path.insert(0, str(BASE))
 
-from engine import load_data  # noqa: E402
+from tests.legacy_fixture import load_fixture as load_data  # noqa: E402
 from streamlit.testing.v1 import AppTest  # noqa: E402
 from tests.fake_openai import FakeOpenAIServer  # noqa: E402
 from tests.isolation import LLM_VARS, IsolatedEnvTest  # noqa: E402

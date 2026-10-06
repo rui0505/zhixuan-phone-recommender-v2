@@ -21,7 +21,7 @@ if str(BASE) not in sys.path:
     sys.path.insert(0, str(BASE))
 
 from bridge import Bridged, bridge_contract  # noqa: E402
-from engine import load_data  # noqa: E402
+from tests.legacy_fixture import load_fixture as load_data  # noqa: E402
 from pipeline import (  # noqa: E402
     MAX_ASK_ROUNDS,
     TOP_N,

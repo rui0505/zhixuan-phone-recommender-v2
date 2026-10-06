@@ -77,7 +77,9 @@ CHAT_STATE_KEYS = (
 
 
 @st.cache_data
-def data(): return load_data()
+def data():
+    from tests.legacy_fixture import load_fixture
+    return load_fixture()
 
 
 def _prepare_llm_env() -> None:

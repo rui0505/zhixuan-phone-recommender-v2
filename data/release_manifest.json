@@ -177,5 +177,13 @@
   "long_excerpts": "NOT_PUBLISHED",
   "llm_enabled": false,
   "vikor": "NOT_IMPLEMENTED",
-  "python_version": "3.12"
+  "python_version": "3.12",
+  "runtime_contract": {
+    "python_tested": "3.12.14",
+    "direct_packages": {"streamlit": "1.65.0", "pandas": "2.3.3", "numpy": "2.5.3", "openpyxl": "3.1.5"},
+    "observed_framework_dependencies": {"starlette": "1.7.0", "uvicorn": "0.54.0", "Pillow": "12.3.0"},
+    "test_environment": "clean-no-source-archive",
+    "tested_on": "2026-10-06",
+    "transitive_versions": "observed, not fully locked; revalidate after dependency updates"
+  }
 }

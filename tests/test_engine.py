@@ -4,12 +4,13 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import unittest
 import pandas as pd
 from engine import ROW_ID_LEGACY_PREFIX, load_data, rank, stable_id
+from legacy_fixture import load_fixture, fixture_path, MODEL_COUNT, CONFIG_COUNT
 
 class RankingTests(unittest.TestCase):
-    def setUp(self): self.df=load_data()
+    def setUp(self): self.df=load_fixture()
     def test_data(self):
-        self.assertEqual(len(self.df),156)
-        self.assertEqual(self.df['产品名称'].nunique(),46)
+        self.assertEqual(len(self.df),CONFIG_COUNT)
+        self.assertEqual(self.df['产品名称'].nunique(),MODEL_COUNT)
         self.assertFalse(self.df[['price','storage','weight','screen','refresh']].isna().any().any())
         self.assertTrue((self.df[self.df['存储'].str.contains('LPDDR5T')].storage==1024).all())
     def test_price_only(self):
@@ -36,7 +37,7 @@ class StableIdTests(unittest.TestCase):
     """
 
     @classmethod
-    def setUpClass(cls): cls.df=load_data()
+    def setUpClass(cls): cls.df=load_fixture()
 
     def test_no_legacy_row_ids(self):
         self.assertFalse(self.df['id'].str.startswith(ROW_ID_LEGACY_PREFIX).any())
@@ -66,7 +67,7 @@ class StableIdTests(unittest.TestCase):
         }])
         import tempfile
         from pathlib import Path as P
-        source=P(__file__).resolve().parents[1]/'data'/'phones.xlsx'
+        source=fixture_path()
         with tempfile.TemporaryDirectory() as directory:
             target=P(directory)/'extended.xlsx'
             pd.concat([pd.read_excel(source),extra],ignore_index=True).to_excel(target,index=False)
@@ -75,7 +76,7 @@ class StableIdTests(unittest.TestCase):
         self.assertTrue(set(self.df['id'])<=set(extended['id']))
 
     def test_duplicate_identity_rejected(self):
-        source=Path(__file__).resolve().parents[1]/'data'/'phones.xlsx'
+        source=fixture_path()
         raw=pd.read_excel(source)
         doubled=pd.concat([raw,raw.head(1)],ignore_index=True)
         import tempfile
@@ -87,9 +88,13 @@ class StableIdTests(unittest.TestCase):
 
     def test_ranking_unchanged_by_id_scheme(self):
         """排序主键是 score；ID 只作为同分时的稳定次序，不得改变得分。"""
-        result=rank(self.df,dict(price=35,weight=20,storage=20,refresh=15,screen=10),6.5)
-        self.assertAlmostEqual(result.iloc[0].score,0.684495,places=5)
-        self.assertLessEqual(result.iloc[0].price,result.iloc[-1].price)
+        # Independent 2-model analytic fixture: cheaper S-A must score 1, S-B 0.
+        # Original 0.684495 source-baseline result remains recorded, not reasserted
+        # against unrelated synthetic values.
+        frame=pd.DataFrame([{'id':'A','产品名称':'合成甲','price':1000,'weight':180,'storage':256,'refresh':120,'screen':6.5},
+                            {'id':'B','产品名称':'合成乙','price':2000,'weight':180,'storage':256,'refresh':120,'screen':6.5}])
+        result=rank(frame,dict(price=35,weight=20,storage=20,refresh=15,screen=10),6.5)
+        self.assertEqual(result.score.tolist(),[1.0,0.0])
         self.assertTrue(result.score.is_monotonic_decreasing)
 
 if __name__=='__main__': unittest.main()

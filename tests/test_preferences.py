@@ -75,7 +75,8 @@ class PreferenceTests(unittest.TestCase):
     def test_target_zero_no_effect(self):
         self.needs['target_screen_inches'] = None
         weights = build_initial_weights(self.needs)['weights']
-        frame = load_data().head(12)
+        from tests.legacy_fixture import load_fixture
+        frame = load_fixture().head(12)
         self.assertEqual(rank(frame, weights, 6.1).id.tolist(), rank(frame, weights, 6.8).id.tolist())
 
     def test_no_mutation(self):

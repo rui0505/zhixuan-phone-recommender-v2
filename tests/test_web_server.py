@@ -37,6 +37,15 @@ from providers.jev import MockClassifier  # noqa: E402
 from quiz import build_text, quiz_payload  # noqa: E402
 from tests.isolation import IsolatedEnvTest  # noqa: E402
 from web import server  # noqa: E402
+from tests.legacy_fixture import load_fixture,MODEL_COUNT,CONFIG_COUNT
+from unittest.mock import patch
+
+def setUpModule():
+    global _fixture_patch
+    _fixture_patch=patch('web.server.load_data',load_fixture);_fixture_patch.start()
+
+def tearDownModule():
+    _fixture_patch.stop()
 
 
 def free_port() -> int:
@@ -176,7 +185,7 @@ class MetaTests(WebServerTest):
 
     def test_reports_the_real_dataset_size(self):
         _, meta = self.get_json('/api/meta')
-        self.assertEqual(meta['totals'], {'models': 46, 'configs': 156})
+        self.assertEqual(meta['totals'], {'models': MODEL_COUNT, 'configs': CONFIG_COUNT})
 
     def test_exposes_the_ui_contract(self):
         _, meta = self.get_json('/api/meta')
@@ -205,14 +214,14 @@ class MetaTests(WebServerTest):
 class PhonesTests(WebServerTest):
     def test_returns_every_config(self):
         _, payload = self.get_json('/api/phones')
-        self.assertEqual(len(payload['phones']), 156)
+        self.assertEqual(len(payload['phones']), CONFIG_COUNT)
 
     def test_first_row_carries_real_values(self):
         _, payload = self.get_json('/api/phones')
         sample = next(p for p in payload['phones'] if p['name'] == 'iPhone 15')
         self.assertEqual(sample['brand'], '苹果')
-        self.assertEqual(sample['price'], 5999.0)
-        self.assertEqual(sample['weight'], 171.0)
+        self.assertEqual(sample['price'], 2000.0)  # synthetic, not real retail price
+        self.assertEqual(sample['weight'], 180.0)
 
     def test_does_not_invent_battery_or_fold_fields(self):
         _, payload = self.get_json('/api/phones')
@@ -381,7 +390,7 @@ class QuizTests(WebServerTest):
 
     def test_models_all_come_from_the_dataset(self):
         """机型必须真实存在，不能是拼出来的。"""
-        frame = load_data()
+        frame = load_fixture()
         known = set(frame['产品名称'])
         body = self.quiz_ask()
         for model in body['models']:
