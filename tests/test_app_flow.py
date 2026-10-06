@@ -30,7 +30,7 @@ from streamlit.testing.v1 import AppTest  # noqa: E402
 from tests.fake_openai import FakeOpenAIServer  # noqa: E402
 from tests.isolation import LLM_VARS, IsolatedEnvTest  # noqa: E402
 
-APP = str(BASE / "app.py")
+APP = str(BASE / "tests/reference_streamlit.py")
 
 
 def send(at: AppTest, text: str) -> AppTest:

@@ -10,6 +10,19 @@ FRAME_FIELDS={'price':'price_cny','weight':'weight_g','storage':'storage_gb',
               'refresh':'refresh_rate_hz','screen':'screen_size_inch'}
 
 
+def resolve_brands(requested,known):
+    """Declared label aliases only, not automatic brand inference or fuzzy matching."""
+    aliases=(('apple','苹果'),('huawei','华为'),('honor','荣耀'),('xiaomi','小米'),
+             ('redmi','红米'),('realme','真我'),('oneplus','一加'),('samsung','三星'))
+    resolved=[]
+    for name in requested:
+        group=next((set(pair) for pair in aliases if name.lower() in pair),{name.lower()})
+        hits=[value for value in known if value.lower() in group]
+        if len(hits)!=1:raise ValueError('品牌无法唯一匹配，请在手动条件中确认')
+        if hits[0] not in resolved:resolved.append(hits[0])
+    return resolved
+
+
 def canonical_weights(weights):
     mapped={}
     for key,value in weights.items():

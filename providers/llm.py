@@ -203,6 +203,7 @@ def post_chat(
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 return json.loads(response.read().decode("utf-8")), None
         except urllib.error.HTTPError as error:
+            error.close()  # HTTPError owns an open response even when urlopen raises.
             # 400 通常是参数不被支持，交给调用方降级重试
             if error.code == 400:
                 return None, None

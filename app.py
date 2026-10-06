@@ -1,488 +1,177 @@
-"""知选 · 手机推荐实验室。
-
-两条入口，共用同一份数据与同一套TOPSIS算法：
-
-1. **对话框**（主入口）：用中文说需求 → 大模型抽取 → 用户确认 → 取舍追问 → 引擎算。
-   信息不全时先追问（最多 `MAX_ASK_ROUNDS` 轮），追问话术来自
-   `needs_extraction` 的 `clarifications`。
-2. **侧边栏滑块**（手动模式）：可独立调整；确认与追问模式使用确认表单的值。
-
-**机型永远由引擎算，不由大模型报。** 大模型的职责只有两个：
-理解需求（`needs_extraction`）和把引擎结果写成一段话（`providers.recommend`）。
-界面始终把引擎的机型卡片渲染在推荐语下方——以卡片为准。
-"""
-
+"""Production: read-only release → confirmed needs → TOPSIS → bound evidence."""
 import os
-
+import sqlite3
+from pathlib import Path
 import streamlit as st
+from catalog.adapter import build_input,resolve_brands
+from catalog.evidence import build_evidence,digest,render_template
+from engine import rank_decision_input
+from ui.catalog_views import (file_sha,load_release,invalidate_confirmation,clear_result,
+    display_records,render_details,sku_details,safe_url)
+from ui.export_results import export_results
+from providers.env import load_dotenv,llm_enabled
 
-from bridge import (
-    BUDGET_DEFAULT,
-    BUDGET_LIMIT,
-    BUDGET_STEP,
-    SCREEN_DEFAULT,
-    SCREEN_RANGE,
-    STORAGE_DEFAULT,
-    STORAGE_OPTIONS,
-    bridge_contract,
-)
-from engine import load_data, rank
-from needs_extraction import (
-    FIELD_PATH_TO_ASK,
-    STATUS_FAILED,
-    extract_needs,
-)
-from providers.env import load_dotenv
-from providers.recommend import Brief, fallback_text, write_recommendation
-from schemas import CRITERIA
-from needs_adapter import to_blue_needs
-from preferences import filter_candidates
-from preference_panel import render_preference_panel
-from pipeline import (
-    MAX_ASK_ROUNDS,
-    TOP_N,
-    WEIGHT_LABELS,
-    Bridged,
-    ask_text,
-    candidate_frame,
-    is_declining,
-    join_history,
-    models_payload,
-)
-
-st.set_page_config(page_title='知选 · 手机推荐实验室',page_icon='📱',layout='wide')
-st.markdown('''<style>
-.stApp {background:#f7f9fc} .block-container {max-width:1280px;padding-top:2.5rem}
-h1,h2,h3 {color:#16283f} [data-testid="stMetric"] {background:white;border:1px solid #e3e9f1;border-radius:12px;padding:16px}
-[data-testid="stSidebar"] {background:#edf2f8} .stButton>button {border-radius:8px}
-</style>''',unsafe_allow_html=True)
-
-# 侧边栏里所有带 key 的控件。对话抽出的条件写这些键，清空时删这些键。
-# 筛选控件加 filter_ 前缀：权重滑块的 key 直接用维度名（CRITERIA），
-# 两者若不隔离，`storage` 会同时被下拉框和滑块占用而报重复 key。
-FILTER_KEYS = {
-    'budget': 'filter_budget',
-    'brands': 'filter_brands',
-    'storage': 'filter_storage',
-    'target': 'filter_target',
-}
-WIDGET_KEYS = (*FILTER_KEYS.values(), *CRITERIA)
-# 权重滑块默认值。只属于界面——`pipeline` 不关心默认值长什么样。
-WEIGHT_DEFAULTS = {'price':35,'weight':20,'storage':20,'refresh':15,'screen':10}
-
-CHAT_STATE_KEYS = (
-    'chat', 'need_history', 'asked', 'ask_rounds',
-    'needs', 'bridged', 'degraded', 'parse_error',
-)
-
-
-@st.cache_data
-def data(): return load_data()
-
-
-def _prepare_llm_env() -> None:
-    """把配置搬进环境变量。`providers.llm` 只读环境变量，密钥不落盘。
-
-    优先级：**真实环境变量 > `.env` > `st.secrets`**。
-
-    - `.env` 是本地开发路径。注意：在本函数之前，`.env.example` 承诺的
-      「复制为 .env 就能用」其实**从未生效**——没有任何代码读它。
-    - `st.secrets` 是 Streamlit 云端部署路径。
-    - 三者都是「只填不覆盖」，所以临时 `export` 一个值永远压得住另外两个。
-    """
-    load_dotenv()
-    try:
-        secrets = st.secrets
-    except Exception:
-        return
-    for key in ('LLM_BASE_URL', 'LLM_MODEL', 'LLM_API_KEY'):
-        try:
-            value = secrets[key]
-        except Exception:
-            continue
-        if value and not os.environ.get(key):
-            os.environ[key] = str(value)
-
-
-@st.cache_resource(show_spinner=False)
-def llm_status():
-    """探测大模型是否可用，返回 (是否可用, 原因)。
-
-    未配置时界面退回纯手动滑块模式，而不是报错崩溃。
-
-    判定逻辑与 Web 服务共用 `providers.llm.llm_status`——**只检查配置，
-    不发真实请求**，界面加载不产生调用费用。真调一次请用
-    `python tools/check_llm.py`。
-    """
-    _prepare_llm_env()
-    from providers.env import llm_enabled
-    if not llm_enabled():
-        return False, '大模型默认关闭，手动推荐可用；启用真实调用需另行确认预算和网关限额'
-    from providers.llm import llm_status as probe
-    return probe()
-
-
-# --- 对话链路 ---------------------------------------------------------------
-#
-# 抽取、筛选、机型载荷、追问话术这些「怎么算」的部分都在 `pipeline` 里，
-# 与 Web 服务共用同一份实现。本段只负责**界面状态**：把结果写进
-# `session_state`，让侧边栏控件和结果区拿到同一份数据。
-
-
-def handle_turn(prompt: str, df) -> None:
-    """处理一轮用户输入。
-
-    **必须在侧边栏控件创建之前调用**：本函数会写 `FILTER_KEYS` 与权重滑块的
-    session_state，控件一旦实例化就不能再赋值。
-    """
-    state = st.session_state
-    text = prompt.strip()
-    state.setdefault('chat', []).append({'role': 'user', 'text': text})
-    history = state.setdefault('need_history', [])
-    history.append(text)
-
-    state.pop('active_ranking_ids', None)
-    result = extract_needs(join_history(history))
-    state.needs = result
-
-    if result['status'] == STATUS_FAILED:
-        reason = (result.get('meta') or {}).get('error') or '未知原因'
-        state.parse_error = reason
-        state.pop('extracted_needs', None)
-        state.blue_session = None
-        state.preference_mode = '手动调整'
-        state.chat.append({
-            'role': 'assistant',
-            'kind': 'error',
-            'text': f'这次没能理解你的需求（{reason}）。\n\n'
-                    f'换个说法再试一次，或者直接用左侧的滑块手动调条件。',
-        })
-        return
-
-    try:
-        blue_needs = to_blue_needs(result)
-    except ValueError as error:
-        state.parse_error = str(error)
-        state.pop('extracted_needs', None)
-        state.blue_session = None
-        state.preference_mode = '手动调整'
-        state.chat.append({'role': 'assistant', 'kind': 'error',
-                           'text': '需求输出未通过接口检查，请重新输入或使用手动模式。'})
-        return
-
-    bridged, degraded = bridge_contract(result, known_brands=sorted(df.brand.unique()))
-    state.bridged = bridged
-    state.degraded = degraded
-    state.parse_error = ''
-    state.extracted_needs = blue_needs
-    state.blue_session = None
-    state.pop('blue_model_fingerprint', None)
-    state.preference_mode = '需求确认与追问'
-
-    # 写控件键。此时侧边栏控件尚未创建，赋值合法；重跑后它们以新值初始化。
-    state[FILTER_KEYS['budget']] = bridged.budget
-    state[FILTER_KEYS['brands']] = bridged.brands
-    state[FILTER_KEYS['storage']] = bridged.storage
-    state[FILTER_KEYS['target']] = bridged.target
-    for key, value in bridged.weights.items():
-        state[key] = value
-
-    # 追问决策：只问「没问过的」字段，且总轮数受 MAX_ASK_ROUNDS 限制。
-    asked = set(state.get('asked') or ())
-    rounds = int(state.get('ask_rounds') or 0)
-    clarifications = [
-        item for item in result.get('clarifications') or []
-        if item.get('field') in FIELD_PATH_TO_ASK
-    ]
-
-    if rounds and is_declining(text):
-        # 用户刚被问过、又明确表示不想回答：把本轮所有待确认项记成「已问过」，
-        # 直接出结果。否则抽取器会把「随便」读成「屏幕随便」，又冒出新问题，
-        # 用户就被困在追问循环里了。
-        state.asked = sorted(asked | {item['field'] for item in clarifications})
-        pending = []
-    else:
-        pending = [item for item in clarifications if item['field'] not in asked]
-
-    if pending and rounds < MAX_ASK_ROUNDS:
-        state.ask_rounds = rounds + 1
-        state.asked = sorted(asked | {item['field'] for item in pending})
-        state.chat.append({
-            'role': 'assistant',
-            'kind': 'ask',
-            'text': ask_text(pending),
-        })
-        return
-
-    state.chat.append({
-        'role': 'assistant', 'kind': 'confirm',
-        'text': '需求已整理好。请检查下面的条件和偏好，点击“确认需求并生成推荐”。'
-                '之后可用两道取舍题进一步调整推荐。',
-    })
-
-
-def _render_model_list(models: list[dict]) -> None:
-    """对话里的机型清单：紧凑、可扫读。完整卡片留在下方结果区，避免重复。"""
-    lines = []
-    for index, model in enumerate(models, 1):
-        lines.append(
-            f'{index}. **{model["name"]}**　{model["config"]}　'
-            f'¥{model["price"]:,.0f}　'
-            f'<span style="color:#6b7a8f">匹配度 {model["score"] * 100:.1f}%</span>'
-        )
-    st.markdown('  \n'.join(lines), unsafe_allow_html=True)
-    st.caption(
-        '匹配度是本次候选集内的相对得分，不是质量评分。'
-        '完整参数与对比见下方「为你推荐」。'
-    )
-
-
-def render_chat() -> None:
-    for message in st.session_state.get('chat') or []:
-        role = message.get('role', 'assistant')
-        with st.chat_message(role, avatar='🧑' if role == 'user' else '📱'):
-            st.markdown(message.get('text', ''))
-            if message.get('models'):
-                st.caption('这是生成这条消息时的推荐记录；当前权重对应的最新排序见下方“为你推荐”。')
-                _render_model_list(message['models'])
-                if not message.get('advice_from_llm'):
-                    st.caption(
-                        '（推荐语未由大模型生成，已改用模板文案：'
-                        f'{message.get("advice_error") or "未接入"}）'
-                    )
-
-
-# --- 页面 -------------------------------------------------------------------
-
-st.caption('知选  /  PERSONAL PHONE LAB')
-st.title('找到更适合你的手机')
-
+st.set_page_config(page_title='知选 · 可解释手机推荐',page_icon='📱',layout='wide')
+st.title('知选 · 可解释手机推荐')
+st.caption('先确认需求，再比较可比数据。TOPSIS 排序与解释引用同一数据版本。')
+state=st.session_state
+db=Path(os.environ.get('PHONE_CATALOG_PATH',str(Path(__file__).resolve().parent/'data/catalog.sqlite')))
 try:
-    df = data()
-except Exception as error:
-    st.error(f'数据读取失败：{error}')
+    manifest_sha=file_sha(db.with_name('release_manifest.json'))
+    repo,manifest=load_release(str(db),manifest_sha)
+except (OSError,ValueError,KeyError,TypeError,RuntimeError,sqlite3.Error):
+    clear_result(state);state['manual_confirm']=False
+    st.error('发布数据校验失败或文件不可用；已停止推荐。请维护者检查发布快照与清单。')
     st.stop()
+if invalidate_confirmation(state,manifest_sha+':'+manifest['snapshot_sha256']):
+    st.warning('数据版本或快照已更新，旧排名与解释已失效，请重新确认需求。')
+all_rows=repo.as_records(repo.load_catalog(mode='all'))
+state['catalog_rows']=all_rows
+st.caption(f"数据 {manifest['dataset_version']} / 规则 {manifest['feature_rule_version']} / 算法 topsis-1.0.0 / 快照 {manifest['snapshot_sha256'][:12]}")
+counts=st.columns(3)
+for col,key,title in zip(counts,('model_id','variant_id','sku_id'),('机型','版本','配置 SKU')):
+    col.metric(title,len({r[key] for r in all_rows}))
+acceptance=manifest['acceptance']
+st.warning(f"机器验收 {acceptance['machine_acceptance']}；总体验收 {acceptance['overall_acceptance']}；WPS {acceptance['wps_review']}。人工抽查仍待完成。")
+st.warning('游戏数据缺关键测试条件时只展示备选，不用刷新率或处理器型号冒充实测。1% Low 未形成有效覆盖，不推算完整游戏性能总分。')
+st.caption('VIKOR 未实现。拍照暂用同协议 DXOMARK 照片子分，不代表所有场景。权重为试验设置；价格是历史记录；成色未知的记录不混入新机或二手。')
 
-ALL_BRANDS = sorted(df.brand.unique())
-llm_ready, llm_message = llm_status()
-
-# 对话输入必须在这里处理：它会写 session_state 里的控件键，
-# 而侧边栏控件一旦创建就不能再赋值。
-prompt = st.chat_input(
-    '说说你的需求，例如：预算三千左右，想要轻一点的，主要看价格',
-    key='chat_prompt',
-    disabled=not llm_ready,
-)
+load_dotenv()
+for key in ('PHONE_ENABLE_LLM','PHONE_LLM_BUDGET_APPROVED','PHONE_LLM_GATEWAY_LIMITS_APPROVED','LLM_BASE_URL','LLM_MODEL','LLM_API_KEY'):
+    if not os.environ.get(key):
+        try:
+            value=st.secrets[key]
+            if value is not None:os.environ[key]=str(value)
+        except (KeyError,FileNotFoundError,RuntimeError):pass
+enabled=llm_enabled()
+if enabled:
+    from providers.llm import llm_status
+    enabled,_=llm_status()
+st.info('对话框需要接入经预算及网关限额审核的大模型；本次默认关闭。手动确认始终可用。')
+prompt=st.chat_input('可选：补充购机需求，抽取后仍需手动确认',disabled=not enabled)
 if prompt:
-    with st.spinner('正在理解你的需求…'):
-        handle_turn(prompt, df)
+    from needs_extraction import extract_needs
+    from pipeline import join_history,MAX_ASK_ROUNDS
+    from bridge import bridge_contract
+    state['need_history']=[*state.get('need_history',[]),prompt]
+    extracted=extract_needs(join_history(state['need_history']));state['extracted_needs']=extracted
+    clear_result(state);state['manual_confirm']=False
+    if extracted['status']!='failed':
+        known=sorted({r['brand'] for r in all_rows})
+        try:
+            extracted['brands']={side:resolve_brands(extracted['brands'][side],known) for side in ('include','exclude')}
+        except ValueError:
+            extracted['status']='failed';extracted['meta']['error']='抽取的品牌无法唯一匹配；不自动放宽品牌条件，请手动选择后确认。'
+    if extracted['status']!='failed':
+        bridged,_=bridge_contract(extracted,known_brands=sorted({r['brand'] for r in all_rows}))
+        state['manual_brands']=list(bridged.brands);state['manual_excludes']=list(bridged.excluded_brands)
+        for edge in ('min','max'):
+            value=extracted['budget'][edge];state['manual_use_'+edge]=value is not None
+            if value is not None:state['manual_'+edge]=float(value)
+        state['manual_storage']=float(extracted.get('min_storage') or 0)
+        if extracted.get('target_screen') is not None:state['manual_target']=float(extracted['target_screen'])
+        for key,value in bridged.weights.items():state['manual_w_'+key]=min(10,max(0,int(round(value*10))))
+        state['ask_rounds']=min(MAX_ASK_ROUNDS,state.get('ask_rounds',0)+1)
+if state.get('extracted_needs'):
+    with st.expander('需求抽取与待澄清内容',expanded=True):
+        extracted=state['extracted_needs']
+        if extracted['status']=='failed':st.error(extracted['meta']['error'])
+        else:
+            st.json(extracted)
+            for item in extracted['clarifications']:
+                st.text(item['question'] if state.get('ask_rounds',0)<2 else '请在手动条件中确认：'+item['field'])
+            st.caption('含糊预算只保留参考值，不自动变成上限。拍照/游戏权重使用手动控件。')
+if st.button('清空需求与结果'):
+    clear_result(state)
+    for key in ('need_history','extracted_needs','ask_rounds'):state.pop(key,None)
+    for key in list(state):
+        if key.startswith('manual_'):state.pop(key,None)
+    st.rerun()
 
+labels={'price':'价格更低','weight':'机身更轻','storage':'存储更大','refresh':'屏幕刷新率更高（非游戏性能）',
+    'screen':'屏幕接近目标','photo':'拍照：DXOMARK 照片子分','game':'游戏：王者荣耀实测平均帧率'}
+defaults={'price':5,'weight':2,'storage':2,'refresh':1,'screen':0,'photo':0,'game':0}
+for key,value in {'manual_min':0.0,'manual_max':5000.0,'manual_storage':0.0,'manual_target':6.5,
+                  **{'manual_w_'+key:value for key,value in defaults.items()}}.items():state.setdefault(key,value)
 with st.sidebar:
-    # 清空动作必须在任何控件创建之前处理，否则改不动已实例化的控件
-    if st.session_state.pop('_reset', False):
-        blue_keys = [key for key in st.session_state if str(key).startswith(('blue_', 'level_', 'FormSubmitter:'))]
-        for key in (*CHAT_STATE_KEYS, 'chat_prompt', *WIDGET_KEYS, *blue_keys,
-                    'extracted_needs', 'active_ranking_ids', 'preference_mode'):
-            st.session_state.pop(key, None)
-
-    st.header('你的选购需求')
-
-    if not llm_ready:
-        st.caption('未配置大模型，当前为手动模式。滑块可以照常用。')
-        with st.expander('如何接入真实 API'):
-            st.write('**方式一：`.env` 文件（推荐，本地开发）**')
-            st.code(
-                'cp .env.example .env\n'
-                '# 然后编辑 .env，填入真实值：\n'
-                'LLM_BASE_URL=https://api.deepseek.com/v1\n'
-                'LLM_MODEL=deepseek-chat\n'
-                'LLM_API_KEY=sk-...',
-                language='bash',
-            )
-            st.write('**方式二：环境变量**')
-            st.code(
-                'export LLM_BASE_URL=https://api.deepseek.com/v1\n'
-                'export LLM_MODEL=deepseek-chat\n'
-                'export LLM_API_KEY=sk-...',
-                language='bash',
-            )
-            st.caption(
-                '优先级：真实环境变量 > `.env` > `.streamlit/secrets.toml`。'
-                '`.env` 与 `secrets.toml` 都在 .gitignore 里，不会被提交。'
-            )
-            st.caption(
-                '配好后用 `python tools/check_llm.py` 体检一次——它会真调一次线上服务，'
-                '把原始回复、契约结构和耗时都打出来。'
-            )
-            st.caption(f'当前状态：{llm_message}')
+    st.header('确认你的需求')
+    mode_label=st.selectbox('价格成色范围',['新机','二手','全部（含成色未知）'],key='manual_mode')
+    mode={'新机':'new','二手':'used','全部（含成色未知）':'all'}[mode_label]
+    use_min=st.checkbox('启用预算下限',key='manual_use_min')
+    min_price=st.number_input('预算下限（元）',min_value=0.0,value=None,step=100.0,key='manual_min')
+    use_max=st.checkbox('启用预算上限',key='manual_use_max')
+    max_price=st.number_input('预算上限（元）',min_value=0.0,value=None,step=100.0,key='manual_max')
+    min_storage=st.number_input('最低存储（GB，0 表示不筛选）',min_value=0.0,value=None,step=128.0,key='manual_storage')
+    brands=sorted({r['brand'] for r in all_rows})
+    included=st.multiselect('仅看这些品牌（空表示不限）',brands,key='manual_brands')
+    excluded=st.multiselect('排除这些品牌',brands,key='manual_excludes')
+    target=st.slider('目标屏幕尺寸（英寸）',3.0,10.0,None,0.1,key='manual_target')
+    st.caption('以下为试验默认权重；0 表示不参与排序。未提及不等于已理解你的偏好。')
+    weights={key:st.slider(label,0,10,None,key='manual_w_'+key) for key,label in labels.items()}
+    checked=st.checkbox('我已检查条件、权重和数据限制',key='manual_confirm')
+    confirm=st.button('确认需求并生成推荐',type='primary')
+needs={'budget':{'min':min_price if use_min else None,'max':max_price if use_max else None},
+       'min_storage':min_storage or None,'brands':{'include':included,'exclude':excluded}}
+request={'needs':needs,'weights':weights,'target':target,'mode':mode};request_hash=digest(request)
+if state.get('request_hash') and state['request_hash']!=request_hash:
+    clear_result(state);st.info('条件已修改，旧结果已清除；请重新确认。')
+if confirm:
+    clear_result(state)
+    if not checked:st.error('请先检查并勾选确认。')
+    elif set(included)&set(excluded):st.error('同一品牌不能同时包含和排除。')
     else:
-        st.caption(llm_message)
-        st.caption('想确认真的接通了，跑 `python tools/check_llm.py` 体检一次。')
-
-    if st.button('清空对话与条件', use_container_width=True):
-        st.session_state['_reset'] = True
-        st.rerun()
-
-    if st.session_state.get('parse_error'):
-        st.error(f'解析失败：{st.session_state["parse_error"]}')
-
-    mode = st.radio('设置方式', ['手动调整', '需求确认与追问'], key='preference_mode')
-    if mode == '手动调整':
-        with st.expander('筛选条件', expanded=True):
-            budget = st.slider('预算范围（元）', *BUDGET_LIMIT, BUDGET_DEFAULT, BUDGET_STEP, key=FILTER_KEYS['budget'])
-            brands = st.multiselect('品牌（留空表示全部）', ALL_BRANDS, key=FILTER_KEYS['brands'])
-            storage = st.selectbox('最低存储容量（GB）', STORAGE_OPTIONS, index=STORAGE_OPTIONS.index(STORAGE_DEFAULT), key=FILTER_KEYS['storage'])
-            target = st.slider('偏好的屏幕尺寸（英寸）', *SCREEN_RANGE, SCREEN_DEFAULT, .1, key=FILTER_KEYS['target'])
-
-        with st.expander('重要程度权重', expanded=False):
-            st.caption('0 表示不计入评分；设置会自动归一化为权重。')
-            weights = {k: st.slider(WEIGHT_LABELS[k], 0, 100, WEIGHT_DEFAULTS[k], 5, key=k) for k in CRITERIA}
-            st.caption('当前使用手动滑块权重。切换到需求确认与追问可使用等级映射与取舍调整。')
-# 主区域
-if not (st.session_state.get('chat') or []):
-    st.write(
-        '在下面的输入框里用一句话说需求，系统抽取偏好后请先确认，再给出机型；'
-        '也可以直接用左侧滑块手动调整。'
-    )
-    if not llm_ready:
-        st.info('对话框需要接入大模型才能用。当前可以先用左侧滑块手动筛选。')
-
-render_chat()
-
-blue_session = None
-if mode == '需求确认与追问':
-    st.session_state.pop('active_ranking_ids', None)
-    blue_session = render_preference_panel(df)
-    confirmed_needs = blue_session['needs']
-    weights = blue_session['current_weights']
-    target = confirmed_needs['target_screen_inches'] or SCREEN_DEFAULT
-    # target为空时屏幕权重为0，这个占位值不参与评分。
-    hard = confirmed_needs['hard_constraints']
-    budget_upper = hard['max_price']
-    budget = (hard.get('min_price') or 0, budget_upper)
-else:
-    budget_upper = budget[1]
-
-bridged = st.session_state.get('bridged')
-if bridged is not None and mode == '手动调整':
-    with st.container(border=True):
-        st.subheader('我对你需求的理解')
-        left, right = st.columns(2)
-        with left:
-            st.write(f"预算　¥{budget[0]:,} – ¥{budget[1]:,}")
-            st.write(f"最低存储　{storage}GB　｜　屏幕偏好　{target:g} 英寸")
-            st.write(f"品牌白名单　{'、'.join(brands) if brands else '不限'}")
-            st.write(f"排除品牌　{'、'.join(bridged.excluded_brands) if bridged.excluded_brands else '无'}")
-        with right:
-            st.write('权重　' + '　'.join(f'{WEIGHT_LABELS[k]} {int(weights[k])}' for k in CRITERIA))
-        if st.session_state.get('degraded'):
-            st.warning(
-                '模型给的条件里有无法采用的部分，已忽略：'
-                + '；'.join(st.session_state['degraded'])
-            )
-        if bridged.pending:
-            st.warning('下面这些我没有可靠依据，请你确认后再看推荐：' + '、'.join(bridged.pending))
-        if bridged.unsupported:
-            st.error('这些需求现有数据覆盖不到，不会生成结论，也不会用别的指标替代：' + '、'.join(bridged.unsupported))
-        with st.expander('这些条件是怎么来的'):
-            for note in bridged.notes:
-                st.write('· ' + note)
-            st.caption('说明：偏好等级「一般」与「未提及」在当前映射表里都取 1，'
-                       '所以「轻一点」这类弱表达不会改变权重。要拉开差距请说「越轻越好」。')
-
-if blue_session is not None:
-    candidates = filter_candidates(df, blue_session['needs'])
-else:
-    # 手动模式的筛选口径与对话链路共用 `candidate_frame`：白名单与排除名单
-    # 的处理规则只有一份，两条路径不会分叉。
-    candidates = candidate_frame(df, Bridged(
-        budget=tuple(budget),
-        brands=list(brands),
-        excluded_brands=list(bridged.excluded_brands) if bridged is not None else [],
-        storage=storage,
-        target=target,
-        weights=dict(weights),
-    ))
-
-cols = st.columns(4)
-for col, title, value in zip(cols, ['数据机型', '配置记录', '筛选后机型', '筛选后配置'], [df['产品名称'].nunique(), len(df), candidates['产品名称'].nunique(), len(candidates)]):
-    col.metric(title, value)
-
-st.info('价格均为数据表记录价，未核实当前售价和库存。处理器、摄像头与充电参数仅展示，不参与评分；本原型不评价游戏性能或拍照质量。')
-
-if candidates.empty:
-    st.warning('当前条件下没有候选，请放宽预算、品牌或最低存储要求。')
-    st.stop()
-if sum(weights.values()) == 0:
-    st.warning('请至少将一项重要程度设为大于 0。')
-    st.stop()
-
-result = rank(candidates, weights, target)
-st.session_state['active_ranking_ids'] = result.id.tolist()
-models = result.drop_duplicates('产品名称').head(TOP_N)
-
-if blue_session is not None:
-    with st.expander('追问前后的推荐对比'):
-        initial_rank = rank(candidates, blue_session['initial']['weights'], target)
-        left, right = st.columns(2)
-        fields = ['产品名称', '配置', 'price', 'weight', 'score']
-        with left:
-            st.write('确认后的初始推荐')
-            st.dataframe(initial_rank.drop_duplicates('产品名称').head(TOP_N)[fields], hide_index=True)
-        with right:
-            st.write('按当前权重推荐')
-            st.dataframe(models[fields], hide_index=True)
-    # 推荐语只在显式点击时请求，且只使用本轮实际排序，避免重跑重复调用。
-    if st.button('生成当前推荐说明'):
-        current_models = models_payload(result, TOP_N, budget_upper)
-        brief = Brief(
-            models=current_models,
-            needs_summary='确认后的偏好：' + str(blue_session['needs']['preferences']),
-            unsupported=blue_session['needs']['unsupported_needs'],
-            candidate_configs=len(candidates), total_configs=len(df),
-            budget=budget if budget_upper is not None else None,
-        )
-        with st.spinner('正在解释当前推荐…'):
-            advice, advice_error = write_recommendation(brief)
-        st.session_state.chat.append({
-            'role': 'assistant', 'kind': 'result',
-            'text': advice or fallback_text(brief), 'models': current_models,
-            'candidate_count': len(candidates), 'advice_from_llm': not advice_error,
-            'advice_error': advice_error,
-            'weights': dict(weights), 'ranking_ids': result.id.tolist(),
-        })
-        st.rerun()
-
-tab1, tab2, tab3 = st.tabs(['为你推荐', '机型对比', '数据与算法说明'])
-with tab1:
-    st.subheader('推荐前五款')
-    st.caption('先计算具体配置得分，再为每个机型保留最高分配置。匹配度是当前候选集内的相对得分，不是质量评分或购买概率。')
-    for index, (_, row) in enumerate(models.iterrows(), 1):
-        with st.container(border=True):
-            left, right = st.columns([4, 1])
-            left.subheader(f'{index:02d}  {row["产品名称"]}')
-            left.write(f'{row["配置"]}　｜　{row["处理器"]}')
-            right.metric('表内价格', f'¥{row.price:,.0f}')
-            st.progress(float(row.score), text=f'TOPSIS 相对匹配度 {row.score*100:.1f}%')
-            st.write(f'重量 {row.weight:g}g　·　屏幕 {row.screen:g} 英寸　·　{row.refresh:g}Hz　·　存储 {row.storage:g}GB')
-            facts = []
-            if weights['price'] and budget_upper is not None: facts.append(f'比预算上限低 {budget_upper-row.price:,.0f} 元')
-            if weights['screen']: facts.append(f'距目标尺寸 {abs(row.screen-target):.2f} 英寸')
-            if weights['weight']: facts.append(f'候选配置重量中位数 {candidates.weight.median():g}g，本配置 {row.weight:g}g')
-            st.caption('参数依据：' + '；'.join(facts) if facts else '参数依据见对比页。上述数据描述不代表独立的分数贡献。')
-    export = result[['id', '产品名称', '配置', 'brand', 'price', 'weight', 'screen', 'storage', 'refresh', 'score']]
-    st.download_button('下载本次配置排序 CSV', export.to_csv(index=False).encode('utf-8-sig'), 'phone_ranking.csv', 'text/csv')
-with tab2:
-    st.subheader('放在一起比较')
-    selected = st.multiselect('选择 2–3 个配置', result.label.tolist(), default=models.label.head(3).tolist(), max_selections=3)
-    if selected:
-        compare = result.set_index('label').loc[selected]
-        fields = ['产品名称', '配置', '价格', '重量', '屏幕大小', '分辨率', '屏幕刷新率', '处理器', '后摄像头', '前摄像头', '充电功率']
-        st.dataframe(compare[fields].T, use_container_width=True)
-        st.caption('“价格”沿用原表文本。不同处理器、相机像素和功率不能直接等同于实际体验。')
-with tab3:
-    st.subheader('计算方式与边界')
-    st.write('1. 用预算、品牌和最低存储筛选配置。2. 将屏幕尺寸转为与目标尺寸的绝对差。3. 对五列进行向量归一化并乘以用户权重。4. 计算到理想解与负理想解的欧氏距离，得分为负理想距离除以两距离之和。')
-    st.write('价格、重量、屏幕距离为成本型；存储与刷新率为效益型。常量列不贡献距离。完全无法区分的候选得分为0.5，同分按价格和记录ID排序。候选集变化可能引起名次变化。')
-    st.write('存储换算约定：1TB→1024GB，原始标称保留。括号中的内存类型保留在配置描述中。无额外数据补采，原始工作簿不被修改。')
-    st.dataframe(df.iloc[:, :12], hide_index=True, use_container_width=True)
+        try:
+            di=build_input(repo,needs,weights,target,mode);result=rank_decision_input(di,target_screen=target)
+            state['catalog_input']=di;state['catalog_result']=result
+            state['confirmed_request']=request;state['request_hash']=request_hash
+            if result.status=='ready':state['catalog_bundle']=build_evidence(di,result,needs)
+        except (ValueError,KeyError,TypeError,OverflowError):
+            clear_result(state)
+            st.error('条件、权重或可比输入无效；请检查预算上下界和正权重。不生成推荐成绩。')
+recommend,catalog,details,compare=st.tabs(['推荐结果','全部目录','配置详情与来源','按 SKU 对比'])
+with recommend:
+    result=state.get('catalog_result');di=state.get('catalog_input')
+    if result is None:st.info('请选择条件与权重，检查后点击“确认需求并生成推荐”。')
+    else:
+        st.caption(f"数据 {result.dataset_version} / 规则 {result.feature_rule_version} / 算法 {result.algorithm_version}")
+        st.text(result.reason);st.json(di['coverage_summary'],expanded=False)
+        if result.status!='ready':st.warning(result.reason)
+        else:
+            st.subheader('本次可比候选的 TOPSIS 相对排序')
+            display_records([{k:r.get(k) for k in ('sku_id','score','display_name','variant_name','ram_raw','storage_raw','price_cny','condition','observed_at','is_estimated','price_id')} for r in repo.as_records(result.ranked)])
+            bundle=state['catalog_bundle']
+            with st.expander('已核验程序解释与事实依据'):
+                st.text(render_template(bundle));st.json(bundle,expanded=False)
+                links=set()
+                for fact in bundle['facts'].values():
+                    for source in fact['sources']:
+                        url=safe_url(source.get('url'))
+                        if url and source['source_id'] not in links:
+                            links.add(source['source_id']);st.link_button(source['source_id'],url)
+            st.caption('CSV/XLSX 是展示副本：公式型文本前加单引号，数据库原文不变。缺失留空；JSON 用 null。')
+            for fmt,mime in (('csv','text/csv'),('xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),('json','application/json')):
+                st.download_button('下载 '+fmt.upper(),export_results(result,bundle,fmt),file_name='zhixuan_'+result.dataset_version+'.'+fmt,mime=mime)
+        if not result.backups.empty:
+            st.subheader('数据不足或不可比的备选（不评分）');display_records(repo.as_records(result.backups))
+            with st.expander('备选未进入排名的原因'):
+                display_records([{'sku_id':p['sku_id'],'metric_key':ev['metric_key'],'reason':ev.get('missing_reason'),'comparison_group':ev.get('comparison_group')} for i,p in enumerate(di['provenance']) if i in di['backup_indices'] for ev in p['criteria'] if ev['value'] is None and di['weights'][ev['metric_key']]>0])
+columns=('sku_id','model_id','variant_id','display_name','variant_name','ram_raw','storage_raw','memory_type','price_cny','condition','observed_at','is_estimated','price_id')
+with catalog:
+    st.subheader('当前发布目录')
+    st.caption('此页包含全部成色，只用于查阅。推荐区采用你确认的成色与硬条件。图片未授权发布，暂不展示。')
+    display_records([{k:r.get(k) for k in columns} for r in all_rows])
+by_id={r['sku_id']:r for r in all_rows}
+def label(ident):
+    r=by_id[ident];return f"{r['display_name']} / {r['variant_name']} / {r['ram_raw']} / {r['storage_raw']} / {ident}"
+with details:
+    if by_id:
+        sku=st.selectbox('选择配置 SKU',list(by_id),format_func=label,key='detail_sku');render_details(repo,sku)
+with compare:
+    chosen=st.multiselect('选择最多 4 个规范 SKU',list(by_id),format_func=label,max_selections=4,key='compare_skus')
+    if chosen:
+        display_records([{k:by_id[ident].get(k) for k in columns} for ident in chosen])
+        for ident in chosen:
+            with st.expander(label(ident)):
+                detail=sku_details(repo,ident)
+                display_records([{k:r.get(k) for k in ('spec_key','value_num','unit','raw_value','subject_type','comparison_group','spec_id')} for r in detail['specifications']])
+    else:st.info('按 ID 选择配置后对比；同名不同版本不会合并。')
