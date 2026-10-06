@@ -64,6 +64,7 @@ def rank_decision_input(di, *, target_screen=None):
     import math
     from numbers import Real
     from catalog.contracts import RankingResult
+    from catalog.binding import decision_context, decision_fingerprint, ranking_fingerprint
     candidates=di['candidates'].copy()
     keys=[d['metric_key'] for d in di['criterion_definitions']]
     if not keys or len(set(keys))!=len(keys): raise ValueError('指标定义为空或重复')
@@ -87,9 +88,18 @@ def rank_decision_input(di, *, target_screen=None):
     candidates['input_index']=range(len(candidates))
     backups=candidates.iloc[backup].copy()
     active_keys=[keys[j] for j in active]
+    declared_target = di.get('selection_rules',{}).get('target_screen')
+    if declared_target is not None and declared_target != target_screen:
+        raise ValueError('排名屏幕目标与确认的决策输入不一致')
+    input_hash = decision_fingerprint(di, target_screen)
+    context = decision_context(di, target_screen)
     def result(status, ranked, reason):
-        return RankingResult(status,ranked,backups,reason,di.get('dataset_version'),
-                             di.get('feature_rule_version'),ALGORITHM_VERSION,active_keys)
+        unscored = candidates.iloc[eligible].copy() if status!='ready' else candidates.iloc[:0].copy()
+        output = RankingResult(status,ranked,backups,reason,di.get('dataset_version'),
+                             di.get('feature_rule_version'),ALGORITHM_VERSION,active_keys,
+                             unscored_candidates=unscored,decision_sha256=input_hash,decision_context=context)
+        output.ranking_sha256=ranking_fingerprint(output)
+        return output
     status=di['decision_status']
     if status not in ('ready','requires_target_transform','no_candidates','insufficient_comparable_data'):
         raise ValueError('未定义的决策状态')

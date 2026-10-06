@@ -17,11 +17,11 @@ Streamlit 原型：人工确认需求 → 同口径候选矩阵 → TOPSIS 相�
 
 ## 安装与启动（Windows / WorkBuddy）
 
-仓库实际建立后使用管理员提供的地址，私有仓库先接受邀请。用自己的 GitHub 账号，不共享 token。
+仓库地址：https://github.com/rui0505/zhixuan-phone-recommender-v2 。私有仓库先接受管理员邀请；用自己的 GitHub 账号，不共享 token。
 
 ```powershell
-git clone <管理员提供的实际GitHub仓库HTTPS地址>
-cd <克隆目录>
+git clone https://github.com/rui0505/zhixuan-phone-recommender-v2.git
+cd zhixuan-phone-recommender-v2
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe scripts/check_release.py --root .

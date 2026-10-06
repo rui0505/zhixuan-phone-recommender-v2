@@ -77,13 +77,13 @@ def parse_screen_size(raw):
 
 
 def parse_refresh_rate(raw):
-    """返回 (hz, note)。'120Hz（LTPO）' -> (120, 'LTPO')；双屏写法取主屏并记 note。"""
+    """Only explicit single values; never choose a display, range bound or estimate."""
     if raw is None:
         return None, None, "missing"
     s = str(raw).strip()
-    m = re.search(r"(\d+(?:\.\d+)?)\s*Hz", s)
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)\s*Hz\s*(?:ProMotion|[（(]\s*LTPO\s*[）)])?", s, re.I)
     if not m:
-        return None, None, ("missing" if classify_missing(s) else "unparsed")
+        return None, s, ("missing" if classify_missing(s) else "unparsed")
     note = s
     return float(m.group(1)), note, "ok"
 
@@ -278,6 +278,9 @@ def build_derived(cfg, paths, main_rows, camera_rows, aux_rows, model_by_key,
                 num = 1 if num else 0
             if status == "missing":
                 num = None
+            if spec_key == 'refresh_rate_hz' and status == 'unparsed':
+                issues.append(dict(issue_code='REFRESH_NOT_EXACT_SINGLE_VALUE',severity='medium',
+                    source_record_id=src,detail=f'刷新率原文 {raw!r} 无法作为无作用域精确单值；原文保留，数值 NULL，不取首值'))
             specs.append({
                 "spec_id": f"SP{spec_seq:05d}",
                 "subject_type": "sku", "subject_id": sid, "variant_id": vid,

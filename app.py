@@ -7,7 +7,7 @@ from catalog.adapter import build_input,resolve_brands
 from catalog.evidence import build_evidence,digest,render_template
 from engine import rank_decision_input
 from ui.catalog_views import (file_sha,load_release,invalidate_confirmation,clear_result,
-    display_records,render_details,sku_details,safe_url)
+    display_records,render_details,sku_details,safe_urls)
 from ui.export_results import export_results
 from providers.env import load_dotenv,llm_enabled
 
@@ -135,7 +135,12 @@ with recommend:
     else:
         st.caption(f"数据 {result.dataset_version} / 规则 {result.feature_rule_version} / 算法 {result.algorithm_version}")
         st.text(result.reason);st.json(di['coverage_summary'],expanded=False)
-        if result.status!='ready':st.warning(result.reason)
+        if result.status!='ready':
+            st.warning(result.reason)
+            if not result.unscored_candidates.empty:
+                st.subheader('满足条件但未评分的候选')
+                st.caption('以下候选满足当前硬条件，但可比独立机型不足；不生成分数或优劣排名。')
+                display_records(repo.as_records(result.unscored_candidates))
         else:
             st.subheader('本次可比候选的 TOPSIS 相对排序')
             display_records([{k:r.get(k) for k in ('sku_id','score','display_name','variant_name','ram_raw','storage_raw','price_cny','condition','observed_at','is_estimated','price_id')} for r in repo.as_records(result.ranked)])
@@ -145,9 +150,10 @@ with recommend:
                 links=set()
                 for fact in bundle['facts'].values():
                     for source in fact['sources']:
-                        url=safe_url(source.get('url'))
-                        if url and source['source_id'] not in links:
-                            links.add(source['source_id']);st.link_button(source['source_id'],url)
+                        for number,url in enumerate(safe_urls(source.get('url')),1):
+                            identity=(source['source_id'],url)
+                            if identity not in links:
+                                links.add(identity);st.link_button(source['source_id']+f' / {number}',url)
             st.caption('CSV/XLSX 是展示副本：公式型文本前加单引号，数据库原文不变。缺失留空；JSON 用 null。')
             for fmt,mime in (('csv','text/csv'),('xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),('json','application/json')):
                 st.download_button('下载 '+fmt.upper(),export_results(result,bundle,fmt),file_name='zhixuan_'+result.dataset_version+'.'+fmt,mime=mime)

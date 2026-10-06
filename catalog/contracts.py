@@ -1,5 +1,5 @@
 """Shared data and ranking contracts; no executable ranking policy."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
 
@@ -20,6 +20,7 @@ class DecisionInput(TypedDict):
     coverage_summary: dict
     selected_run_ids: list[dict[str, str | None]]
     selection_rules: dict
+    snapshot_sha256: str
 
 
 @dataclass
@@ -32,3 +33,7 @@ class RankingResult:
     feature_rule_version: str | None
     algorithm_version: str
     active_criteria: list[str]
+    unscored_candidates: Any = None
+    decision_sha256: str = ''
+    ranking_sha256: str = ''
+    decision_context: dict = field(default_factory=dict)

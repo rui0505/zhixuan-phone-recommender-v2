@@ -293,10 +293,15 @@ class CatalogRepository:
                              comparison_group_overrides=None):
         """只构建可比输入，不计算 TOPSIS/VIKOR 分数。先检查 decision_status。"""
         from .decision_input import build_decision_input
-        return build_decision_input(self, metric_keys, mode, weights, max_price,
+        before = hashlib.sha256(Path(self.db_path).read_bytes()).hexdigest()
+        result = build_decision_input(self, metric_keys, mode, weights, max_price,
                                     min_storage_gb, brands, price_kind_preference, min_price=min_price,
                                     excluded_brands=excluded_brands,
                                     comparison_group_overrides=comparison_group_overrides)
+        if hashlib.sha256(Path(self.db_path).read_bytes()).hexdigest() != before:
+            raise ValueError('构建输入期间数据库发生变化，请重新加载快照')
+        result['snapshot_sha256'] = before
+        return result
 
     def summary(self) -> dict:
         counts = {}

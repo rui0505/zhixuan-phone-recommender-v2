@@ -8,6 +8,7 @@ from io import BytesIO,StringIO
 import json
 from catalog.repository import CatalogRepository
 from catalog.evidence import verify_bundle
+from catalog.binding import verify_result
 
 
 def _safe_cell(value):
@@ -17,6 +18,9 @@ def _safe_cell(value):
 
 def result_records(result,bundle):
     verify_bundle(bundle)
+    verify_result(result)
+    if result.decision_sha256!=bundle['decision_sha256'] or result.ranking_sha256!=bundle['ranking_sha256']:
+        raise ValueError('导出排名与证据不是同一次决策')
     for key in ('dataset_version','feature_rule_version','algorithm_version'):
         if getattr(result,key)!=bundle[key]:raise ValueError('结果与证据版本不一致')
     rows=[]
@@ -25,6 +29,11 @@ def result_records(result,bundle):
         for fact in bundle['facts'].values():
             if fact['sku_id']==row['sku_id']:row[fact['metric_key']]=fact['value']
         row.update({k:bundle[k] for k in ('dataset_version','feature_rule_version','algorithm_version')})
+        context=bundle['decision_context']
+        row.update(target_screen=context['target_screen'],decision_sha256=bundle['decision_sha256'],
+            ranking_sha256=bundle['ranking_sha256'],
+            weights_json=json.dumps(context['weights'],ensure_ascii=False,allow_nan=False),
+            selection_rules_json=json.dumps(context['selection_rules'],ensure_ascii=False,allow_nan=False))
         rows.append(row)
     return rows
 
@@ -46,6 +55,11 @@ def export_results(result,bundle,format: str) -> bytes:
     for row in rows:ws.append([_safe_cell(row.get(k)) for k in columns])
     meta=wb.create_sheet('证据与说明');meta.append(['项目','内容'])
     for key in ('dataset_version','feature_rule_version','algorithm_version','evidence_sha256'):meta.append([key,bundle[key]])
+    for key,value in bundle['decision_context'].items():
+        text=json.dumps(value,ensure_ascii=False,allow_nan=False) if isinstance(value,(dict,list)) else value
+        if isinstance(text,str) and len(text)>160:
+            for start in range(0,len(text),160):meta.append([key+f' [{start//160+1}]',text[start:start+160]])
+        else:meta.append([key,text])
     meta.append(['展示导出规则','缺失为留空；公式型文本前加单引号，只改变展示副本，不修改数据库。'])
     for text in bundle['limitations']:meta.append(['限制',text])
     facts=wb.create_sheet('逐项事实');facts.append(['事实 ID','字段','内容'])

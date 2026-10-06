@@ -32,7 +32,8 @@ class CatalogAppTests(IsolatedEnvTest):
         self.assertEqual(self.at.session_state['catalog_result'].status,'ready')
         self.assertGreaterEqual(len(self.at.session_state['catalog_result'].ranked),2)
         self.assertIn('topsis-1.0.0',' '.join(x.value for x in self.at.caption))
-        self.assertEqual(self.at.session_state['catalog_bundle']['dataset_version'],'catalog-2026-10-04-v2')
+        self.assertEqual(self.at.session_state['catalog_bundle']['dataset_version'],
+                         json.loads((self.root/'release_manifest.json').read_text(encoding='utf-8'))['dataset_version'])
         self.assertEqual(self.at.dataframe[0].value.columns[1],'score')
     def test_confirmation_is_required_and_all_zero_has_no_score(self):
         next(b for b in self.at.button if b.label=='确认需求并生成推荐').click().run()
@@ -129,3 +130,18 @@ class CatalogAppTests(IsolatedEnvTest):
         self.confirm()
         configs=[json.loads(frame.proto.columns) for frame in self.at.dataframe]
         self.assertTrue(any(c.get('score',{}).get('label')=='相对匹配分' for c in configs))
+
+    def test_single_matching_apple_is_displayed_without_score(self):
+        self.at.multiselect(key='manual_brands').set_value(['Apple'])
+        for key in ('weight','storage','refresh','screen','photo','game'):
+            self.at.slider(key='manual_w_'+key).set_value(0)
+        self.at.checkbox(key='manual_use_min').check()
+        self.at.checkbox(key='manual_use_max').check()
+        self.at.number_input(key='manual_min').set_value(5999.0)
+        self.at.number_input(key='manual_max').set_value(5999.0)
+        self.confirm()
+        result=self.at.session_state['catalog_result']
+        self.assertEqual(result.status,'insufficient_comparable_data')
+        self.assertIn('满足条件但未评分的候选', [h.value for h in self.at.subheader])
+        self.assertTrue(any('sku_id' in f.value and 'S0011' in f.value['sku_id'].tolist()
+                            and 'score' not in f.value for f in self.at.dataframe))

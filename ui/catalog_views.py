@@ -59,6 +59,12 @@ def safe_url(value):
     except ValueError:return None
 
 
+def safe_urls(value):
+    """A source may contain newline-separated URLs; validate each, not the blob."""
+    if not isinstance(value,str):return []
+    return list(dict.fromkeys(url for line in value.splitlines() if (url:=safe_url(line.strip()))))
+
+
 def display_records(records):
     if not records:st.info('暂无记录');return
     import pandas as pd
@@ -101,6 +107,7 @@ def render_details(repo,sku_id: str):
     st.markdown('#### 来源链接')
     for source in repo.as_records(repo._q('SELECT source_id,url,publisher FROM sources ORDER BY source_id')):
         if source['source_id'] not in ids:continue
-        url=safe_url(source['url'])
-        if url:st.link_button(source['source_id'],url)
+        urls=safe_urls(source['url'])
+        if urls:
+            for number,url in enumerate(urls,1):st.link_button(source['source_id']+f' / {number}',url)
         else:st.text(source['source_id']+'：未记载可公开链接')

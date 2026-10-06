@@ -1,8 +1,8 @@
 {
   "status": "PASS",
-  "snapshot_sha256": "8e643da6229333a021214cd4d5d4fd321a9e42c2ff600171be25c677bcdceef2",
-  "dataset_version": "catalog-2026-10-04-v2",
-  "feature_rule_version": "rules-2.2.0",
+  "snapshot_sha256": "128207745f5450c285cb8d6c61ff2c692f19387f2df0823690cd5b323c453bc8",
+  "dataset_version": "catalog-2026-10-06-v2.1",
+  "feature_rule_version": "rules-2.3.0",
   "allowlist": {
     "phone_models": [
       "model_id",
@@ -180,10 +180,10 @@
   "python_version": "3.12",
   "runtime_contract": {
     "python_tested": "3.12.14",
-    "direct_packages": {"streamlit": "1.65.0", "pandas": "2.3.3", "numpy": "2.5.3", "openpyxl": "3.1.5"},
-    "observed_framework_dependencies": {"starlette": "1.7.0", "uvicorn": "0.54.0", "Pillow": "12.3.0"},
+    "direct_packages": {"streamlit":"1.65.0","pandas":"2.3.3","numpy":"2.5.3","openpyxl":"3.1.5"},
+    "observed_framework_packages": {"starlette":"1.7.0","uvicorn":"0.54.0","Pillow":"12.3.0"},
     "test_environment": "clean-no-source-archive",
-    "tested_on": "2026-10-06",
-    "transitive_versions": "observed, not fully locked; revalidate after dependency updates"
+    "validated_on": "2026-10-06",
+    "transitive_note": "Observed versions, not a complete lock; revalidate dependency updates."
   }
 }

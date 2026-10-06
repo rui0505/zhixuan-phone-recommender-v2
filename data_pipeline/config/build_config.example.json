@@ -1,6 +1,6 @@
 {
-  "dataset_version": "catalog-2026-10-04-v2",
-  "rule_version": "rules-2.2.0",
+  "dataset_version": "catalog-2026-10-06-v2.1",
+  "rule_version": "rules-2.3.0",
   "id_registry_version": "ids-1.0.0",
   "source_dir": "./private_sources",
   "output_dir": "./local_build/full",

@@ -2,6 +2,7 @@
 import hashlib
 import json
 from .repository import CatalogRepository
+from .binding import decision_fingerprint, verify_result
 
 LABELS={'price_cny':'记录价格','weight_g':'重量','storage_gb':'存储','refresh_rate_hz':'屏幕刷新率',
         'screen_size_inch':'屏幕尺寸','battery_capacity_mah':'电池标称容量',
@@ -18,6 +19,9 @@ def verify_bundle(bundle):
 
 
 def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
+    verify_result(result)
+    if decision_fingerprint(di,result.decision_context['target_screen'])!=result.decision_sha256:
+        raise ValueError('排名与当前决策输入内容不一致')
     if (result.dataset_version!=di['dataset_version'] or result.feature_rule_version!=di['feature_rule_version']):
         raise ValueError('排名和证据数据版本不一致')
     candidates=CatalogRepository.as_records(di['candidates']);models=[];facts={}
@@ -43,10 +47,16 @@ def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
                   'value':ev['value'],'sources':ev.get('sources',[]),
                   'dataset_version':result.dataset_version,'feature_rule_version':result.feature_rule_version,
                   'algorithm_version':result.algorithm_version,'weight':di['weights'][key]}
+            if criterion['direction']=='target' and fact['value'] is not None:
+                target=result.decision_context['target_screen']
+                fact['transformation']={'rule':'abs(value - target)','target':target,
+                    'deviation':abs(fact['value']-target),'direction':'cost'} if target is not None else None
             fact_id='F-'+digest(fact)[:24];facts[fact_id]={'fact_id':fact_id,**fact}
     bundle={'status':result.status,'reason':result.reason,'models':models,'facts':facts,
         'dataset_version':result.dataset_version,'feature_rule_version':result.feature_rule_version,
         'algorithm_version':result.algorithm_version,'needs':needs,'active_criteria':result.active_criteria,
+        'decision_sha256':result.decision_sha256,'ranking_sha256':result.ranking_sha256,
+        'decision_context':result.decision_context,
         'coverage_summary':di.get('coverage_summary',{}),
         'limitations':['TOPSIS 是当前可比候选集内的相对排序，不是绝对性能或购买概率。',
             '参数参考值不是实际体验；像素不等于拍照质量，电池容量不等于续航。',
@@ -72,6 +82,8 @@ def render_template(bundle: dict, fact_ids=None) -> str:
     ids=list(bundle['facts']) if fact_ids is None else validate_fact_selection({'fact_ids':fact_ids},bundle)
     selected=set(ids)
     lines=[f"数据 {bundle['dataset_version']} / 规则 {bundle['feature_rule_version']} / 算法 {bundle['algorithm_version']}",bundle['reason']]
+    context=bundle['decision_context']
+    lines.append('已确认筛选与权重：'+json.dumps(context,ensure_ascii=False,allow_nan=False))
     for model in bundle['models']:
         lines.append(f"{model['name']} · {model['variant_name'] or '版本未记载'} · {model['config']} · {model['sku_id']}：相对分 {model['score']:.4f}")
         lines.append(f"价格快照 {model['price_id'] or '缺失'}；成色 {model['condition'] or '未知'}；记录日期 {model['observed_at'] or '未记载'}"+
@@ -81,5 +93,8 @@ def render_template(bundle: dict, fact_ids=None) -> str:
             value='缺失' if fact['value'] is None else f"{fact['value']:g} {fact.get('unit') or ''}".rstrip()
             group=fact.get('comparison_group') or '未选定可比组'
             lines.append(f"{fact['label']}：{value}；比较组 {group}；证据 {ident}")
+            if fact.get('transformation'):
+                t=fact['transformation']
+                lines.append(f"屏幕目标 {t['target']:g} 英寸；绝对偏差 {t['deviation']:.4f} 英寸；偏差越小越好。")
     lines.extend(bundle['limitations'])
     return '\n'.join(lines)
