@@ -115,6 +115,9 @@ def llm_status():
     `python tools/check_llm.py`。
     """
     _prepare_llm_env()
+    from providers.env import llm_enabled
+    if not llm_enabled():
+        return False, '大模型默认关闭，手动推荐可用；启用真实调用需另行确认预算和网关限额'
     from providers.llm import llm_status as probe
     return probe()
 

@@ -10,8 +10,9 @@
     大模型：理解需求（`needs_extraction`） + 把真实结果写成一段话（本模块）
     引擎：  筛选 + TOPSIS 排序 + 给出机型、价格、参数（`engine.rank`）
 
-本模块的输入是**已经算好的事实清单**，输出只是一段措辞。模型没有任何
-机会引入新事实——清单里没有的型号、价格、参数，它一个都不许提。
+历史 Brief/LLMWriter 是参考链路：提示词约束并不能证明自由文案没有幻觉。
+新的 catalog 生产链路使用 explain_evidence：模型只能选择已封存事实 ID，
+数值、机型、来源和措辞都由程序渲染；自由文案和无效引用一律退回模板。
 
 ## 防幻觉的三道闸
 
@@ -21,8 +22,8 @@
 3. **界面兜底**：本模块**永不抛异常**，失败返回空串；界面用模板文案顶上，
    并始终把引擎的机型卡片渲染在推荐语下方——**以卡片为准，不以推荐语为准**。
 
-第 3 条是关键：推荐语只是「解说」，机型列表永远来自引擎。即使模型胡说，
-用户看到的机型也不会错。
+以上三条只描述历史参考链路，不是自由文案的真实性证明。
+本次新版默认无付费调用，且不在生产界面展示未经验证的模型散文。
 """
 
 from __future__ import annotations
@@ -126,13 +127,13 @@ def render_facts(brief: Brief) -> str:
     for index, model in enumerate(brief.models, 1):
         lines.append(f"{index}. 机型名: {model.get('name', '')}")
         lines.append(f"   配置: {model.get('config', '')}")
-        lines.append(f"   表内价格: ¥{model.get('price', 0):,.0f}")
+        lines.append(f"   表内价格: {_numeric(model.get('price'), ',.0f', '¥')}")
         lines.append(f"   处理器: {model.get('chip', '') or '数据缺失'}")
-        lines.append(f"   重量: {model.get('weight', 0):g} 克")
-        lines.append(f"   屏幕: {model.get('screen', 0):g} 英寸")
-        lines.append(f"   刷新率: {model.get('refresh', 0):g} Hz")
-        lines.append(f"   存储: {model.get('storage', 0):g} GB")
-        lines.append(f"   {_SCORE_LABEL}: {model.get('score', 0):.3f}")
+        lines.append(f"   重量: {_numeric(model.get('weight'))} 克")
+        lines.append(f"   屏幕: {_numeric(model.get('screen'))} 英寸")
+        lines.append(f"   刷新率: {_numeric(model.get('refresh'))} Hz")
+        lines.append(f"   存储: {_numeric(model.get('storage'))} GB")
+        lines.append(f"   {_SCORE_LABEL}: {_numeric(model.get('score'), '.3f')}")
         if model.get("reason"):
             lines.append(f"   参数差异: {model['reason']}")
     lines.append("")
@@ -261,12 +262,15 @@ def write_recommendation(
 
     try:
         if writer is None:
+            from providers.env import llm_enabled
+            if not llm_enabled():
+                return '', '大模型默认关闭（PHONE_ENABLE_LLM）；未配置或未审核的 LLM_BASE_URL 不会自动请求'
             writer = LLMWriter(**({"timeout": timeout} if timeout else {}))
         text = _clean(writer.write(brief))
     except JevUnavailable as error:
-        return "", str(error)
+        return "", "服务不可用，已退回模板；不显示上游异常内容"
     except Exception as error:  # noqa: BLE001 - 契约要求永不抛
-        return "", f"{type(error).__name__}: {error}"
+        return "", f"推荐语生成失败（{type(error).__name__}），已退回模板；不显示上游异常内容"
 
     if not text:
         return "", "模型返回了空内容"
@@ -287,7 +291,7 @@ def fallback_text(brief: Brief) -> str:
     for index, model in enumerate(brief.models, 1):
         lines.append(
             f"{index}. {model.get('name', '')}（{model.get('config', '')}）"
-            f"　¥{model.get('price', 0):,.0f}"
+            f"　{_numeric(model.get('price'), ',.0f', '¥', missing='价格缺失')}"
         )
     if brief.pending:
         lines.append("还有这些条件我没法确定：" + "、".join(brief.pending) + "。")
@@ -298,6 +302,25 @@ def fallback_text(brief: Brief) -> str:
         )
     lines.append("（当前未接入大模型，以上为模板文案；机型与参数来自本地数据表。）")
     return "\n".join(lines)
+
+
+def _numeric(value,format_spec='g',prefix='',missing='缺失'):
+    import math
+    from numbers import Real
+    if isinstance(value,bool) or not isinstance(value,Real) or not math.isfinite(value): return missing
+    return prefix+format(value,format_spec)
+
+
+def explain_evidence(bundle: dict, *, selector=None):
+    """No automatic live client. An injected selector can only select existing fact IDs."""
+    from catalog.evidence import render_template,validate_fact_selection
+    template=render_template(bundle)
+    if selector is None: return template,'已核验程序模板；未请求模型'
+    try:
+        ids=validate_fact_selection(selector.select(bundle),bundle)
+        return render_template(bundle,ids),'已核验事实块选择；文字由程序渲染'
+    except Exception:
+        return template,'选择未通过核验或不可用，已退回程序模板'
 
 
 __all__ = [

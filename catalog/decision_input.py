@@ -223,6 +223,15 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
     else:
         status, reason = 'ready', '输入可供算法使用；本接口不计算排名或保证评测质量'
     release = repo.dataset_version()
+    sources={s['source_id']:s for s in repo.as_records(repo._q(
+        'SELECT source_id,url,publisher,published_at,collected_at FROM sources'))}
+    for row in provenance:
+        for ev in row['criteria']:
+            ids={ev['source_id']} if ev.get('source_id') else set()
+            if ev.get('spec_id'):
+                ev['spec_provenance']=repo.get_spec_provenance(ev['spec_id'])
+                ids.update(p['source_id'] for p in ev['spec_provenance'] if p.get('source_id'))
+            ev['sources']=[sources[sid] for sid in sorted(ids) if sid in sources]
     from .repository import pd, PRICE_PRIORITY_NEW, PRICE_PRIORITY_USED
     for c in candidates:
         c.pop('_model_hardware_conflict', None)

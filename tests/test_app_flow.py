@@ -88,7 +88,7 @@ class ChatFlowTests(IsolatedEnvTest):
 
     def setUp(self):
         super().setUp()
-        self.server = FakeOpenAIServer()
+        self.server = FakeOpenAIServer(enable_auto_provider=True)
         self.server.__enter__()
         st.cache_resource.clear()
         self.at = AppTest.from_file(APP, default_timeout=30).run()
@@ -269,7 +269,7 @@ class FallbackTests(IsolatedEnvTest):
 
     def setUp(self):
         super().setUp()
-        self.server = FakeOpenAIServer(status=500)
+        self.server = FakeOpenAIServer(status=500,enable_auto_provider=True)
         self.server.__enter__()
         st.cache_resource.clear()
         self.addCleanup(self._teardown)

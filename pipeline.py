@@ -49,13 +49,14 @@ from bridge import (
 )
 from engine import rank, rank_decision_input
 from catalog.contracts import RankingResult
+from catalog.evidence import build_evidence
 from needs_adapter import to_blue_needs
 from needs_extraction import (
     FIELD_PATH_TO_ASK,
     STATUS_FAILED,
     extract_needs,
 )
-from providers.recommend import Brief, fallback_text, write_recommendation
+from providers.recommend import Brief, fallback_text, write_recommendation, explain_evidence
 
 # 推荐语里提到的机型必须与用户看到的完全一致，否则「文案说 5 款、界面只列 3 款」
 # 就是自相矛盾。所以两个界面共用同一个数量。
@@ -317,6 +318,7 @@ class Turn:
     advice_error: str = ''
     ranking: RankingResult | None = None
     decision_input: dict | None = None
+    evidence: dict | None = None
 
     @property
     def ok(self) -> bool:
@@ -458,8 +460,8 @@ def handle(
             turn.stage=ranking.status;turn.error=ranking.reason;turn.advice=ranking.reason
             return turn
         turn.models=models_payload(ranking.ranked,top_n,budget_high)
-        turn.advice=ranking.reason+'\n'+'\n'.join(m['name']+' · '+m['id'] for m in turn.models)
-        turn.advice_error='未请求大模型推荐语；证据模板将在解释层渲染'
+        turn.evidence=build_evidence(di,ranking,dict(result),sku_ids=[m['id'] for m in turn.models])
+        turn.advice,turn.advice_error=explain_evidence(turn.evidence)
         return turn
 
     if candidates.empty:

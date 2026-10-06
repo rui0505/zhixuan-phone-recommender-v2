@@ -57,12 +57,14 @@ class FakeOpenAIServer:
             # 环境变量已指向本服务，直接构造 LLMClassifier 即可
             ...
 
-    环境变量只在 `__enter__` 时写入，且不覆盖已有的真实配置。
+    环境变量只在 `__enter__` 时写入；始终使用本地假密钥，退出时恢复。
+    自动提供者测试必须显式 enable_auto_provider=True；默认不启用。
     """
 
-    def __init__(self, *, model: str = "fake-local-model", status: int = 200) -> None:
+    def __init__(self, *, model: str = "fake-local-model", status: int = 200, enable_auto_provider: bool = False) -> None:
         self.model = model
         self.status = status
+        self.enable_auto_provider = enable_auto_provider
         self.requests: list[dict] = []
         classifier = MockClassifier()
 
@@ -146,14 +148,22 @@ class FakeOpenAIServer:
         return f"http://127.0.0.1:{self.port}/v1"
 
     def __enter__(self):
+        self._env_keys = ('LLM_BASE_URL','LLM_MODEL','LLM_API_KEY',
+            'PHONE_ENABLE_LLM','PHONE_LLM_BUDGET_APPROVED','PHONE_LLM_GATEWAY_LIMITS_APPROVED')
+        self._saved = {key:os.environ.get(key) for key in self._env_keys}
         os.environ["LLM_BASE_URL"] = self.base_url
         os.environ["LLM_MODEL"] = self.model
-        os.environ.setdefault("LLM_API_KEY", "sk-fake-local-no-real-key")
+        os.environ["LLM_API_KEY"] = "sk-fake-local-no-real-key"
+        if self.enable_auto_provider:
+            for key in self._env_keys[3:]:os.environ[key]='true'
         return self
 
     def __exit__(self, *exc):
         self._server.shutdown()
         self._server.server_close()
+        for key,value in self._saved.items():
+            if value is None:os.environ.pop(key,None)
+            else:os.environ[key]=value
         return False
 
 

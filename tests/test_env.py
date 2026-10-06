@@ -222,12 +222,14 @@ class ShippedTemplateTests(unittest.TestCase):
         values, problems = parse_dotenv(template.read_text(encoding="utf-8"))
         self.assertEqual(problems, [])
         self.assertEqual(
-            sorted(values), ["LLM_API_KEY", "LLM_BASE_URL", "LLM_MODEL"]
+            sorted(values), ["LLM_API_KEY", "LLM_BASE_URL", "LLM_MODEL", "PHONE_ENABLE_LLM",
+                            "PHONE_LLM_BUDGET_APPROVED", "PHONE_LLM_GATEWAY_LIMITS_APPROVED"]
         )
-        self.assertEqual(values["LLM_BASE_URL"], "https://api.deepseek.com/v1")
-        # 必须是 DeepSeek 的当前模型名，不是已退役的 deepseek-chat
-        self.assertEqual(values["LLM_MODEL"], "deepseek-flash")
-        self.assertNotEqual(values["LLM_MODEL"], "deepseek-chat")
+        from providers.env import llm_enabled
+        self.assertFalse(llm_enabled(values))
+        self.assertEqual(values['LLM_BASE_URL'],'')
+        self.assertEqual(values['LLM_MODEL'],'')
+        self.assertEqual(values['LLM_API_KEY'],'')
 
 
 class MaskTests(unittest.TestCase):

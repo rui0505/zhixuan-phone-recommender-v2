@@ -188,7 +188,8 @@ class StatusFailedTests(unittest.TestCase):
 
         result = extract_needs("随便买个手机", classifier=_Unavailable())
         self.assertEqual(result["status"], STATUS_FAILED)
-        self.assertEqual(result["meta"]["error"], "服务不可用")
+        self.assertIn('服务不可用',result['meta']['error'])
+        self.assertIn('不显示上游异常内容',result['meta']['error'])
 
     def test_missing_config_returns_failed(self):
         """没配 LLM_BASE_URL 时不抛，退回 failed 结构。"""

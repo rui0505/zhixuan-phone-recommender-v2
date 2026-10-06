@@ -42,6 +42,17 @@ _ESCAPES = {"n": "\n", "t": "\t", "r": "\r", "\\": "\\", '"': '"', "'": "'"}
 __all__ = ["DotenvLoad", "load_dotenv", "parse_dotenv", "find_dotenv"]
 
 
+def llm_enabled(environ=None):
+    """Owner-only opt-in; budget and an externally limited gateway need separate approval.
+
+    This is not a billing/rate limiter and does not prove a gateway's limits.
+    No flags are enabled by this application or copied from secrets automatically.
+    """
+    env=os.environ if environ is None else environ
+    return all(str(env.get(key,'false')).lower() in ('1','true') for key in
+               ('PHONE_ENABLE_LLM','PHONE_LLM_BUDGET_APPROVED','PHONE_LLM_GATEWAY_LIMITS_APPROVED'))
+
+
 @dataclass
 class DotenvLoad:
     """一次加载的结果。**只记录键名，不记录值。**"""

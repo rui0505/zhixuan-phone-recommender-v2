@@ -36,3 +36,12 @@ class PipelineCatalogTests(unittest.TestCase):
     def test_no_candidates_turn_is_not_success(self):
         turn=self.turn(lambda needs,bridged:self.repo.build_decision_input(['price_cny'],max_price=0))
         self.assertEqual(turn.stage,'no_candidates');self.assertFalse(turn.ok)
+    def test_catalog_advice_binds_visible_models_and_versioned_facts(self):
+        turn=handle('预算1000到3000',self.df,classifier=MockClassifier(),top_n=1,
+            decision_builder=lambda needs,bridged:self.repo.build_decision_input(['price_cny']))
+        self.assertEqual([m['sku_id'] for m in turn.evidence['models']],['S1'])
+        self.assertIn('fixture-v1',turn.advice)
+        self.assertIn('F-',turn.advice)
+        self.assertNotIn('测试机2',turn.advice)
+        self.assertFalse(turn.advice_from_llm)
+        self.assertEqual(turn.to_dict()['evidence']['models'][0]['price_id'],'P1')

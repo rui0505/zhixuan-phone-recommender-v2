@@ -146,10 +146,10 @@ def extract_needs(
         if classifier is None:
             classifier = _default_classifier()
         result = classify_preferences(text, classifier=classifier)
-    except JevUnavailable as error:
-        return _failed(text, str(error), started)
+    except JevUnavailable:
+        return _failed(text, '服务不可用或大模型未启用；请检查 PHONE_ENABLE_LLM / LLM_BASE_URL 配置，或使用手动确认；不显示上游异常内容', started)
     except Exception as error:  # noqa: BLE001 - 契约要求永不抛
-        return _failed(text, f"{type(error).__name__}: {error}", started)
+        return _failed(text, f"需求抽取失败（{type(error).__name__}）；不显示上游异常内容", started)
 
     return _shape(text, result, started)
 
@@ -266,6 +266,9 @@ def validate_result(result: Mapping[str, Any]) -> list[str]:
 
 
 def _default_classifier() -> Any:
+    from providers.env import llm_enabled
+    if not llm_enabled():
+        raise JevUnavailable('大模型默认关闭（PHONE_ENABLE_LLM）；未配置或未审核的 LLM_BASE_URL 不会自动请求，请使用手动确认')
     from providers.llm import LLMClassifier
 
     return LLMClassifier()

@@ -154,7 +154,8 @@ class WriteRecommendationTests(unittest.TestCase):
 
         text, error = write_recommendation(a_brief(), writer=Unavailable())
         self.assertEqual(text, "")
-        self.assertEqual(error, "服务不可用")
+        self.assertIn('服务不可用',error)
+        self.assertIn('不显示上游异常内容',error)
 
     def test_empty_model_reply_is_reported(self):
         class Silent:
@@ -253,7 +254,7 @@ class EndToEndTests(unittest.TestCase):
     """走真实 HTTP 打到本地假服务，验证线格式与「不编造型号」。"""
 
     def setUp(self):
-        self.server = FakeOpenAIServer()
+        self.server = FakeOpenAIServer(enable_auto_provider=True)
         self.server.__enter__()
         self.addCleanup(self._teardown)
 
@@ -300,7 +301,7 @@ class EndToEndTests(unittest.TestCase):
         self.server.__exit__(None, None, None)
         for key in LLM_VARS:
             os.environ.pop(key, None)
-        self.server = FakeOpenAIServer(status=500)
+        self.server = FakeOpenAIServer(status=500,enable_auto_provider=True)
         self.server.__enter__()
         text, error = write_recommendation(a_brief())
         self.assertEqual(text, "")
