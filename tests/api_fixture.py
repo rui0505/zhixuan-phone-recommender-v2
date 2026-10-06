@@ -1,5 +1,6 @@
 """Synthetic API releases; never depend on private workbooks or mutate production."""
 from contextlib import closing
+from copy import deepcopy
 from pathlib import Path
 
 from tests.catalog_fixture import create_catalog, insert
@@ -21,3 +22,13 @@ def make_release(root: Path, *, prepare=None) -> Path:
     export_snapshot(source, destination, approved_asset_ids=set(), release_status={
         'machine_acceptance': 'PASS', 'overall_acceptance': 'PENDING', 'wps_review': 'NOT_CHECKED'})
     return destination
+
+
+def request_payload(release, **updates):
+    payload = dict(needs={'budget':{'min':None,'max':None},'min_storage':None,
+                          'brands':{'include':[],'exclude':[]}},
+                   weights={'price_cny':5,'weight_g':2,'storage_gb':2,'refresh_rate_hz':1,
+                            'screen_size_inch':0,'dxomark_photo':0,'honor_of_kings_avg_fps':0},
+                   target_screen=6.5,mode='new',confirmed=True,expected_release=deepcopy(release.key))
+    payload.update(deepcopy(updates))
+    return payload
