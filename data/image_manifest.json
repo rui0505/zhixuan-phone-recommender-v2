@@ -1,0 +1,1480 @@
+{
+  "approval": "OWNER_APPROVED_PUBLIC_DISPLAY",
+  "approval_date": "2026-10-07",
+  "approval_note": "Project owner confirmed public display in chat; not an independent copyright certification.",
+  "snapshot_sha256": "128207745f5450c285cb8d6c61ff2c692f19387f2df0823690cd5b323c453bc8",
+  "association_rule": "Exact brand and display_name; never reuse source model IDs across releases.",
+  "models": {
+    "M0001": {
+      "filename": "M0001_92684a97d38d036e.webp",
+      "sha256": "92684a97d38d036e51720d78d7b9f0a854ba9c0b8189793ec8f925fdf24d3730",
+      "color": "粉色",
+      "alt": "iPhone 15 · 粉色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0002": {
+      "filename": "M0002_c03253cb1a3951b2.webp",
+      "sha256": "c03253cb1a3951b22dc705e50b271ce92ab6a3330873fa4fd264ea3e9e409d4d",
+      "color": "原色钛金属",
+      "alt": "iPhone 16 Pro Max · 原色钛金属",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0003": {
+      "filename": "M0003_b5f873ae9fc6b5e6.webp",
+      "sha256": "b5f873ae9fc6b5e6fed7185716bf83b6b2a79d6ff1234517dff67e99280cf456",
+      "color": "原色钛金属",
+      "alt": "iPhone 16 Pro · 原色钛金属",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0004": {
+      "filename": "M0004_b8c3419b117ea542.webp",
+      "sha256": "b8c3419b117ea542524179ec251f53dc4925b77bbf7e0b404cf9d1bd62305f1e",
+      "color": "深青色",
+      "alt": "iPhone 16 · 深青色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0005": {
+      "filename": "M0005_2227da4279f4b7ea.webp",
+      "sha256": "2227da4279f4b7ea38593f96edca0595bc8e59f577991261b89ad690456de3d5",
+      "color": "原色钛金属",
+      "alt": "iPhone 15 Pro Max · 原色钛金属",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0006": {
+      "filename": "M0006_442546c30722761b.webp",
+      "sha256": "442546c30722761b777cf70a7cc5dbce43e5fa8ff4ca9efe9ab2ddf486b970af",
+      "color": "星宇橙色",
+      "alt": "iPhone 17 Pro Max · 星宇橙色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0007": {
+      "filename": "M0007_4e44f81f50fc6161.webp",
+      "sha256": "4e44f81f50fc6161bfd51301407108c7b498d46ce6addc97821fa5b1a872090f",
+      "color": "白色",
+      "alt": "iPhone 17 · 白色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0008": {
+      "filename": "M0008_3647e754c0e0daf3.webp",
+      "sha256": "3647e754c0e0daf3c87129458644a8c667d2d552175ca78c7bff149544058626",
+      "color": "星宇橙色",
+      "alt": "iPhone 17 Pro · 星宇橙色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0009": {
+      "filename": "M0009_95c6a1d214d93d9b.webp",
+      "sha256": "95c6a1d214d93d9b2cbcb1d1f1c235a3305b88ecd50e0f8e4eeae138aef85f7a",
+      "color": "午夜色",
+      "alt": "iPhone 14 · 午夜色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0010": {
+      "filename": "M0010_1f317e17c2fede72.webp",
+      "sha256": "1f317e17c2fede724dd866f91a1f60be8b0ee5cb07ab1741a718db4d056abb1d",
+      "color": "白色",
+      "alt": "iPhone 16e · 白色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0011": {
+      "filename": "M0011_b03c38b2d00fee45.webp",
+      "sha256": "b03c38b2d00fee454abe30a92c312c491a1390aacfeba996ab46cc6712b8646c",
+      "color": "原色钛金属",
+      "alt": "iPhone 15 Pro · 原色钛金属",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0012": {
+      "filename": "M0012_bdfba4e3fb8b49ef.webp",
+      "sha256": "bdfba4e3fb8b49ef9f9d7f5ed4e716b959d0ac4a4ff0414e73facd9749947404",
+      "color": "钛岭绿",
+      "alt": "三星Galaxy S24 Ultra · 钛岭绿",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0013": {
+      "filename": "M0013_f7351f040d8eec50.webp",
+      "sha256": "f7351f040d8eec50391b141b0b09935bd78699908d3322b302055108e5c364fb",
+      "color": "钛墨黑",
+      "alt": "三星Galaxy S25 Ultra · 钛墨黑",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0014": {
+      "filename": "M0014_2f3f2431853149bc.webp",
+      "sha256": "2f3f2431853149bcbdd0a3dc33dfcbe43d57aacb5856a2a27ef131ed8d37e01a",
+      "color": "幽夜紫",
+      "alt": "三星Galaxy S26 Ultra · 幽夜紫",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0015": {
+      "filename": "M0015_04e0bfba88dd3b31.webp",
+      "sha256": "04e0bfba88dd3b31bb722c6e29b798effe5179d1532d221db0d682c83d12fbe7",
+      "color": "石墨色",
+      "alt": "三星Galaxy A56 · 石墨色",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0016": {
+      "filename": "M0016_d72d6fdc2c673cc7.webp",
+      "sha256": "d72d6fdc2c673cc7a2dd4d46163201feb03ad31e803ca693a9f87606d99b375c",
+      "color": "紫色",
+      "alt": "华为Mate 60 Pro · 紫色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0017": {
+      "filename": "M0017_ccc28cf2a6fed57f.webp",
+      "sha256": "ccc28cf2a6fed57f1f33158c119ff501e71f9b542a6845ed4b6ce972f87d86d5",
+      "color": "云杉绿",
+      "alt": "华为Mate 80 · 云杉绿",
+      "dimensions": [
+        580,
+        1600
+      ]
+    },
+    "M0018": {
+      "filename": "M0018_d51dbecfb3745f03.webp",
+      "sha256": "d51dbecfb3745f03909fa01a4cabf8b986be2beeae37159a2ca4797763d2f053",
+      "color": "云杉绿",
+      "alt": "华为Mate 70 · 云杉绿",
+      "dimensions": [
+        300,
+        800
+      ]
+    },
+    "M0019": {
+      "filename": "M0019_fab97fab2e164b3c.webp",
+      "sha256": "fab97fab2e164b3c6cf5d168098abf9f9d0ebcfabc6a58515826e25e9b8dc61c",
+      "color": "山峦青",
+      "alt": "Redmi K80 · 山峦青",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0020": {
+      "filename": "M0020_308fb1c552010a82.webp",
+      "sha256": "308fb1c552010a827a310d5bab1587dfa01c1e52afbed8cca0b1cf5e61b83278",
+      "color": "典雅黑",
+      "alt": "荣耀X50 · 典雅黑",
+      "dimensions": [
+        266,
+        571
+      ]
+    },
+    "M0021": {
+      "filename": "M0021_078943d4477d09e7.webp",
+      "sha256": "078943d4477d09e744b2e9460882861db34a8d2167c33174fd1d14559435115b",
+      "color": "幻夜黑",
+      "alt": "荣耀X70 · 幻夜黑",
+      "dimensions": [
+        252,
+        532
+      ]
+    },
+    "M0022": {
+      "filename": "M0022_4763fcc5057088f7.webp",
+      "sha256": "4763fcc5057088f7e0fb220ebc5f53877bd1ac1271275ac096a617fe0b68650b",
+      "color": "丁香紫",
+      "alt": "小米15 · 丁香紫",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0023": {
+      "filename": "M0023_edb76401b4a4e440.webp",
+      "sha256": "edb76401b4a4e440e4cef1ad9ba8f448ad1abc8db4254a4dcfe8831052b968f5",
+      "color": "岩石青",
+      "alt": "小米14 · 岩石青",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0024": {
+      "filename": "M0024_ff76ba534574fa10.webp",
+      "sha256": "ff76ba534574fa10fd1ab7bf7c3f26779091eae08c475134388c05770658fb56",
+      "color": "午夜色",
+      "alt": "iPhone 13 · 午夜色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0025": {
+      "filename": "M0025_cbf1ce4f5369efee.webp",
+      "sha256": "cbf1ce4f5369efee363ad928b1fa92e7099ffd63e80c300b242bc1d2008d727d",
+      "color": "石墨色",
+      "alt": "iPhone 13 Pro · 石墨色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0026": {
+      "filename": "M0026_6f24245343004702.webp",
+      "sha256": "6f242453430047022624d4720c4d21263b9664ef48a482607d4eb11c089e47dd",
+      "color": "石墨色",
+      "alt": "iPhone 13 Pro Max · 石墨色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0027": {
+      "filename": "M0027_c3b0b879253ed2f4.webp",
+      "sha256": "c3b0b879253ed2f4651af7b61b3a3d13ea3cc1ad354138abd18dcb705c0f80a1",
+      "color": "白色",
+      "alt": "iPhone 12 · 白色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0028": {
+      "filename": "M0028_fe36b561c9452f95.webp",
+      "sha256": "fe36b561c9452f95cf81ce32f6a9e1f7ae66880e08f7bc19dafe490af5f2b6c5",
+      "color": "海蓝色",
+      "alt": "iPhone 12 Pro · 海蓝色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0029": {
+      "filename": "M0029_9ac8c92b476b9aaf.webp",
+      "sha256": "9ac8c92b476b9aaf35b9d42db7e8c82ffa14b42ecc11b07b954c6463ea468fef",
+      "color": "粉色",
+      "alt": "iPhone 15 Plus · 粉色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0030": {
+      "filename": "M0030_f6004836fd3188ed.webp",
+      "sha256": "f6004836fd3188ede05878022874be5ab327312003c412d442bfc528a4ba4e0a",
+      "color": "深青色",
+      "alt": "iPhone 16 Plus · 深青色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0031": {
+      "filename": "M0031_cddacec92be0aa2d.webp",
+      "sha256": "cddacec92be0aa2de26cef9e39a0ab183f3c6a379d162b35169025ba79a9af67",
+      "color": "午夜色",
+      "alt": "iPhone SE 3 · 午夜色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0032": {
+      "filename": "M0032_5d28f0ce9423d35a.webp",
+      "sha256": "5d28f0ce9423d35a112af5df81c5686761fed49153ce00104e59bdadd70c8281",
+      "color": "云白色",
+      "alt": "iPhone Air · 云白色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0033": {
+      "filename": "M0033_316e4a25b1486483.webp",
+      "sha256": "316e4a25b1486483b4424cb54a9e5595afb6777268d0851b9893a7d569430e5a",
+      "color": "午夜色",
+      "alt": "iPhone 14 Plus · 午夜色",
+      "dimensions": [
+        1000,
+        1000
+      ]
+    },
+    "M0034": {
+      "filename": "M0034_fe8c1aa78ad01c6c.webp",
+      "sha256": "fe8c1aa78ad01c6ce8d5cccdb70e0c81dbdef5a3c2f96ef23503d305981a5801",
+      "color": "冷玉蓝",
+      "alt": "三星Galaxy S24 · 冷玉蓝",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0035": {
+      "filename": "M0035_4efe236a7d6621f7.webp",
+      "sha256": "4efe236a7d6621f780966cb80c7ef66361a2a0651c9ffe3582151a56c324d074",
+      "color": "冷玉蓝",
+      "alt": "三星Galaxy S24+ · 冷玉蓝",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0036": {
+      "filename": "M0036_71a8c3b766fda7db.webp",
+      "sha256": "71a8c3b766fda7db6998fcaba9a26a2ad37893fb83ec4979beb50cac004b9c85",
+      "color": "冷川蓝",
+      "alt": "三星Galaxy S25 · 冷川蓝",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0037": {
+      "filename": "M0037_9454d414f10ec050.webp",
+      "sha256": "9454d414f10ec050336b15654035e827e71793ad8316cba2e843ce1c4638bc24",
+      "color": "冷川蓝",
+      "alt": "三星Galaxy S25+ · 冷川蓝",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0038": {
+      "filename": "M0038_1481b569fe47e5ce.webp",
+      "sha256": "1481b569fe47e5ced8cf79c3f104352f1eab8c76d0c56b2b462a60e4a824fad8",
+      "color": "悠柔白",
+      "alt": "三星Galaxy S23 Ultra · 悠柔白",
+      "dimensions": [
+        720,
+        720
+      ]
+    },
+    "M0039": {
+      "filename": "M0039_5633f06ed3bc25d9.webp",
+      "sha256": "5633f06ed3bc25d98a8134a0cb35bc40b5b01aed67d66d2591d3f6a53162de1a",
+      "color": "悠柔白",
+      "alt": "三星Galaxy S23 · 悠柔白",
+      "dimensions": [
+        720,
+        720
+      ]
+    },
+    "M0040": {
+      "filename": "M0040_0b689fbc74fb95f2.webp",
+      "sha256": "0b689fbc74fb95f2ba1f55885bc6e5f118b13f8ffaed4b83220fe67675d818f2",
+      "color": "冰蓝色",
+      "alt": "三星Galaxy A55 · 冰蓝色",
+      "dimensions": [
+        720,
+        720
+      ]
+    },
+    "M0041": {
+      "filename": "M0041_239c4a202d40b792.webp",
+      "sha256": "239c4a202d40b7923d621a9be9db7535f96ba7b2501272ce252fb42ca66d4e55",
+      "color": "冷夜蓝",
+      "alt": "三星Galaxy Z Fold6 · 冷夜蓝",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0042": {
+      "filename": "M0042_86f1d57399136e05.webp",
+      "sha256": "86f1d57399136e05bc7bf5ece9088846bb3174d74106a86152433f9b12344417",
+      "color": "夏沫蓝",
+      "alt": "三星Galaxy Z Flip6 · 夏沫蓝",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0043": {
+      "filename": "M0043_266760a5ed9fff26.webp",
+      "sha256": "266760a5ed9fff261558f4945378f6193cbc111d6ed110be0e874b83fca91baa",
+      "color": "冰萃蓝",
+      "alt": "三星Galaxy Z Fold5 · 冰萃蓝",
+      "dimensions": [
+        720,
+        720
+      ]
+    },
+    "M0044": {
+      "filename": "M0044_3e123a895b7d9527.webp",
+      "sha256": "3e123a895b7d9527fb2732573824659429fe6c1f0e07e016162a75b62d83a826",
+      "color": "云影灰",
+      "alt": "三星Galaxy Z Flip5 · 云影灰",
+      "dimensions": [
+        720,
+        720
+      ]
+    },
+    "M0045": {
+      "filename": "M0045_ffccd1c6a57dc828.webp",
+      "sha256": "ffccd1c6a57dc8289eb6046300274d91cbc984293ec886540db021ae7ae8986a",
+      "color": "幽夜紫",
+      "alt": "三星Galaxy S26 · 幽夜紫",
+      "dimensions": [
+        1200,
+        648
+      ]
+    },
+    "M0046": {
+      "filename": "M0046_04feb537dde93c1c.webp",
+      "sha256": "04feb537dde93c1c6cf69490cea8c774bc7bb652727e3bea56683319cf2f111d",
+      "color": "云杉绿",
+      "alt": "华为Mate 70 Pro · 云杉绿",
+      "dimensions": [
+        300,
+        800
+      ]
+    },
+    "M0047": {
+      "filename": "M0047_ec22adad06e7f980.webp",
+      "sha256": "ec22adad06e7f980c1f7dfbd0b2bd7f1b83ad5b0a01a47e978cb527ad4800835",
+      "color": "墨韵黑",
+      "alt": "华为Mate 70 Pro+ · 墨韵黑",
+      "dimensions": [
+        300,
+        800
+      ]
+    },
+    "M0048": {
+      "filename": "M0048_fa1d851e215637ac.webp",
+      "sha256": "fa1d851e215637ac65365ff944e15022c0b834b9417863019947375f93a2afc1",
+      "color": "玄黑",
+      "alt": "华为Mate 70 RS 非凡大师 · 玄黑",
+      "dimensions": [
+        300,
+        800
+      ]
+    },
+    "M0049": {
+      "filename": "M0049_a73e279d817c1f4d.webp",
+      "sha256": "a73e279d817c1f4d807d025e863675796d233ca3d0d979ad21cb6c7b2e5d8bf0",
+      "color": "云杉绿",
+      "alt": "华为Mate 80 Pro · 云杉绿",
+      "dimensions": [
+        294,
+        800
+      ]
+    },
+    "M0050": {
+      "filename": "M0050_04381ae1a143cba1.webp",
+      "sha256": "04381ae1a143cba17bd8db3188d80d1492e8c713df5ddfc96fcb4b241a8b9b82",
+      "color": "极光青",
+      "alt": "华为Mate 80 Pro Max · 极光青",
+      "dimensions": [
+        296,
+        800
+      ]
+    },
+    "M0051": {
+      "filename": "M0051_f041e272fb645324.webp",
+      "sha256": "f041e272fb6453246a25c5b883e97b52fbe2dbb75e939bee6c8da1d96ce2fa79",
+      "color": "白色",
+      "alt": "华为Pura 70 · 白色",
+      "dimensions": [
+        435,
+        1200
+      ]
+    },
+    "M0052": {
+      "filename": "M0052_6e383b6241b0d061.webp",
+      "sha256": "6e383b6241b0d061550ba308eb01fbaa706cfa3a508071bcf614174d12a1f16a",
+      "color": "白色",
+      "alt": "华为Pura 70 Pro · 白色",
+      "dimensions": [
+        290,
+        800
+      ]
+    },
+    "M0053": {
+      "filename": "M0053_2d73e124475d7d08.webp",
+      "sha256": "2d73e124475d7d080cfd4ef10a43a8febb1fbf32f6b03dadebbf64d5b7cb5498",
+      "color": "棕色",
+      "alt": "华为Pura 70 Ultra · 棕色",
+      "dimensions": [
+        290,
+        800
+      ]
+    },
+    "M0054": {
+      "filename": "M0054_c7e700ed6576fe4a.webp",
+      "sha256": "c7e700ed6576fe4a712cb2e9f31bc4db1502aaf3760731e892c9e3e0ead358f6",
+      "color": "绿色",
+      "alt": "华为Mate 60 · 绿色",
+      "dimensions": [
+        1200,
+        651
+      ]
+    },
+    "M0055": {
+      "filename": "M0055_cb0ebd55f27135ff.webp",
+      "sha256": "cb0ebd55f27135ffab25fddd9819a531136c08452999d371e5f9d32abde86f20",
+      "color": "白色",
+      "alt": "华为Mate 60 Pro+ · 白色",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    "M0056": {
+      "filename": "M0056_298692da548905ae.webp",
+      "sha256": "298692da548905ae2ff323c5843fcafa28be1f3548624aed5fd3f4f3db4618a9",
+      "color": "白色",
+      "alt": "华为nova 12 · 白色",
+      "dimensions": [
+        1200,
+        593
+      ]
+    },
+    "M0057": {
+      "filename": "M0057_1fed1deae02e23b4.webp",
+      "sha256": "1fed1deae02e23b4f9a00874273986271100b16825e5a58ffce8c041b2b38929",
+      "color": "蓝色",
+      "alt": "华为nova 12 Pro · 蓝色",
+      "dimensions": [
+        1200,
+        640
+      ]
+    },
+    "M0058": {
+      "filename": "M0058_3a2cbab8d59b4588.webp",
+      "sha256": "3a2cbab8d59b4588e53a4336a334e1e88da163575e43ee32c84359f3cae6e6ae",
+      "color": "灰色",
+      "alt": "华为Pura X · 灰色",
+      "dimensions": [
+        428,
+        428
+      ]
+    },
+    "M0059": {
+      "filename": "M0059_8011ab3ffea8e2b9.webp",
+      "sha256": "8011ab3ffea8e2b989ade362d940f07ba5a3bc91522fc0ce9a0950d321ee3413",
+      "color": "白色",
+      "alt": "华为Mate X5 · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0060": {
+      "filename": "M0060_8011ab3ffea8e2b9.webp",
+      "sha256": "8011ab3ffea8e2b989ade362d940f07ba5a3bc91522fc0ce9a0950d321ee3413",
+      "color": "白色",
+      "alt": "华为Mate X5 典藏版 · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0061": {
+      "filename": "M0061_5c0ecc1b25859105.webp",
+      "sha256": "5c0ecc1b258591054f375eebf860b4468b91785bb578f2b9232df64507135a0e",
+      "color": "银色",
+      "alt": "华为Pura 70 Pro+ · 银色",
+      "dimensions": [
+        1200,
+        551
+      ]
+    },
+    "M0062": {
+      "filename": "M0062_3a2cbab8d59b4588.webp",
+      "sha256": "3a2cbab8d59b4588e53a4336a334e1e88da163575e43ee32c84359f3cae6e6ae",
+      "color": "灰色",
+      "alt": "华为Pura X 典藏版 · 灰色",
+      "dimensions": [
+        428,
+        428
+      ]
+    },
+    "M0063": {
+      "filename": "M0063_b8a36419fb45c8b8.webp",
+      "sha256": "b8a36419fb45c8b811e6412cad7dffbfe7c2d99f7df0ab0ced96509083fcbd9d",
+      "color": "旷野绿",
+      "alt": "小米13 · 旷野绿",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0064": {
+      "filename": "M0064_e5c6cd8193eb784f.webp",
+      "sha256": "e5c6cd8193eb784f6f6c53cafaf72093960ce6cdc6f29904e4a58258f6e15d80",
+      "color": "旷野绿（陶瓷）",
+      "alt": "小米13 Pro · 旷野绿（陶瓷）",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0065": {
+      "filename": "M0065_ef634d4568caa252.webp",
+      "sha256": "ef634d4568caa252a4a9ac750156f910917942b2ba0804be432d0c5fb059cd17",
+      "color": "橄榄绿",
+      "alt": "小米13 Ultra · 橄榄绿",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0066": {
+      "filename": "M0066_d73393175ca9713a.webp",
+      "sha256": "d73393175ca9713a71c3469b4b3c240b68c563ce0b0846cdbd161c72e4a7a105",
+      "color": "岩石青",
+      "alt": "小米14 Pro · 岩石青",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0067": {
+      "filename": "M0067_b562a1754e32fa00.webp",
+      "sha256": "b562a1754e32fa003d82d5856e2c3e35d57f3dac35062461c5ac7cddc1c39914",
+      "color": "白色",
+      "alt": "小米14 Ultra · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0068": {
+      "filename": "M0068_68cb92d92669b8ab.webp",
+      "sha256": "68cb92d92669b8abf5bd174bcb73df4ec5642a108e90ec33d8a0668b12e8304d",
+      "color": "云杉绿",
+      "alt": "小米15 Pro · 云杉绿",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0069": {
+      "filename": "M0069_c66a52d4f46f3792.webp",
+      "sha256": "c66a52d4f46f3792a19506310ce12cda2dfefeee6b9a23b4b350733a0c2f3ad2",
+      "color": "绿色",
+      "alt": "Redmi K60 · 绿色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0070": {
+      "filename": "M0070_63742c4a68b95fd8.webp",
+      "sha256": "63742c4a68b95fd813a3fd8288038dc17edeb167e253da9131a5acd160ecf784",
+      "color": "白色",
+      "alt": "Redmi K60 Pro · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0071": {
+      "filename": "M0071_531a9024cf36862a.webp",
+      "sha256": "531a9024cf36862a8caa01affe3fb49fbc837ef7231ec09399a61ed0817192b6",
+      "color": "白色",
+      "alt": "Redmi K70E · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0072": {
+      "filename": "M0072_c00d3e4f2961912b.webp",
+      "sha256": "c00d3e4f2961912bab02d151ca92c4ed401bb9efa5133a019692c5e45c581a65",
+      "color": "白色",
+      "alt": "Redmi Note 13 · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0073": {
+      "filename": "M0073_d0f6c7c9fe1f95d6.webp",
+      "sha256": "d0f6c7c9fe1f95d663763b1708d45c4fa5b839019591df28da43b09f1dd5c567",
+      "color": "白色",
+      "alt": "Redmi Note 13 Pro+ · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0074": {
+      "filename": "M0074_eb7192c3500d0d0d.webp",
+      "sha256": "eb7192c3500d0d0d1cfa0510363e44be1853cf1c2f614a084bb95e1c2d164866",
+      "color": "白色",
+      "alt": "Redmi Note 14 · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0075": {
+      "filename": "M0075_4797c9bd05fa6aba.webp",
+      "sha256": "4797c9bd05fa6aba8f8e8d595e5f8335f0077f2500a87706c561aebe4f42d070",
+      "color": "好运红",
+      "alt": "Redmi Note 14 Pro · 好运红",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0076": {
+      "filename": "M0076_1c934d335850b1aa.webp",
+      "sha256": "1c934d335850b1aa7bb8901c4234f0750b41df743016647f8acfca7d7dfedf90",
+      "color": "冰钛",
+      "alt": "Redmi Turbo 3 · 冰钛",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0077": {
+      "filename": "M0077_fd41e85dd4a0f739.webp",
+      "sha256": "fd41e85dd4a0f739ff4c9b28df860177bca561f38894906cf1785d6666d9fc0b",
+      "color": "暗影黑",
+      "alt": "Redmi 12C · 暗影黑",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0078": {
+      "filename": "M0078_3edea35d514f26c3.webp",
+      "sha256": "3edea35d514f26c3e6513a851ccd30056d4b4f6b0ed8fba1bb339d1886f51a67",
+      "color": "蓝色",
+      "alt": "Redmi Note 12 Turbo · 蓝色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0079": {
+      "filename": "M0079_c52588ad17215073.webp",
+      "sha256": "c52588ad17215073e00242ae9c0949070d590ce1a0628c1a61b97496215346c8",
+      "color": "微风蓝",
+      "alt": "小米Civi 4 Pro · 微风蓝",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0080": {
+      "filename": "M0080_37129e635f4b5134.webp",
+      "sha256": "37129e635f4b513441c81dc9c2d7a7fc0e5a4759f518b1bb7236a482da42f6b4",
+      "color": "冠军版深灰色",
+      "alt": "Redmi K80 Pro · 冠军版深灰色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0081": {
+      "filename": "M0081_0ea87af96f505afd.webp",
+      "sha256": "0ea87af96f505afdfe4a0fc4eddfabd144da8d4b01729246b14e064d08641af8",
+      "color": "白色",
+      "alt": "Redmi Note 15 Pro · 白色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0082": {
+      "filename": "M0082_9a2a7b8b51f7a3c7.webp",
+      "sha256": "9a2a7b8b51f7a3c7590405fd5eb5c135cced3bc8bce65249b15cbde0be499f55",
+      "color": "幻境紫",
+      "alt": "Redmi 13R · 幻境紫",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0083": {
+      "filename": "M0083_37b72f7e1d773e43.webp",
+      "sha256": "37b72f7e1d773e43c83df17ec3882afe218937f16e645b1e43eb773d1f93e3ce",
+      "color": "天青蓝",
+      "alt": "Redmi Note 15 · 天青蓝",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0084": {
+      "filename": "M0084_73e708d7840d02ac.webp",
+      "sha256": "73e708d7840d02acbda11b3cb3b38e516ab4c54d9f34f1e15e8b434c43169ac4",
+      "color": "天海青",
+      "alt": "荣耀200 · 天海青",
+      "dimensions": [
+        268,
+        571
+      ]
+    },
+    "M0085": {
+      "filename": "M0085_c569feace5203695.webp",
+      "sha256": "c569feace52036952426bb5b3bc818d20a4cf3a2992f5f3bdcd0c611eafbce48",
+      "color": "天海青",
+      "alt": "荣耀200 Pro · 天海青",
+      "dimensions": [
+        268,
+        571
+      ]
+    },
+    "M0086": {
+      "filename": "M0086_2682ab3c19a5a16c.webp",
+      "sha256": "2682ab3c19a5a16cba1048bb3104498407c01b2f41891289bb1a30f2b7776b67",
+      "color": "流云紫",
+      "alt": "荣耀Magic6 · 流云紫",
+      "dimensions": [
+        274,
+        571
+      ]
+    },
+    "M0087": {
+      "filename": "M0087_c1a51a86fe0fa9e6.webp",
+      "sha256": "c1a51a86fe0fa9e6cb38d11e18541b2b22243c497b1cc2f1852e0cf154743ba5",
+      "color": "流云紫",
+      "alt": "荣耀Magic6 Pro · 流云紫",
+      "dimensions": [
+        274,
+        571
+      ]
+    },
+    "M0088": {
+      "filename": "M0088_a9d5d8cea15eabb3.webp",
+      "sha256": "a9d5d8cea15eabb327606d04e8bdc804305885faf1a1224799543bcd32f66a27",
+      "color": "典雅黑",
+      "alt": "荣耀X50 Pro · 典雅黑",
+      "dimensions": [
+        274,
+        571
+      ]
+    },
+    "M0089": {
+      "filename": "M0089_7f09e072ffaf2f63.webp",
+      "sha256": "7f09e072ffaf2f638f87ceceb1010bfb8073e421a648ee9b2b394925ddb01ed7",
+      "color": "亮黑色",
+      "alt": "荣耀90 · 亮黑色",
+      "dimensions": [
+        246,
+        532
+      ]
+    },
+    "M0090": {
+      "filename": "M0090_977f101a2f0ceeca.webp",
+      "sha256": "977f101a2f0ceecaf195763932c3888b222865869a0dba9beefe81b8ea9c7933",
+      "color": "亮黑色",
+      "alt": "荣耀90 Pro · 亮黑色",
+      "dimensions": [
+        244,
+        532
+      ]
+    },
+    "M0091": {
+      "filename": "M0091_175fd6ad62713cff.webp",
+      "sha256": "175fd6ad62713cff3aef17cbc52d1d5529f0152d0a65895dc8b2789d60854805",
+      "color": "仙踪绿",
+      "alt": "荣耀畅玩60 Plus · 仙踪绿",
+      "dimensions": [
+        268,
+        571
+      ]
+    },
+    "M0092": {
+      "filename": "M0092_5689ce78682e645c.webp",
+      "sha256": "5689ce78682e645c9195e7013bda5a695a17c5058b48e8987258a9f9ed9025fa",
+      "color": "幻夜黑",
+      "alt": "荣耀Play9T · 幻夜黑",
+      "dimensions": [
+        265,
+        571
+      ]
+    },
+    "M0093": {
+      "filename": "M0093_d07fc9a899cf8f60.webp",
+      "sha256": "d07fc9a899cf8f6097d15d707cdf93f26ea5e4dd25d472a2f032d690613c4186",
+      "color": "墨玉青",
+      "alt": "荣耀X40 · 墨玉青",
+      "dimensions": [
+        274,
+        571
+      ]
+    },
+    "M0094": {
+      "filename": "M0094_51343741e73da1ed.webp",
+      "sha256": "51343741e73da1edd721d907b8d3fbfb600a0a7f3b5e602e4ff75ee4b55eebfe",
+      "color": "天际蓝",
+      "alt": "荣耀Magic7 · 天际蓝",
+      "dimensions": [
+        252,
+        532
+      ]
+    },
+    "M0095": {
+      "filename": "M0095_40d81bd8dff3c45c.webp",
+      "sha256": "40d81bd8dff3c45c8ee054fe63f5845315325e434ae8763799b3b438896b11ae",
+      "color": "宝石蓝",
+      "alt": "vivo X200 · 宝石蓝",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0096": {
+      "filename": "M0096_db7a185d47de3b43.webp",
+      "sha256": "db7a185d47de3b43c912bcb6dccc71b1882f35230193f52b13be08f6e11243b2",
+      "color": "宝石蓝",
+      "alt": "vivo X200 Pro · 宝石蓝",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0097": {
+      "filename": "M0097_7457d90b7611cf4b.webp",
+      "sha256": "7457d90b7611cf4be42b07e30b48a3dea42241e6b3da32c97c9fcd44b70e97ab",
+      "color": "星迹蓝",
+      "alt": "vivo X100 Pro · 星迹蓝",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0098": {
+      "filename": "M0098_b51ef99df7afb4e8.webp",
+      "sha256": "b51ef99df7afb4e8ae3e21195a58028cc1272ac14d3be5ffb9b6bbfbbec2c05f",
+      "color": "松烟墨",
+      "alt": "vivo S19 · 松烟墨",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0099": {
+      "filename": "M0099_9f6b2d7a0092484f.webp",
+      "sha256": "9f6b2d7a0092484fc02e2211dfecbf1255492d7ade24e110f5061255b0a663f0",
+      "color": "凤羽金",
+      "alt": "vivo S20 · 凤羽金",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0100": {
+      "filename": "M0100_437e241c71d516f0.webp",
+      "sha256": "437e241c71d516f0435e07241e9c22c378fdc697ff954abd9b59fd50767b566d",
+      "color": "皓夜",
+      "alt": "vivo Y200 · 皓夜",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0101": {
+      "filename": "M0101_6957a9660505cb1f.webp",
+      "sha256": "6957a9660505cb1f0d5487aac78ed849e279b520c87d018a209008569b8267e7",
+      "color": "传奇版",
+      "alt": "iQOO 12 · 传奇版",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0102": {
+      "filename": "M0102_a1c61954d2062b24.webp",
+      "sha256": "a1c61954d2062b24048f9ff572077f6e7ddbc23e88aa3d4b52233fdbeca95583",
+      "color": "传奇版",
+      "alt": "iQOO 13 · 传奇版",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0103": {
+      "filename": "M0103_e0dd06398dae57f9.webp",
+      "sha256": "e0dd06398dae57f9ce62b3ee69d02e525049538d921d5fae8acc584e969b1f7f",
+      "color": "格斗黑",
+      "alt": "iQOO Neo9 · 格斗黑",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0104": {
+      "filename": "M0104_6a8c34cdee9a4a86.webp",
+      "sha256": "6a8c34cdee9a4a86be867bcceaf79bc95a38e3a894a18266bb7a48615039523f",
+      "color": "拉力橙",
+      "alt": "iQOO Neo10 Pro · 拉力橙",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0105": {
+      "filename": "M0105_488a09f92cb563f0.webp",
+      "sha256": "488a09f92cb563f01c37fe8ccc5b433f13d6b4833d2d0543b327c6318021ef9b",
+      "color": "星夜黑",
+      "alt": "vivo Y100 · 星夜黑",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0106": {
+      "filename": "M0106_35c8d5e9c495a434.webp",
+      "sha256": "35c8d5e9c495a434a8a13b61fb2f36279e7429506b739ce8ac6f8185eb2dc367",
+      "color": "微粉",
+      "alt": "vivo X200 Pro Mini · 微粉",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0107": {
+      "filename": "M0107_8e29b68a5010fccf.webp",
+      "sha256": "8e29b68a5010fccf477ee8d43494008a7a15236e7c53f26b1c52dc0b89fdec0c",
+      "color": "红圈",
+      "alt": "vivo X200 Ultra · 红圈",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0108": {
+      "filename": "M0108_667a856fca9d1b3c.webp",
+      "sha256": "667a856fca9d1b3c60c2e48cf7f265331b769eaf812575b43994e615c3f2ad23",
+      "color": "星野黑",
+      "alt": "OPPO Find X8 · 星野黑",
+      "dimensions": [
+        1200,
+        1252
+      ]
+    },
+    "M0109": {
+      "filename": "M0109_022aaef8b93667af.webp",
+      "sha256": "022aaef8b93667af51c555688b5ea93528447e47788ca63727d36859b2c5fee4",
+      "color": "星野黑",
+      "alt": "OPPO Find X8 Pro · 星野黑",
+      "dimensions": [
+        1200,
+        1252
+      ]
+    },
+    "M0110": {
+      "filename": "M0110_f80fe8574414b341.webp",
+      "sha256": "f80fe8574414b3410115775783099d11bff10c3b41f288e9fa5d9a2c9aa8542d",
+      "color": "大漠银月",
+      "alt": "OPPO Find X7 · 大漠银月",
+      "dimensions": [
+        660,
+        1792
+      ]
+    },
+    "M0111": {
+      "filename": "M0111_5fdcfff92319ba65.webp",
+      "sha256": "5fdcfff92319ba652e0e2d1c24b2fd45c41de5018fc9ef3eb94d7d3997a61e9b",
+      "color": "乌木黑",
+      "alt": "OPPO Reno 12 · 乌木黑",
+      "dimensions": [
+        1200,
+        771
+      ]
+    },
+    "M0112": {
+      "filename": "M0112_eb542d70febb6622.webp",
+      "sha256": "eb542d70febb6622b89d34a50d309716bd472162ca8688f1c9cca7b08e3ebedb",
+      "color": "乌木黑",
+      "alt": "OPPO Reno 12 Pro · 乌木黑",
+      "dimensions": [
+        1200,
+        771
+      ]
+    },
+    "M0113": {
+      "filename": "M0113_07a9dbe7e989fd5f.webp",
+      "sha256": "07a9dbe7e989fd5fa8d967deb4623aaddcafbc656c4367c6c7fc92fa7510f782",
+      "color": "午夜黑",
+      "alt": "OPPO Reno 13 · 午夜黑",
+      "dimensions": [
+        1200,
+        917
+      ]
+    },
+    "M0114": {
+      "filename": "M0114_cc85d4fc4e3c5de6.webp",
+      "sha256": "cc85d4fc4e3c5de695d416d513f60c2a8a11ce8b8864022b7ccc7775a23919a8",
+      "color": "大漠银月",
+      "alt": "OPPO Find X7 Ultra · 大漠银月",
+      "dimensions": [
+        672,
+        1808
+      ]
+    },
+    "M0115": {
+      "filename": "M0115_95add4654cf3f877.webp",
+      "sha256": "95add4654cf3f877a9c8bcd8811dec6206f35618d5fca233fb4250f87cb3c1ca",
+      "color": "岩黑",
+      "alt": "一加12 · 岩黑",
+      "dimensions": [
+        1080,
+        1080
+      ]
+    },
+    "M0116": {
+      "filename": "M0116_32423e1ef8a6a217.webp",
+      "sha256": "32423e1ef8a6a217216284ce0bcceb8a6c932193343f52eca01044ff40798ef9",
+      "color": "白露晨曦",
+      "alt": "一加13 · 白露晨曦",
+      "dimensions": [
+        1080,
+        1080
+      ]
+    },
+    "M0117": {
+      "filename": "M0117_232c50451b476f04.webp",
+      "sha256": "232c50451b476f0422fdc3a9e60c71fa79b3952c3e82ed069ed6b477baf1a6c2",
+      "color": "冰河蓝",
+      "alt": "一加Ace 2 · 冰河蓝",
+      "dimensions": [
+        1080,
+        1080
+      ]
+    },
+    "M0118": {
+      "filename": "M0118_bff950e2fd8a75d7.webp",
+      "sha256": "bff950e2fd8a75d7954bbfff90c8f6ce53617df5ad00c0dce57344cad7a6bec7",
+      "color": "灰色",
+      "alt": "一加Ace 2 Pro · 灰色",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    "M0119": {
+      "filename": "M0119_1977f62275094522.webp",
+      "sha256": "1977f6227509452261564576f9d18831fe065b68b0fa7d0046724aad28405fbe",
+      "color": "绿野素青",
+      "alt": "一加Ace 3 Pro · 绿野素青",
+      "dimensions": [
+        1080,
+        1080
+      ]
+    },
+    "M0120": {
+      "filename": "M0120_a2cc1d8957afa88a.webp",
+      "sha256": "a2cc1d8957afa88a2d58cd7702eceda53426160425c34c0f4a8b8a6a364f2858",
+      "color": "星雾绿洲",
+      "alt": "realme GT5 · 星雾绿洲",
+      "dimensions": [
+        1200,
+        375
+      ]
+    },
+    "M0121": {
+      "filename": "M0121_7cc765320cfcb70b.webp",
+      "sha256": "7cc765320cfcb70b921c4a0abb8d4ad9df3272c9a15a45d1b93d9d1a9cb4c674",
+      "color": "星夜",
+      "alt": "realme GT5 Pro · 星夜",
+      "dimensions": [
+        1200,
+        375
+      ]
+    },
+    "M0122": {
+      "filename": "M0122_a31682f74cade417.webp",
+      "sha256": "a31682f74cade4172520dae2341d47cc8ad22853c2273b9fb60637eddb08a3b0",
+      "color": "星舰",
+      "alt": "realme Neo7 · 星舰",
+      "dimensions": [
+        1200,
+        375
+      ]
+    },
+    "M0123": {
+      "filename": "M0123_09d79a3b83321b69.webp",
+      "sha256": "09d79a3b83321b69f6f5be394403fd0fbcadebc85e6e372150c08cd35c6c3174",
+      "color": "全速黑",
+      "alt": "一加Ace 5 · 全速黑",
+      "dimensions": [
+        1080,
+        1080
+      ]
+    },
+    "M0124": {
+      "filename": "M0124_72a6c62002d9814c.webp",
+      "sha256": "72a6c62002d9814c0c355194dad242e9c8ab3cc96821a8f1b609f4726d2e9477",
+      "color": "流银骑士",
+      "alt": "realme GT Neo6 · 流银骑士",
+      "dimensions": [
+        1200,
+        375
+      ]
+    },
+    "M0125": {
+      "filename": "M0125_c2dcf3e7f8c29931.webp",
+      "sha256": "c2dcf3e7f8c29931740bdc953a72910df59704a881677cd58d49dede0e6867ed",
+      "color": "墨玉黑",
+      "alt": "vivo Y300i · 墨玉黑",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0126": {
+      "filename": "M0126_ec2b321b5abe319d.webp",
+      "sha256": "ec2b321b5abe319dce452e73b4ae6637ee3f11d2aed696271066f652c6e35204",
+      "color": "月影黑",
+      "alt": "vivo Y37 · 月影黑",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0127": {
+      "filename": "M0127_f58150cb0579cafd.webp",
+      "sha256": "f58150cb0579cafd37d5e8f7a1a101ba0552e537179523d20a4fc73f9f3ef627",
+      "color": "暗影黑",
+      "alt": "Redmi 14R · 暗影黑",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0128": {
+      "filename": "M0128_d3dfb06c50953869.webp",
+      "sha256": "d3dfb06c50953869397e08da16042e6407d33a1a5270d4854d95f3e1b1584b7f",
+      "color": "奇幻紫",
+      "alt": "vivo Y36 · 奇幻紫",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0129": {
+      "filename": "M0129_e5f061a053a02437.webp",
+      "sha256": "e5f061a053a0243700ded016c08e47b31444412cb1679751d292f8cfef43798c",
+      "color": "星云紫",
+      "alt": "vivo Y35+ · 星云紫",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0130": {
+      "filename": "M0130_11ddb5f48da5dbbb.webp",
+      "sha256": "11ddb5f48da5dbbb8cd3d736732f611928881dc8ac967dba30792a6bc4054a57",
+      "color": "冰川白",
+      "alt": "vivo Y200i · 冰川白",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0131": {
+      "filename": "M0131_9f74e1c2513431a0.webp",
+      "sha256": "9f74e1c2513431a09510b7a19baa66e1de6427aada471340e1773ead8a824bac",
+      "color": "冰晶紫",
+      "alt": "OPPO A2 · 冰晶紫",
+      "dimensions": [
+        1200,
+        945
+      ]
+    },
+    "M0132": {
+      "filename": "M0132_7474b79bc4d42dc4.webp",
+      "sha256": "7474b79bc4d42dc42a60791374fdcdbfe3ff1ffd59de883274e40de510adb6a6",
+      "color": "云羽粉",
+      "alt": "OPPO A3x · 云羽粉",
+      "dimensions": [
+        1200,
+        718
+      ]
+    },
+    "M0133": {
+      "filename": "M0133_fee5d4b9a2ddfcfb.webp",
+      "sha256": "fee5d4b9a2ddfcfb401abe4ce93b10d7d3d3e4166adf8d57d74ec1fd84c40ce5",
+      "color": "洛登绿",
+      "alt": "华为nova 13 · 洛登绿",
+      "dimensions": [
+        290,
+        800
+      ]
+    },
+    "M0134": {
+      "filename": "M0134_82d32885b5fe7b0b.webp",
+      "sha256": "82d32885b5fe7b0b45a8e9ef3efc8941105e6a31a697b45f5458019159677388",
+      "color": "墨羽",
+      "alt": "Redmi K70 · 墨羽",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0135": {
+      "filename": "M0135_1a30c6128cfed05e.webp",
+      "sha256": "1a30c6128cfed05ebd8abdfaa9f4725dc6ed3646075d8bead846cb05b62088c8",
+      "color": "冠军版橙色",
+      "alt": "Redmi K70 至尊版 · 冠军版橙色",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0136": {
+      "filename": "M0136_cb5920ae2d303c52.webp",
+      "sha256": "cb5920ae2d303c5269658eead651d37518ca64ae13f09172848b5f7582d61142",
+      "color": "蓝色",
+      "alt": "华为nova 12 活力版 · 蓝色",
+      "dimensions": [
+        1200,
+        617
+      ]
+    },
+    "M0137": {
+      "filename": "M0137_d2ce9a5990372f92.webp",
+      "sha256": "d2ce9a5990372f92dbc4c9eb650a4c4baa5237cd60208dfa8a261740878404ab",
+      "color": "好运红",
+      "alt": "Redmi Note 13 Pro · 好运红",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0138": {
+      "filename": "M0138_b3a562e0205c9fa9.webp",
+      "sha256": "b3a562e0205c9fa902fcf0c2ad3aaf0e122e9e415a8eadc09ed46ad36a37a866",
+      "color": "墨玉青",
+      "alt": "荣耀畅玩50 · 墨玉青",
+      "dimensions": [
+        268,
+        571
+      ]
+    },
+    "M0139": {
+      "filename": "M0139_96ab4ad6aca7d97d.webp",
+      "sha256": "96ab4ad6aca7d97d624c3e15db996eba779ffaa8d41bd1e2fd70ce3d21893a78",
+      "color": "典雅黑",
+      "alt": "荣耀X60 · 典雅黑",
+      "dimensions": [
+        263,
+        571
+      ]
+    },
+    "M0140": {
+      "filename": "M0140_7542d51b1f0eae68.webp",
+      "sha256": "7542d51b1f0eae68860a77072874fd3d620f24b28ba5bf0b7853c0970b69df56",
+      "color": "哈利·波特版",
+      "alt": "Redmi Turbo 4 Pro · 哈利·波特版",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0141": {
+      "filename": "M0141_b142588fe97491f2.webp",
+      "sha256": "b142588fe97491f213fc1896c17b27adec7e970eb6dacb6f878b7f58fb76a818",
+      "color": "幻夜黑",
+      "alt": "荣耀400 · 幻夜黑",
+      "dimensions": [
+        256,
+        532
+      ]
+    },
+    "M0142": {
+      "filename": "M0142_238ac97c5b8e0da6.webp",
+      "sha256": "238ac97c5b8e0da604ac9188074de5c51d0b99a836d97c7969e68f58035f0f16",
+      "color": "星夜黑",
+      "alt": "OPPO A2m · 星夜黑",
+      "dimensions": [
+        1200,
+        1171
+      ]
+    },
+    "M0143": {
+      "filename": "M0143_e1282b30dec211b6.webp",
+      "sha256": "e1282b30dec211b6a02a66ca985e805f4ec7d1f12a1f305c0134b0461b744236",
+      "color": "星辰黑",
+      "alt": "一加Ace 3 · 星辰黑",
+      "dimensions": [
+        1080,
+        1080
+      ]
+    },
+    "M0144": {
+      "filename": "M0144_e409c0455d90a22f.webp",
+      "sha256": "e409c0455d90a22fe34ef92ea235abdc44ef677fd2d3cb1ca639ff00b2cbe7dd",
+      "color": "亮黑色",
+      "alt": "荣耀100 · 亮黑色",
+      "dimensions": [
+        274,
+        571
+      ]
+    },
+    "M0145": {
+      "filename": "M0145_e8cc0f5818b6b0b0.webp",
+      "sha256": "e8cc0f5818b6b0b05c817cd81812032ce74a616de9cc6a9a6d02eb3cd1aa9149",
+      "color": "星迹蓝",
+      "alt": "vivo X100 · 星迹蓝",
+      "dimensions": [
+        640,
+        640
+      ]
+    },
+    "M0146": {
+      "filename": "M0146_f2c038d2272a87a3.webp",
+      "sha256": "f2c038d2272a87a344197afc3ef738f36cad5fde8f9a557d232a72a790e24b52",
+      "color": "冰川银",
+      "alt": "Redmi 14C 4G · 冰川银",
+      "dimensions": [
+        800,
+        800
+      ]
+    },
+    "M0147": {
+      "filename": "M0147_7579b470ba5d69c7.webp",
+      "sha256": "7579b470ba5d69c74b887be89d4c4de998b1a8913bb98b946efb76386ea914f5",
+      "color": "银色",
+      "alt": "Redmi 13C 5G · 银色",
+      "dimensions": [
+        800,
+        800
+      ]
+    }
+  },
+  "missing_models": []
+}

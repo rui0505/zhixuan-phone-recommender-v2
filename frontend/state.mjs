@@ -1,4 +1,4 @@
-const channels=['recommend','catalog','detail','compare','download'];
+const channels=['recommend','catalog','detail','compare','download','explain'];
 const clone=value=>structuredClone(value);
 const releaseTag=release=>JSON.stringify(['dataset_version','feature_rule_version','snapshot_sha256','manifest_sha256'].map(k=>release?.[k]??null));
 export function createState(){

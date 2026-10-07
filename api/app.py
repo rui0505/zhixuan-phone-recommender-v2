@@ -1,4 +1,4 @@
-"""Same-origin ASGI entrypoint. No Streamlit, user-file access or model calls."""
+"""Same-origin ASGI entrypoint; optional server-only evidence explanation."""
 from contextlib import asynccontextmanager
 import json
 import os
@@ -7,12 +7,15 @@ from pathlib import Path
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
-from starlette.responses import Response
+from starlette.responses import Response, FileResponse
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 
 from catalog.release import ReleaseStore
 from .service import CatalogService
+from .images import ImageCatalog
+from .explanations import ExplanationService
+from catalog.evidence import build_evidence
 from .contracts import (ApiError, parse_recommendation, parse_catalog_query,
                         parse_pagination, parse_compare, parse_export)
 
@@ -20,6 +23,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BODY_LIMIT=32768
 MIMES={'csv':'text/csv; charset=utf-8','json':'application/json; charset=utf-8',
        'xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
+
+class FrontendFiles(StaticFiles):
+    async def get_response(self,path,scope):
+        response=await super().get_response(path,scope)
+        response.headers['Cache-Control']='no-store'
+        response.headers['X-Content-Type-Options']='nosniff'
+        return response
 
 
 def response_json(value,status=200):
@@ -52,10 +62,15 @@ async def read_body(request):
         raise ApiError(400,'invalid_json','请求不是有效的 UTF-8 JSON，或含重复键') from exc
 
 
-def create_app(db_path: Path | None=None, frontend_dir: Path | None=None):
+def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None):
     # Only trusted process configuration injects paths; HTTP parsers reject them.
     store=ReleaseStore(db_path or Path(os.environ.get('PHONE_CATALOG_PATH',ROOT/'data/catalog.sqlite')))
-    service=CatalogService(store)
+    if image_catalog is None:
+        try:snapshot=store.get().key['snapshot_sha256']
+        except (ValueError,OSError):snapshot=''
+        data_root=Path(store.db_path).parent if hasattr(store,'db_path') else (Path(db_path).parent if db_path else ROOT/'data')
+        image_catalog=ImageCatalog(data_root/'image_manifest.json',data_root/'media',snapshot)
+    service=CatalogService(store,image_catalog,ExplanationService())
 
     @asynccontextmanager
     async def lifespan(app):
@@ -74,6 +89,18 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None):
         if 'sku_id' in request.path_params:return response_json(service.details(request.path_params['sku_id']))
         if path=='/api/v1/compare':return response_json(service.compare(parse_compare(body)))
         brands=service.meta()['brands']
+        if path=='/api/v1/explain':
+            if not isinstance(body,dict) or set(body)!={'request','fingerprints','sku_id'}:
+                raise ApiError(422,'invalid_request','解释只接受已确认请求、指纹和准确配置 ID')
+            ids=parse_compare({'sku_ids':[body['sku_id']]})
+            parsed,fps=parse_export({k:body[k] for k in ('request','fingerprints')},brands)
+            outcome=service.recommend(parsed)
+            if outcome.result.status!='ready':raise ApiError(409,'not_ready','当前条件不能生成推荐解释')
+            if any(getattr(outcome.result,k)!=fps[k] for k in fps):raise ApiError(409,'decision_changed','解释指纹已过期，请重新推荐')
+            if ids[0] not in set(outcome.result.ranked['sku_id']):raise ApiError(422,'invalid_request','该配置不在本次排名中')
+            bundle=build_evidence(outcome.di,outcome.result,outcome.needs,sku_ids=ids)
+            answer=service.explanations.explain(bundle); service._unchanged(outcome.release_key)
+            return response_json(answer)
         if path=='/api/v1/recommend':
             pagination=parse_pagination(queries); parsed=parse_recommendation(body,brands)
             return response_json(service.recommendation_payload(service.recommend(parsed),pagination))
@@ -95,6 +122,11 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None):
 
     async def health(request):return response_json({'status':'alive'})
 
+    async def media(request):
+        path=await run_in_threadpool(image_catalog.path_for,request.path_params['filename'])
+        if path is None:return error_response(ApiError(404,'not_found','图片未发布或不可用'))
+        return FileResponse(path,media_type='image/webp',headers={'X-Content-Type-Options':'nosniff','Cache-Control':'public, max-age=3600'})
+
     async def http_error(request,exc):
         code='not_found' if exc.status_code==404 else 'invalid_request'
         return error_response(ApiError(exc.status_code,code,'资源不存在或请求方法不允许'))
@@ -102,9 +134,10 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None):
     routes=[Route('/healthz',health),Route('/readyz',endpoint),Route('/api/v1/meta',endpoint),
             Route('/api/v1/catalog',endpoint),Route('/api/v1/skus/{sku_id}',endpoint),
             Route('/api/v1/compare',endpoint,methods=['POST']),Route('/api/v1/recommend',endpoint,methods=['POST']),
-            Route('/api/v1/export/{format}',endpoint,methods=['POST'])]
+            Route('/api/v1/export/{format}',endpoint,methods=['POST']),Route('/api/v1/explain',endpoint,methods=['POST']),
+            Route('/media/{filename}',media)]
     static=Path(frontend_dir) if frontend_dir is not None else ROOT/'frontend'
-    if static.is_dir():routes.append(Mount('/',app=StaticFiles(directory=static,html=True,follow_symlink=False)))
+    if static.is_dir():routes.append(Mount('/',app=FrontendFiles(directory=static,html=True,follow_symlink=False)))
     app=Starlette(routes=routes,lifespan=lifespan,exception_handlers={HTTPException:http_error})
     app.state.service=service
     return app

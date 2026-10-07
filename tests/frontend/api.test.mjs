@@ -35,3 +35,8 @@ test('rejects arbitrary remote URLs and unknown formats before fetch',async()=>{
     await assert.rejects(fetchDownload('exe',{}));assert.equal(calls,0);
   });
 });
+test('bound explanation endpoint is an allowed same-origin POST',async()=>{
+  await mockFetch(async(path,init)=>{assert.equal(path,'/api/v1/explain');assert.equal(init.method,'POST');return new Response('{"mode":"template"}');},async()=>{
+    assert.equal((await fetchJson('/api/v1/explain',{method:'POST',body:{sku_id:'S1'}})).mode,'template');
+  });
+});

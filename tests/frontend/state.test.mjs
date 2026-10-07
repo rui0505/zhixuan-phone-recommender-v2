@@ -38,3 +38,8 @@ test('states and preferences are isolated and late errors discarded',()=>{
   assert.equal(acceptResponse(a,'recommend',old,{error:{message:'old failure'}}),false);
   assert.equal(a.results.status,'ready');assert.equal(a.errors.recommend,null);
 });
+test('explanations reject responses from an earlier preference revision',()=>{
+  const state=createState();const token=beginRequest(state,'explain');
+  setPreferences(state,{mode:'used'});
+  assert.equal(acceptResponse(state,'explain',token,{text:'old'}),false);
+});
