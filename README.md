@@ -1,7 +1,7 @@
 # 知选 v2：证据可追溯的手机推荐
 
 人工确认需求 → 同口径候选矩阵 → TOPSIS 相对排序 → 程序证据解释。
-新增 HTML + 独立 API 入口 `api.app:app`，保留 Streamlit `app.py`。新版协作、启动、图片与可选 DeepSeek 边界见 [HTML/API 交付](docs/html-api-local.md)。功能分支为 `codex/html-api-ui`，本地提交不代表已推送或部署。
+新增 HTML + 独立 API 入口 `api.app:app`，保留 Streamlit `app.py`。新版协作、启动、图片与可选 DeepSeek 边界见 [HTML/API 交付](docs/html-api-local.md)。功能分支 `codex/html-api-ui` 已推送并创建 PR，未合并；[ECS 演示](http://47.243.189.12/)及验收/维护方式见 [公网交付](docs/ecs-demo-handoff.md)。
 
 ## 功能与边界
 
@@ -50,7 +50,7 @@ $env:PHONE_CATALOG_DB='data/catalog.sqlite'
 ## 独立发布
 
 Streamlit 新应用选实际新仓库 / `main` / `app.py` / Python 3.12；不填 LLM 密钥。
-仓库私有与网页公开是不同设置。只发布白名单快照，不上传原件和图片。
+仓库私有与网页公开是不同设置。只发布白名单快照，不上传原件；HTML/ECS 入口另行授权的 147 张机型图通过独立展示层发布，不代表实际成色/库存。
 已验证公网地址：[知选 v2](https://zhixuan-phone-recommender-v2-kkpzqq7j9pqblxb5ka6u29.streamlit.app/)（2026-10-06）。
 已退出 Streamlit 管理账号实测：无需登录，目录、推荐、详情、对比、无候选/数据不足提示和中文 CSV/XLSX 下载可用。
 相同默认请求的 51 条云端导出与本地复算一致；旧网站仍为原来的 46 机型版本，未替换。
