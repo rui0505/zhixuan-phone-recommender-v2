@@ -7,6 +7,7 @@ import re
 
 class ImageCatalog:
     def __init__(self, manifest, media_root, snapshot_sha256):
+        self.snapshot_sha256=snapshot_sha256
         self.root=Path(media_root).resolve(); self.models={}; self.files={}
         try:
             data=json.loads(Path(manifest).read_text(encoding='utf-8'))
@@ -25,6 +26,20 @@ class ImageCatalog:
 
     @property
     def count(self):return len(self.models)
+
+    def matches(self,snapshot_sha256):
+        return bool(snapshot_sha256 and snapshot_sha256==self.snapshot_sha256)
+
+    def read_for(self,filename,snapshot_sha256):
+        if not self.matches(snapshot_sha256):return None
+        digest=self.files.get(filename)
+        if not digest:return None
+        path=self.root/filename
+        try:
+            if path.is_symlink() or path.resolve().parent!=self.root:return None
+            content=path.read_bytes()
+            return content if hashlib.sha256(content).hexdigest()==digest else None
+        except OSError:return None
 
     def for_model(self,model_id):
         item=self.models.get(model_id)

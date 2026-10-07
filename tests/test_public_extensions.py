@@ -16,6 +16,36 @@ class PublicExtensions(unittest.TestCase):
         self.root=Path(self.tmp.name); self.db=make_release(self.root)
         self.release=ReleaseStore(self.db).get()
 
+    def test_images_follow_active_release_and_invalid_release_fails_closed(self):
+        from dataclasses import replace
+        from api.app import create_app
+        from api.images import ImageCatalog
+        media=self.root/'media'; media.mkdir()
+        content=b'RIFF-test-WEBP'; (media/'A1.webp').write_bytes(content)
+        manifest=self.root/'image_manifest.json'
+        manifest.write_text(json.dumps({'approval':'OWNER_APPROVED_PUBLIC_DISPLAY',
+            'snapshot_sha256':self.release.key['snapshot_sha256'],
+            'models':{'M1':{'filename':'A1.webp','sha256':hashlib.sha256(content).hexdigest()}}}),encoding='utf-8')
+        app=create_app(self.db,image_catalog=ImageCatalog(manifest,media,self.release.key['snapshot_sha256']))
+        with TestClient(app) as client:
+            self.assertEqual(client.get('/media/A1.webp').content,content)
+            newer=replace(self.release,key={**self.release.key,'snapshot_sha256':'0'*64})
+            with patch.object(app.state.service.store,'get',return_value=newer):
+                self.assertIsNone(client.get('/api/v1/skus/S1').json()['sku']['image'])
+                self.assertEqual(client.get('/api/v1/meta').json()['features']['image_models'],0)
+                self.assertEqual(client.get('/media/A1.webp').status_code,404)
+            with patch.object(app.state.service.store,'get',side_effect=ValueError('invalid')):
+                self.assertEqual(client.get('/media/A1.webp').status_code,503)
+
+    def test_no_query_routes_reject_unknown_and_duplicate_keys(self):
+        from api.app import create_app
+        with TestClient(create_app(self.db)) as client:
+            for path in ('/api/v1/meta','/api/v1/skus/S1','/readyz'):
+                self.assertEqual(client.get(path+'?unknown=true').status_code,422)
+                self.assertEqual(client.get(path+'?mode=new&mode=used').status_code,422)
+            for path in ('/api/v1/compare','/api/v1/explain'):
+                self.assertEqual(client.post(path+'?unknown=true',json={'sku_ids':['S1']}).status_code,422)
+
     def test_image_association_is_exact_and_fail_closed(self):
         from api.images import ImageCatalog
         media=self.root/'media'; media.mkdir(); image=media/'A1.webp'; image.write_bytes(b'RIFF-test-WEBP')

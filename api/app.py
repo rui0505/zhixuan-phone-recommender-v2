@@ -7,7 +7,7 @@ from pathlib import Path
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
-from starlette.responses import Response, FileResponse
+from starlette.responses import Response
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 
@@ -83,6 +83,8 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         except (ValueError,OSError) as exc:
             raise ApiError(503,'release_unavailable','数据发布暂不可用，请联系维护者或稍后重试') from exc
         path=request.url.path; queries=list(request.query_params.multi_items())
+        if queries and path not in ('/api/v1/catalog','/api/v1/recommend'):
+            raise ApiError(422,'invalid_request','此接口不接受查询参数')
         if path=='/readyz':return response_json({'status':'ready','release':service.meta()['release']})
         if path=='/api/v1/meta':return response_json(service.meta())
         if path=='/api/v1/catalog':return response_json(service.catalog(parse_catalog_query(queries,service.meta()['brands'])))
@@ -123,9 +125,14 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
     async def health(request):return response_json({'status':'alive'})
 
     async def media(request):
-        path=await run_in_threadpool(image_catalog.path_for,request.path_params['filename'])
-        if path is None:return error_response(ApiError(404,'not_found','图片未发布或不可用'))
-        return FileResponse(path,media_type='image/webp',headers={'X-Content-Type-Options':'nosniff','Cache-Control':'public, max-age=3600'})
+        try:
+            release=await run_in_threadpool(store.get)
+            content=await run_in_threadpool(image_catalog.read_for,request.path_params['filename'],release.key['snapshot_sha256'])
+            await run_in_threadpool(service._unchanged,release.key)
+        except (ValueError,OSError):return error_response(ApiError(503,'release_unavailable','数据发布暂不可用'))
+        except ApiError as exc:return error_response(exc)
+        if content is None:return error_response(ApiError(404,'not_found','图片未发布或不可用'))
+        return Response(content,media_type='image/webp',headers={'X-Content-Type-Options':'nosniff','Cache-Control':'no-store'})
 
     async def http_error(request,exc):
         code='not_found' if exc.status_code==404 else 'invalid_request'

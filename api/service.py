@@ -50,9 +50,9 @@ class CatalogService:
         self.store=store
         self.images=images; self.explanations=explanations
 
-    def card(self,row):
+    def card(self,row,release_key):
         result=project(row,CARD_FIELDS)
-        if self.images:result['image']=self.images.for_model(row.get('model_id'))
+        result['image']=self.images.for_model(row.get('model_id')) if self.images and self.images.matches(release_key['snapshot_sha256']) else None
         return result
 
     def _unchanged(self, key):
@@ -65,11 +65,12 @@ class CatalogService:
 
     def meta(self):
         release=self.store.get(); repo=release.repo
+        image_count=self.images.count if self.images and self.images.matches(release.key['snapshot_sha256']) else 0
         brands=sorted(set(r['brand'] for r in repo.as_records(repo.list_models()) if r.get('brand')))
         result={'release':deepcopy(release.key),'counts':{k:int(v) for k,v in repo.summary().items()},
                 'brands':brands,'metrics':list(METRICS),'defaults':{'weights':dict(DEFAULT_WEIGHTS),'target_screen':6.5,'mode':'new'},
                 'acceptance':deepcopy(release.manifest.get('acceptance',{})),
-                'features':{'llm':bool(self.explanations and self.explanations.available),'vikor':False,'images':bool(self.images and self.images.count),'image_models':self.images.count if self.images else 0,'weights':'试验默认值，非学习所得',
+                'features':{'llm':bool(self.explanations and self.explanations.available),'vikor':False,'images':bool(image_count),'image_models':image_count,'weights':'试验默认值，非学习所得',
                             'game':'仅限同条件王者荣耀平均帧率；无完整游戏总分'}}
         self._unchanged(release.key); return result
 
@@ -79,7 +80,7 @@ class CatalogService:
             min_storage_gb=n['min_storage'],min_price=n['budget']['min'],max_price=n['budget']['max'],
             excluded_brands=n['brands']['exclude']))
         include=n['brands']['include']; search=query.q.casefold()
-        rows=[self.card(r) for r in rows if (not include or r['brand'] in include)
+        rows=[self.card(r,release.key) for r in rows if (not include or r['brand'] in include)
               and (not search or search in ' '.join(str(r.get(k) or '') for k in
                    ('display_name','brand','variant_name','ram_raw','storage_raw','sku_id')).casefold())]
         rows.sort(key=lambda r:r['sku_id'])
@@ -94,7 +95,7 @@ class CatalogService:
         price_fields=('price_id','sku_id','amount','currency','price_kind','condition','is_estimated','channel','observed_at','source_id')
         run_fields=('run_id','subject_type','subject_id','model_id','variant_id','sku_id','benchmark','institution','protocol','conditions_json','run_date','comparison_group','applicable_scope')
         obs_fields=('observation_id','run_id','metric_key','value_num','unit','missing_reason','comparison_group','verification_status')
-        return {'sku':self.card(raw['sku']),'model':project(raw['model'],('model_id','brand','display_name','release_month')),
+        return {'sku':self.card(raw['sku'],release.key),'model':project(raw['model'],('model_id','brand','display_name','release_month')),
                 'specifications':[project(r,spec_fields) for r in raw['specifications']],
                 'prices':[project(r,price_fields) for r in raw['prices']],
                 'benchmark_runs':[project(r,run_fields) for r in raw['benchmark_runs']],
@@ -138,7 +139,7 @@ class CatalogService:
                 rows.append({**project(r,CARD_FIELDS),'criteria':criteria})
             return rows
         explanations={r['sku_id']:render_template(build_evidence(di,result,outcome.needs,sku_ids=[r['sku_id']])) for r in ranked}
-        payload={'status':result.status,'reason':result.reason,'ranked':[self.card(r) for r in ranked],
+        payload={'status':result.status,'reason':result.reason,'ranked':[self.card(r,outcome.release_key) for r in ranked],
                  'ranked_total':len(result.ranked),'page':pagination.page,'page_size':pagination.page_size,
                  'unscored':unscored(result.unscored_candidates),'backups':unscored(result.backups),
                  'coverage':deepcopy(di['coverage_summary']),'selection_rules':deepcopy(di['selection_rules']),

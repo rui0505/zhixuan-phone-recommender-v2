@@ -8,6 +8,8 @@ User=zhixuan
 Group=zhixuan
 WorkingDirectory=/opt/zhixuan/current
 Environment=PYTHONUNBUFFERED=1
+Environment=OPENBLAS_NUM_THREADS=1
+Environment=OMP_NUM_THREADS=1
 Environment=PHONE_ENABLE_LLM=false
 EnvironmentFile=-/etc/zhixuan.env
 ExecStart=/opt/zhixuan/.venv/bin/python -m uvicorn api.app:app --host 127.0.0.1 --port 8600 --workers 1 --limit-concurrency 12 --timeout-keep-alive 5
