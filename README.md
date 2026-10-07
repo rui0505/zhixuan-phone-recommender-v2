@@ -1,7 +1,7 @@
 # 知选 v2：证据可追溯的手机推荐
 
-Streamlit 原型：人工确认需求 → 同口径候选矩阵 → TOPSIS 相对排序 → 程序证据解释。
-本版本独立于旧仓库和旧网站；生产入口是根目录 `app.py`，部署分支为 `main`。
+人工确认需求 → 同口径候选矩阵 → TOPSIS 相对排序 → 程序证据解释。
+新增 HTML + 独立 API 入口 `api.app:app`，保留 Streamlit `app.py`。新版协作、启动、图片与可选 DeepSeek 边界见 [HTML/API 交付](docs/html-api-local.md)。功能分支为 `codex/html-api-ui`，本地提交不代表已推送或部署。
 
 ## 功能与边界
 
@@ -13,7 +13,7 @@ Streamlit 原型：人工确认需求 → 同口径候选矩阵 → TOPSIS 相�
 - 拍照只用同协议 DXOMARK 照片子分，不混 v4/v5/v6、不把归一化总分重复计权。
 - 游戏须同次测试且关键条件齐全，缺数据只列备选；不以处理器/刷新率代替实测。1% Low 无有效覆盖，不推算完整总分。
 - 历史价格有 new/used/unknown；先选快照再筛预算，不承诺实时库存/报价。
-- 机器 PASS；整体 PENDING、WPS NOT_CHECKED、人工抽查待完成。图片未发布，使用依据待确认。VIKOR 未实现。
+- 机器 PASS；整体 PENDING、WPS NOT_CHECKED、人工抽查待完成。另行授权的 147 个机型图片通过独立展示清单关联，不修改数值库；不是 SKU 成色/库存证明。VIKOR 未实现。
 
 ## 安装与启动（Windows / WorkBuddy）
 
