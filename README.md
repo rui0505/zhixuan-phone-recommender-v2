@@ -13,7 +13,34 @@
 - 拍照只用同协议 DXOMARK 照片子分，不混 v4/v5/v6、不把归一化总分重复计权。
 - 游戏须同次测试且关键条件齐全，缺数据只列备选；不以处理器/刷新率代替实测。1% Low 无有效覆盖，不推算完整总分。
 - 历史价格有 new/used/unknown；先选快照再筛预算，不承诺实时库存/报价。
-- 机器 PASS；整体 PENDING、WPS NOT_CHECKED、人工抽查待完成。另行授权的 147 个机型图片通过独立展示清单关联，不修改数值库；不是 SKU 成色/库存证明。VIKOR 未实现。
+- 机器 PASS；整体 PENDING、WPS NOT_CHECKED、人工抽查待完成。另行授权的 147 个机型图片通过独立展示清单关联，不修改数值库；不是 SKU 成色/库存证明。生产默认仍为 TOPSIS；实验室另有 VIKOR Q 指数对照。
+
+## 交互算法实验室（0.2，独立入口）
+
+在本地分支 `codex/competition-preference-fusion` 开发，基于 v2 历史提交 `21db545`。
+运行环境与数据复用本仓库；不会自动更新云服务器。其他目录中的未提交界面改动未包含在此分支。
+
+```powershell
+.\.venv\Scripts\python.exe -m streamlit run algorithm_lab.py --server.address 127.0.0.1 --server.port 8502
+```
+
+浏览器访问 `http://127.0.0.1:8502/`，确认预算及偏好后，最多回答五道手机二选一问题。
+支持跳过、撤销、权重区间、逐算法稳定性、对照排序和完整记录导出。核心模块更新后应重启服务，
+避免开发服务器保留旧 Python 模块。
+
+默认查看学习后 TOPSIS，使用信息增益选题；TODIM、RRF 融合、VIKOR 和加性效用可切换比较。
+经典 TODIM 的逆权重损失项可能与重要性语义冲突，融合尚未证明普遍优于单算法。
+本版本未训练深度模型，也未调用 JEV 外部服务；使用可复算的有限粒子贝叶斯学习。
+
+```powershell
+.\.venv\Scripts\python.exe scripts/evaluate_competition.py --users 24 --particles 128 --seed 20261020 --output local_evidence/v02-default.json
+.\.venv\Scripts\python.exe scripts/evaluate_competition.py --users 96 --particles 128 --seed 20261021 --output local_evidence/v02-validation-a.json
+.\.venv\Scripts\python.exe scripts/evaluate_competition.py --users 96 --particles 128 --seed 20261022 --output local_evidence/v02-validation-b.json
+```
+
+所有效果数据来自合成用户，不代表真实购买效果。完整记录在忽略的 `local_evidence/`，
+可分享摘要在 `docs/experiments/`。参见[实验报告](docs/competition-algorithm-results.md)、
+[计算设计](docs/competition-algorithm-design.md)及[队友接入说明](docs/competition-algorithm-handoff.md)。
 
 ## 安装与启动（Windows / WorkBuddy）
 
