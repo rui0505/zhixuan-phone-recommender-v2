@@ -63,6 +63,12 @@ def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
             '游戏测试仅限对应游戏、协议、条件及适用范围，不能泛化为所有游戏。',
             '1% Low 当前无有效实测值；不推算、不填 0，不提供完整游戏总分。',
             '记录价格可能过时，二手约价不是新机现价。数据总体验收含待完成人工 / WPS 项。']}
+    method=result.decision_context.get('method','topsis')
+    bundle['method']=method
+    bundle['score_label']='融合排序分' if method=='hybrid_rrf' else 'TOPSIS 贴近度'
+    if method=='hybrid_rrf':
+        bundle['limitations'][0]='混合排序（实验）是当前可比候选集内的融合排序，尚未证明更准确；不是绝对性能或购买概率。'
+        bundle['limitations'].append('经典 TODIM 逆权重损失项可能与重要性直觉冲突；权重来自用户确认，非学习所得。')
     bundle['evidence_sha256']=digest(bundle)
     return bundle
 
@@ -85,7 +91,7 @@ def render_template(bundle: dict, fact_ids=None) -> str:
     context=bundle['decision_context']
     lines.append('已确认筛选与权重：'+json.dumps(context,ensure_ascii=False,allow_nan=False))
     for model in bundle['models']:
-        lines.append(f"{model['name']} · {model['variant_name'] or '版本未记载'} · {model['config']} · {model['sku_id']}：相对分 {model['score']:.4f}")
+        lines.append(f"{model['name']} · {model['variant_name'] or '版本未记载'} · {model['config']} · {model['sku_id']}：{bundle.get('score_label','相对分')} {model['score']:.4f}")
         lines.append(f"价格快照 {model['price_id'] or '缺失'}；成色 {model['condition'] or '未知'}；记录日期 {model['observed_at'] or '未记载'}"+
                      ('；估计价，非实时成交价' if model['is_estimated'] else '；非实时价格承诺'))
         for ident,fact in bundle['facts'].items():

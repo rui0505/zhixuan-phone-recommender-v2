@@ -31,6 +31,8 @@ def result_records(result,bundle):
         row.update({k:bundle[k] for k in ('dataset_version','feature_rule_version','algorithm_version')})
         context=bundle['decision_context']
         row.update(target_screen=context['target_screen'],decision_sha256=bundle['decision_sha256'],
+            method=bundle.get('method','topsis'),score_label=bundle.get('score_label','TOPSIS 贴近度'),
+            algorithm_parameters_json=json.dumps(context.get('algorithm_parameters',{}),ensure_ascii=False,allow_nan=False),
             ranking_sha256=bundle['ranking_sha256'],
             weights_json=json.dumps(context['weights'],ensure_ascii=False,allow_nan=False),
             selection_rules_json=json.dumps(context['selection_rules'],ensure_ascii=False,allow_nan=False))

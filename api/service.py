@@ -7,11 +7,12 @@ from catalog.evidence import build_evidence, render_template, digest
 from catalog.read_views import sku_details, sku_sources, safe_url
 from catalog.release import ReleaseStore
 from catalog.repository import CatalogRepository
-from engine import rank_decision_input
+from ranking_modes import rank, ALGORITHM_VERSIONS, SCORE_LABELS, HYBRID_PARAMETERS
 from ui.export_results import export_results
 from .contracts import ApiError, RecommendationRequest, Pagination, METRICS, DEFAULT_WEIGHTS
 from .categories import CATEGORY_LABELS, CATEGORY_RULE_VERSION, model_categories
 from .presentation import recommendation_reason
+from .performance import performance_capabilities, BATTERY_METRIC
 
 CARD_FIELDS = ('sku_id','model_id','variant_id','brand','display_name','variant_name','region',
                'satellite_support','ram_raw','ram_gb','storage_raw','storage_gb','memory_type',
@@ -45,6 +46,7 @@ class RecommendationOutcome:
     bundle: dict | None
     release_key: dict[str,str]
     needs: dict
+    performance_capabilities: dict
 
 
 class CatalogService:
@@ -52,6 +54,7 @@ class CatalogService:
         self.store=store
         self.images=images; self.explanations=explanations
         self._category_cache=None
+        self._performance_cache=None
 
     def _category_index(self,release):
         cached=self._category_cache
@@ -88,7 +91,15 @@ class CatalogService:
         release=self.store.get(); repo=release.repo
         image_count=self.images.count if self.images and self.images.matches(release.key['snapshot_sha256']) else 0
         brands=sorted(set(r['brand'] for r in repo.as_records(repo.list_models()) if r.get('brand')))
+        if self._performance_cache is None or self._performance_cache[0]!=release.key:
+            needs={'budget':{'min':None,'max':None},'min_storage':None,'brands':{'include':[],'exclude':[]}}
+            self._performance_cache=(deepcopy(release.key),performance_capabilities(repo,needs,'new'))
         result={'release':deepcopy(release.key),'counts':{k:int(v) for k,v in repo.summary().items()},
+                'algorithms':[{'method':method,'algorithm_version':version,'score_label':SCORE_LABELS[method],
+                               'experimental':method=='hybrid_rrf',
+                               'parameters':deepcopy(HYBRID_PARAMETERS) if method=='hybrid_rrf' else {}}
+                              for method,version in ALGORITHM_VERSIONS.items()],
+                'performance_capabilities':deepcopy(self._performance_cache[1]),
                 'brands':brands,'metrics':list(METRICS),'defaults':{'weights':dict(DEFAULT_WEIGHTS),'target_screen':6.5,'mode':'new'},
                 'categories':self._category_counts(self._category_index(release)),
                 'acceptance':deepcopy(release.manifest.get('acceptance',{})),
@@ -152,16 +163,23 @@ class CatalogService:
         release=self.store.get()
         if request.expected_release!=release.key:
             raise ApiError(409,'release_changed','发布版本不一致，请刷新并重新确认')
+        if type(request.method) is not str or request.method not in ALGORITHM_VERSIONS:
+            raise ApiError(422,'invalid_request','请选择有效排序方法')
+        if request.expected_algorithm_version is not None and request.expected_algorithm_version!=ALGORITHM_VERSIONS[request.method]:
+            raise ApiError(409,'algorithm_changed','算法版本已变化，请刷新并重新确认')
         needs=deepcopy(request.needs); weights=deepcopy(request.weights)
+        if weights.pop(BATTERY_METRIC,0)>0:
+            raise ApiError(422,'unsupported_metric','当前发布不支持续航实测排序')
         try:
             di=build_input(release.repo,needs,weights,request.target_screen,request.mode)
-            result=rank_decision_input(di,target_screen=request.target_screen)
+            result=rank(di,target_screen=request.target_screen,method=request.method)
             bundle=build_evidence(di,result,needs) if result.status=='ready' else None
+            capabilities=performance_capabilities(release.repo,needs,request.mode)
         except ValueError:
             self._unchanged(release.key)
             raise
         self._unchanged(release.key)
-        return RecommendationOutcome(di,result,bundle,deepcopy(release.key),needs)
+        return RecommendationOutcome(di,result,bundle,deepcopy(release.key),needs,capabilities)
 
     def recommendation_payload(self, outcome, pagination: Pagination):
         di,result=outcome.di,outcome.result
@@ -181,9 +199,12 @@ class CatalogService:
                  'ranked_total':len(result.ranked),'page':pagination.page,'page_size':pagination.page_size,
                  'unscored':unscored(result.unscored_candidates),'backups':unscored(result.backups),
                  'coverage':deepcopy(di['coverage_summary']),'selection_rules':deepcopy(di['selection_rules']),
+                 'performance_capabilities':deepcopy(outcome.performance_capabilities),
                  'effective_weights':deepcopy(di['weights']),'target_screen':result.decision_context['target_screen'],
                  'dataset_version':result.dataset_version,'feature_rule_version':result.feature_rule_version,
                  'algorithm_version':result.algorithm_version,'decision_sha256':result.decision_sha256,
+                 'method':result.decision_context.get('method','topsis'),
+                 'score_label':SCORE_LABELS[result.decision_context.get('method','topsis')],
                  'ranking_sha256':result.ranking_sha256,'release':deepcopy(outcome.release_key),
                  'evidence':public_evidence(outcome.bundle) if outcome.bundle else None,
                  'sources':[], 'explanations':explanations,'recommendation_reasons':reasons}

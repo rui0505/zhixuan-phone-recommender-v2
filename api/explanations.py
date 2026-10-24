@@ -20,6 +20,8 @@ class ExplanationService:
 
     def explain(self,bundle):
         fallback={'text':render_template(bundle),'mode':'template','notice':'程序证据解释；DeepSeek 未启用或本次不可用',
+                  'method':bundle.get('method','topsis'),'algorithm_version':bundle['algorithm_version'],
+                  'score_label':bundle.get('score_label','TOPSIS 贴近度'),
                   'decision_sha256':bundle['decision_sha256'],'ranking_sha256':bundle['ranking_sha256']}
         if not self.available or not self.lock.acquire(blocking=False):return fallback
         try:
