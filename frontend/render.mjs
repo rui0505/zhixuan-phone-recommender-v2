@@ -19,10 +19,28 @@ export function renderCard(record,context={}){
   const body=element('div',undefined,'card-body');body.append(element('h3',record.display_name),element('p',`${record.variant_name||'版本未记载'} · ${record.ram_raw||'内存未记载'} / ${record.storage_raw||'存储未记载'}`,'small'));
   body.append(element('p',record.price_cny==null?'价格未记载':`¥ ${record.price_cny}`,'price'));
   body.append(element('p',`${conditionLabel(record.condition)}${record.is_estimated?' · 估计价':''} · ${record.observed_at||'日期未记载'}`,'small'));
-  body.append(element('p',record.sku_id,'small'));
-  if(record.score!=null)body.append(element('div',`TOPSIS 相对贴近度 ${Number(record.score).toFixed(4)}`,'score'));
-  if(context.explanation){const detail=element('details');detail.append(element('summary','为什么推荐 · 证据与限制'),element('p',context.explanation,'explanation'));if(context.onExplain){const ai=button('DeepSeek 辅助解释',()=>context.onExplain(record.sku_id,detail));ai.disabled=!context.llmEnabled;detail.append(ai,element('p',context.llmEnabled?'仅向服务方发送本配置推荐证据；不改变分数与排名。':'DeepSeek 尚未启用；当前使用可回查的模板解释。','small'));}body.append(detail);}
+  const categories=(record.category_assessments??[]).filter(c=>c.status==='evidence_available');
+  if(categories.length){const tags=element('div',undefined,'category-tags');tags.setAttribute('aria-label','有评测资料的场景，不代表性能认证');for(const c of categories)tags.append(element('span',`${c.label} · 有资料`,'category-tag'));body.append(tags);}
+  const pending=(record.category_assessments??[]).find(c=>c.id===context.category&&c.status==='pending_review');
+  if(pending)body.append(element('p',`${pending.label} · 待评估：${pending.reason}`,'category-pending'));
+  if(context.reason)body.append(renderReason(context.reason));
+  if(context.explanation||record.score!=null){
+    const detail=element('details',undefined,'technical-evidence');detail.append(element('summary','查看数据与计算依据'));
+    detail.append(element('p',`配置编号：${record.sku_id}`,'small'));
+    if(record.score!=null)detail.append(element('div',`TOPSIS 相对贴近度 ${Number(record.score).toFixed(4)}`,'score'));
+    if(context.explanation)detail.append(element('p',context.explanation,'explanation'));
+    if(context.reason?.fact_ids?.length)detail.append(element('p',`上述理由引用：${context.reason.fact_ids.join('、')}`,'small'));
+    if(context.onExplain){const ai=button('DeepSeek 辅助核查',()=>context.onExplain(record.sku_id,detail));ai.disabled=!context.llmEnabled;detail.append(ai,element('p',context.llmEnabled?'仅向服务方发送本配置推荐证据；不改变分数与排名。':'自然语言理由由程序依据数据生成，不需要大模型调用。','small'));}body.append(detail);
+  }
   const actions=element('div',undefined,'card-actions');actions.append(button('详情与来源',()=>context.onDetails?.(record.sku_id)),button(context.selected?'已加入对比':'加入对比',()=>context.onCompare?.(record.sku_id)));body.append(actions);card.append(panel,body);return card;
+}
+function renderReason(reason){
+  const section=element('section',undefined,'recommendation-reason');section.setAttribute('aria-label','为什么适合你');
+  section.append(element('h4','为什么适合你'),element('p',reason.summary));
+  if(reason.matches?.length){const list=element('ul',undefined,'reason-matches');for(const text of reason.matches)list.append(element('li',text));section.append(list);}
+  if(reason.tradeoffs?.length){section.append(element('h4','你需要权衡'));for(const text of reason.tradeoffs)section.append(element('p',text,'reason-tradeoff'));}
+  for(const text of reason.limitations??[])section.append(element('p',text,'reason-limitation'));
+  return section;
 }
 function renderImage(record){
   const panel=element('div',undefined,'brand-panel');
@@ -51,6 +69,18 @@ function table(headers,rows){const wrap=element('div',undefined,'table-scroll');
 export function renderDetail(item){
   const content=element('div');content.append(element('h3',`${item.model.display_name} · ${item.sku.variant_name} · ${item.sku.ram_raw} / ${item.sku.storage_raw}`),element('p',item.sku.sku_id,'small'));
   if(item.sku.image)content.append(renderImage({...item.sku,...item.model}));
+  if(item.sku.category_assessments?.length){
+    content.append(element('h3','场景分类与依据'),element('p','分类用于查找已有资料，不是适用性或性能认证；机型级资料不代表每个配置独立实测。','small'));
+    for(const c of item.sku.category_assessments){
+      const block=element('details',undefined,'category-detail');block.append(element('summary',`${c.label} · ${c.status==='evidence_available'?'有评测资料':'待评估'}`),element('p',c.reason));
+      if(c.status==='pending_review')block.open=true;
+      for(const ref of c.evidence_refs??[]){
+        block.append(element('p',`${labels[ref.metric_key]??ref.metric_key}：${valueText(ref.value,ref.unit?` ${ref.unit}`:'')} · ${ref.institution||'机构未记载'} · ${ref.protocol||'协议未记载'}`));
+        block.append(renderSources([{source_id:ref.source_id,publisher:ref.publisher,urls:ref.urls}]));
+        block.append(element('p',`机型级资料 · ${ref.run_id} · 条件：${valueText(ref.conditions_json)}`,'small'));
+      }block.append(element('p',`分类规则：${c.rule_version}`,'small'));content.append(block);
+    }
+  }
   content.append(element('h3','规格（按机型 / 版本 / 配置准确关联）'),table(['指标','数值 / 原文','作用域'],item.specifications.map(r=>[labels[r.spec_key]??r.spec_key,valueText(r.value_num??r.value_text??r.raw_value,r.unit?` ${r.unit}`:''),`${r.subject_type} · ${r.subject_id}`])));
   content.append(element('h3','价格快照（非实时售价）'),table(['记录价格','成色','记录日期','价格 ID'],item.prices.map(r=>[valueText(r.amount,' CNY'),conditionLabel(r.condition),r.observed_at,r.price_id])));
   content.append(element('h3','评测与测试条件'),element('p',item.evaluation_note,'small'));

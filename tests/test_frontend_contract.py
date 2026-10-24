@@ -1,5 +1,6 @@
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urlsplit
 import unittest
 from starlette.testclient import TestClient
 from api.app import create_app
@@ -34,7 +35,9 @@ class FrontendTests(unittest.TestCase):
     def test_dependencies_are_local_and_reachable(self):
         paths=[a['src'] for tag,a in self.document.nodes if tag=='script']
         paths += [a['href'] for tag,a in self.document.nodes if tag=='link' and a.get('rel')=='stylesheet']
-        self.assertIn('/app.mjs',paths);self.assertIn('/styles.css',paths)
+        # Version queries are allowed; each exact served URL is still checked below.
+        resource_paths=[urlsplit(path).path for path in paths]
+        self.assertIn('/app.mjs',resource_paths);self.assertIn('/styles.css',resource_paths)
         for path in paths:
             self.assertTrue(path.startswith('/')); response=self.client.get(path);self.assertEqual(response.status_code,200)
         for path in ('/render.mjs','/state.mjs','/api.mjs'):
@@ -44,3 +47,12 @@ class FrontendTests(unittest.TestCase):
     def test_ui_modules_are_not_reused_from_previous_deployment(self):
         for path in ('/','/app.mjs','/render.mjs','/styles.css'):
             self.assertIn('no-store',self.client.get(path).headers.get('cache-control',''))
+
+    def test_categories_have_accessible_controls_and_explain_evidence_limits(self):
+        nodes=self.document.nodes
+        buttons=[a for tag,a in nodes if tag=='button' and 'data-category' in a]
+        self.assertEqual({a['data-category'] for a in buttons},{'all','gaming','senior','photography'})
+        self.assertTrue(all(a.get('aria-pressed') in ('true','false') for a in buttons))
+        self.assertTrue(any(tag=='label' and a.get('for')=='category-status' for tag,a in nodes))
+        ids={a.get('id') for tag,a in nodes}
+        self.assertIn('category-methods',ids)

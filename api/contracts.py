@@ -41,6 +41,8 @@ class CatalogQuery:
     mode: str
     q: str
     pagination: Pagination
+    category: str = 'all'
+    category_status: str = 'evidence_available'
 
 
 def invalid(message='条件格式无效，请检查后重新确认'):
@@ -153,8 +155,16 @@ def parse_pagination(items: list[tuple[str,str]]) -> Pagination:
 
 
 def parse_catalog_query(items: list[tuple[str,str]], known_brands: list[str]) -> CatalogQuery:
-    query=_queries(items,{'mode','min_price','max_price','min_storage','include','exclude','q','page','page_size'},
+    query=_queries(items,{'mode','min_price','max_price','min_storage','include','exclude','q','page','page_size','category','category_status'},
                    repeat={'include','exclude'})
+    category=query.get('category','all')
+    category_status=query.get('category_status','evidence_available')
+    if category not in ('all','gaming','senior','photography'):
+        invalid('请选择有效的手机场景分类')
+    if category_status not in ('evidence_available','pending_review'):
+        invalid('请选择有资料或待评估状态')
+    if category=='all' and 'category_status' in query:
+        invalid('请先选择具体场景，再筛选资料状态')
     def numeric(key):
         if key not in query:
             return None
@@ -167,7 +177,7 @@ def parse_catalog_query(items: list[tuple[str,str]], known_brands: list[str]) ->
     needs=_needs({'budget':{'min':numeric('min_price'),'max':numeric('max_price')},
                   'min_storage':numeric('min_storage'),
                   'brands':{'include':query.get('include',[]),'exclude':query.get('exclude',[])}},known_brands)
-    return CatalogQuery(needs,_mode(query.get('mode','all')),query.get('q','').strip(),_pagination(query))
+    return CatalogQuery(needs,_mode(query.get('mode','all')),query.get('q','').strip(),_pagination(query),category,category_status)
 
 
 def parse_compare(body: dict) -> list[str]:

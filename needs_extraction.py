@@ -322,6 +322,35 @@ def _last_utterance(text: str) -> str:
     return lines[-1] if lines else ""
 
 
+def budget_bound_has_source(text: str, value: float, bound: str) -> bool:
+    """Public draft guard: vague prices require explicit source for each bound.
+
+    Unrecognised wording falls back to clarification rather than inventing a range.
+    The legacy validator remains unchanged for existing callers.
+    """
+    if not _find_vague_budget(text):
+        return True
+    # Chinese compound numerals and currency multipliers require manual review.
+    # Exact Arabic literals prevent treating a fragment of '二千五百' as 2000.
+    number = r"\d+(?:\.\d+)?(?![\d.])"
+    prefix = r"(?:不超过|最多|最高|上限(?:是|为)?|至多)" if bound=='max' else r"(?:不低于|至少|最低|下限(?:是|为)?)"
+    suffix = r"(?:以内|以下)" if bound=='max' else r"(?:以上|起)"
+    patterns = [prefix+r"\s*(?P<n>"+number+r")",
+                r"(?P<n>"+number+r")\s*(?:元|块)?\s*"+suffix]
+    def source_tail_clear(end: int) -> bool:
+        tail=text[end:].lstrip()
+        tail=re.sub(r"^(?:元|块钱|块)\s*",'',tail)
+        return not re.match(r"(?:[A-Za-z0-9.英寸千万]|左右|上下|差不多|多|来|把|出头)",tail)
+    for pattern in patterns:
+        for match in re.finditer(pattern,text):
+            if source_tail_clear(match.end()) and value==float(match.group('n')):
+                return True
+    for match in re.finditer(r"(?P<min>"+number+r")\s*元?\s*(?:到|至|[-—~])\s*(?P<max>"+number+r")",text):
+        if source_tail_clear(match.end()) and value==float(match.group(bound)):
+            return True
+    return False
+
+
 def _vague_boundary_conflict(budget: Mapping[str, Any], text: str) -> str:
     """含糊预算被当成了硬边界？返回那段含糊原文，没有则返回空串。
 

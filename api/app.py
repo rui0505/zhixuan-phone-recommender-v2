@@ -15,6 +15,7 @@ from catalog.release import ReleaseStore
 from .service import CatalogService
 from .images import ImageCatalog
 from .explanations import ExplanationService
+from .needs import NeedsService, parse_needs_text
 from catalog.evidence import build_evidence
 from .contracts import (ApiError, parse_recommendation, parse_catalog_query,
                         parse_pagination, parse_compare, parse_export)
@@ -62,7 +63,7 @@ async def read_body(request):
         raise ApiError(400,'invalid_json','请求不是有效的 UTF-8 JSON，或含重复键') from exc
 
 
-def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None):
+def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None, needs_service=None):
     # Only trusted process configuration injects paths; HTTP parsers reject them.
     store=ReleaseStore(db_path or Path(os.environ.get('PHONE_CATALOG_PATH',ROOT/'data/catalog.sqlite')))
     if image_catalog is None:
@@ -71,6 +72,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         data_root=Path(store.db_path).parent if hasattr(store,'db_path') else (Path(db_path).parent if db_path else ROOT/'data')
         image_catalog=ImageCatalog(data_root/'image_manifest.json',data_root/'media',snapshot)
     service=CatalogService(store,image_catalog,ExplanationService())
+    needs_service = needs_service if needs_service is not None else NeedsService()
 
     @asynccontextmanager
     async def lifespan(app):
@@ -86,7 +88,11 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         if queries and path not in ('/api/v1/catalog','/api/v1/recommend'):
             raise ApiError(422,'invalid_request','此接口不接受查询参数')
         if path=='/readyz':return response_json({'status':'ready','release':service.meta()['release']})
-        if path=='/api/v1/meta':return response_json(service.meta())
+        if path=='/api/v1/meta':
+            meta=service.meta(); meta['features']['needs_extraction']=needs_service.available
+            return response_json(meta)
+        if path=='/api/v1/needs':
+            return response_json(needs_service.extract(parse_needs_text(body),service.meta()['brands']))
         if path=='/api/v1/catalog':return response_json(service.catalog(parse_catalog_query(queries,service.meta()['brands'])))
         if 'sku_id' in request.path_params:return response_json(service.details(request.path_params['sku_id']))
         if path=='/api/v1/compare':return response_json(service.compare(parse_compare(body)))
@@ -142,11 +148,13 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
             Route('/api/v1/catalog',endpoint),Route('/api/v1/skus/{sku_id}',endpoint),
             Route('/api/v1/compare',endpoint,methods=['POST']),Route('/api/v1/recommend',endpoint,methods=['POST']),
             Route('/api/v1/export/{format}',endpoint,methods=['POST']),Route('/api/v1/explain',endpoint,methods=['POST']),
+            Route('/api/v1/needs',endpoint,methods=['POST']),
             Route('/media/{filename}',media)]
     static=Path(frontend_dir) if frontend_dir is not None else ROOT/'frontend'
     if static.is_dir():routes.append(Mount('/',app=FrontendFiles(directory=static,html=True,follow_symlink=False)))
     app=Starlette(routes=routes,lifespan=lifespan,exception_handlers={HTTPException:http_error})
     app.state.service=service
+    app.state.needs_service=needs_service
     return app
 
 
