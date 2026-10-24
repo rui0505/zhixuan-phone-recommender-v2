@@ -5,6 +5,7 @@ import re
 from datetime import date, datetime
 from numbers import Real
 
+from catalog.comparability import normalise_game_conditions
 from catalog.evidence import verify_bundle
 from catalog.read_views import safe_url
 
@@ -71,9 +72,11 @@ def _usable(fact):
     if key == 'dxomark_photo':
         return fact['comparison_group'] in _PHOTO_RULES
     conditions = _conditions(fact)
-    return (str(fact['comparison_group']).startswith('game::') and bool(conditions)
-            and all(conditions.get(key) is not None for key in
-                    ('quality', 'fps_target', 'duration_min', 'game_version')))
+    if not str(fact['comparison_group']).startswith('game::'):
+        return False
+    values, _ = normalise_game_conditions(conditions)
+    # 与 catalog.comparability 的分组条件保持一致：画质 + 帧目标决定负载是否可比。
+    return all(values.get(key) is not None for key in ('quality', 'fps_target'))
 
 
 def _price_kind(model):
@@ -124,7 +127,8 @@ def _match(fact, model, needs, target):
         return (f'DXOMARK {_PHOTO_RULES[fact["comparison_group"]]}规则下，'
                 f'照片子分为 {value} 分（仅指照片这一项）。')
     if key == 'honor_of_kings_avg_fps':
-        conditions = _conditions(fact)
+        # 用规范化后的取值，legacy 的 frame_mode 原文也能还原画质与帧目标。
+        conditions, _ = normalise_game_conditions(_conditions(fact))
         details = []
         quality = conditions.get('quality')
         if isinstance(quality, str) and re.fullmatch(r'[A-Za-z0-9\u4e00-\u9fff +.%-]{1,24}', quality):
@@ -133,7 +137,10 @@ def _match(fact, model, needs, target):
             if _number(conditions.get(field)):
                 details.append(_fmt(conditions[field]) + unit)
         detail = '；' + '、'.join(details) if details else ''
-        return f'记录的《王者荣耀》测试平均帧率为 {value} fps（仅限该次测试规则和条件{detail}）。'
+        text = f'记录的《王者荣耀》测试平均帧率为 {value} fps（仅限该次测试规则和条件{detail}）。'
+        if not all(conditions.get(k) is not None for k in ('ambient_temp_c', 'duration_min', 'os_version')):
+            text += '环境温度、测试时长或系统版本等条件未记载，跨机型比较需谨慎。'
+        return text
     return None
 
 

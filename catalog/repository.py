@@ -25,6 +25,23 @@ except Exception:  # pragma: no cover
 
 DEFAULT_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalog.sqlite")
 
+# 快照哈希缓存：key 为库路径，value 为 ((mtime_ns, size), sha256)。
+# 全文件哈希只用来检测"构建期间库被替换"，不需要每次都真算一遍——
+# stat 没变就说明文件没动，直接复用上次结果。
+_SHA_CACHE = {}
+
+
+def snapshot_sha256(path):
+    """按 (mtime_ns, size) 缓存的全文件 SHA256。文件一变立刻重算。"""
+    stat = os.stat(path)
+    stamp = (stat.st_mtime_ns, stat.st_size)
+    cached = _SHA_CACHE.get(path)
+    if cached is not None and cached[0] == stamp:
+        return cached[1]
+    digest = hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    _SHA_CACHE[path] = (stamp, digest)
+    return digest
+
 # 价格选择优先级：同一 sku 同一模式下的取值顺序
 PRICE_PRIORITY_NEW = ["official_current_price", "official_launch_price", "marketplace_listing_price"]
 PRICE_PRIORITY_USED = ["used_market_estimate"]
@@ -293,12 +310,12 @@ class CatalogRepository:
                              comparison_group_overrides=None):
         """只构建可比输入，不计算 TOPSIS/VIKOR 分数。先检查 decision_status。"""
         from .decision_input import build_decision_input
-        before = hashlib.sha256(Path(self.db_path).read_bytes()).hexdigest()
+        before = snapshot_sha256(self.db_path)
         result = build_decision_input(self, metric_keys, mode, weights, max_price,
                                     min_storage_gb, brands, price_kind_preference, min_price=min_price,
                                     excluded_brands=excluded_brands,
                                     comparison_group_overrides=comparison_group_overrides)
-        if hashlib.sha256(Path(self.db_path).read_bytes()).hexdigest() != before:
+        if snapshot_sha256(self.db_path) != before:
             raise ValueError('构建输入期间数据库发生变化，请重新加载快照')
         result['snapshot_sha256'] = before
         return result

@@ -4,15 +4,27 @@ import streamlit as st
 from catalog.release import file_sha, verify_release
 from catalog.read_views import safe_url, safe_urls, sku_details
 
+# Streamlit 每次交互都会重跑脚本。全文件哈希在这里同样不该每轮都算：
+# 先用 (mtime_ns, size) 判断是否变更，只有变了才做全库 SHA256。
+# 校验语义不变——文件一改，缓存立刻失效并重新走完整校验。
+_STAT_CACHE = {}
+
 
 def load_release(db_path: str, manifest_sha: str):
     import json
     path=Path(db_path);mp=path.with_name('release_manifest.json')
+    db_stat=path.stat();mp_stat=mp.stat()
+    stamp=(db_stat.st_mtime_ns,db_stat.st_size,mp_stat.st_mtime_ns,mp_stat.st_size)
+    cached=_STAT_CACHE.get(str(path))
+    if cached is not None and cached[0]==(stamp,manifest_sha):
+        return cached[1]
     if file_sha(mp)!=manifest_sha:raise ValueError('发布清单已变动')
     manifest=json.loads(mp.read_text(encoding='utf-8'))
     actual=file_sha(path)
     if actual!=manifest['snapshot_sha256']:raise ValueError('数据库校验不一致')
-    return _load_verified(str(path.resolve()),manifest_sha,actual)
+    release=_load_verified(str(path.resolve()),manifest_sha,actual)
+    _STAT_CACHE[str(path)]=((stamp,manifest_sha),release)
+    return release
 
 
 @st.cache_resource(show_spinner=False)

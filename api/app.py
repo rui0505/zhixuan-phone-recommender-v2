@@ -1,6 +1,7 @@
 """Same-origin ASGI entrypoint; optional server-only evidence explanation."""
 from contextlib import asynccontextmanager
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -22,6 +23,9 @@ from .contracts import (ApiError, parse_recommendation, parse_catalog_query,
 
 ROOT=Path(__file__).resolve().parents[1]
 BODY_LIMIT=32768
+# 500 只对用户返回通用文案，但服务端必须留下堆栈，否则线上无从定位。
+# uvicorn 已配置日志，这里取同名 logger 即可写进 journald。
+log=logging.getLogger('uvicorn.error')
 MIMES={'csv':'text/csv; charset=utf-8','json':'application/json; charset=utf-8',
        'xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
 
@@ -106,7 +110,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
             if outcome.result.status!='ready':raise ApiError(409,'not_ready','当前条件不能生成推荐解释')
             if any(getattr(outcome.result,k)!=fps[k] for k in fps):raise ApiError(409,'decision_changed','解释指纹已过期，请重新推荐')
             if ids[0] not in set(outcome.result.ranked['sku_id']):raise ApiError(422,'invalid_request','该配置不在本次排名中')
-            bundle=build_evidence(outcome.di,outcome.result,outcome.needs,sku_ids=ids)
+            bundle=build_evidence(outcome.di,outcome.result,outcome.needs,sku_ids=ids,verified=True)
             answer=service.explanations.explain(bundle); service._unchanged(outcome.release_key)
             return response_json(answer)
         if path=='/api/v1/recommend':
@@ -126,7 +130,9 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
             body=await read_body(request) if request.method=='POST' else None
             return await run_in_threadpool(execute,request,body)
         except ApiError as exc:return error_response(exc)
-        except Exception:return error_response(ApiError(500,'internal_error','服务内部异常，请稍后重试或联系维护者'))
+        except Exception:
+            log.exception('unhandled error method=%s path=%s', request.method, request.url.path)
+            return error_response(ApiError(500,'internal_error','服务内部异常，请稍后重试或联系维护者'))
 
     async def health(request):return response_json({'status':'alive'})
 

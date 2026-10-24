@@ -42,8 +42,10 @@ class ImageCatalog:
         except OSError:return None
 
     def for_model(self,model_id):
+        # 哈希在 __init__ 里已逐文件校验过一次；建卡时再读一遍图并 SHA256
+        # 只会让目录页为整库付出几十兆 I/O，校验强度没有任何提升。
         item=self.models.get(model_id)
-        if item and self.path_for(item['url'].rsplit('/',1)[-1]):return dict(item)
+        if item and item['url'].rsplit('/',1)[-1] in self.files:return dict(item)
         return None
 
     def path_for(self,filename):
