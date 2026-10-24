@@ -12,5 +12,6 @@ docs/superpowers/
 data_pipeline/config/build_config.local.json
 node_modules/
 *.log
+/outputs/
 data/phones.xlsx
 data/release-*/

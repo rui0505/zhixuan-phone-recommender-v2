@@ -11,6 +11,7 @@ Environment=PYTHONUNBUFFERED=1
 Environment=OPENBLAS_NUM_THREADS=1
 Environment=OMP_NUM_THREADS=1
 Environment=PHONE_ENABLE_LLM=false
+Environment=PHONE_NEEDS_QUOTA_PATH=/var/lib/zhixuan/needs-quota.sqlite
 EnvironmentFile=-/etc/zhixuan.env
 ExecStart=/opt/zhixuan/.venv/bin/python -m uvicorn api.app:app --host 127.0.0.1 --port 8600 --workers 1 --limit-concurrency 12 --timeout-keep-alive 5
 Restart=on-failure
@@ -19,6 +20,8 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
+StateDirectory=zhixuan
+StateDirectoryMode=0700
 MemoryMax=900M
 TasksMax=64
 UMask=0077
