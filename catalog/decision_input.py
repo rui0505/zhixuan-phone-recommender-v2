@@ -167,6 +167,10 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
         if key in game_keys:
             chosen_groups[key] = game_selection['comparison_group']
             coverage[key] = game_selection['coverage']
+            detail = game_selection.get('comparison_group_detail') or {}
+            # 可比组的可读说明与"未统一控制的条件"必须一路带到证据层。
+            criterion['comparison_group_label'] = detail.get('label')
+            criterion['comparison_group_uncontrolled'] = detail.get('uncontrolled')
         criterion.update(comparison_group_used=chosen_groups[key],
                          comparison_group_used_is_unverified=False,
                          comparison_group_coverage=coverage[key],
@@ -225,11 +229,24 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
     release = repo.dataset_version()
     sources={s['source_id']:s for s in repo.as_records(repo._q(
         'SELECT source_id,url,publisher,published_at,collected_at FROM sources'))}
+    # 一次性载入规格溯源，按 spec_id 建索引。逐条调 get_spec_provenance 会让
+    # 一次推荐产生上百次"开连接 + 查询"（实测约 160 次），是典型的 N+1。
+    # 只取真正被证据引用到的 spec_id：全表 8712 行里通常只有约 1/6 用得上。
+    used_spec_ids = sorted({ev['spec_id'] for row in provenance
+                            for ev in row['criteria'] if ev.get('spec_id')})
+    provenance_by_spec=defaultdict(list)
+    for start in range(0, len(used_spec_ids), 900):
+        chunk = used_spec_ids[start:start + 900]        # 避开 SQLite 变量数上限
+        marks = ','.join('?' * len(chunk))
+        for row in repo.as_records(repo._q(
+                f'SELECT * FROM spec_provenance WHERE spec_id IN ({marks}) '
+                'ORDER BY spec_id,source_record_id,source_col', tuple(chunk))):
+            provenance_by_spec[row['spec_id']].append(row)
     for row in provenance:
         for ev in row['criteria']:
             ids={ev['source_id']} if ev.get('source_id') else set()
             if ev.get('spec_id'):
-                ev['spec_provenance']=repo.get_spec_provenance(ev['spec_id'])
+                ev['spec_provenance']=provenance_by_spec.get(ev['spec_id'],[])
                 ids.update(p['source_id'] for p in ev['spec_provenance'] if p.get('source_id'))
             ev['sources']=[sources[sid] for sid in sorted(ids) if sid in sources]
     from .repository import pd, PRICE_PRIORITY_NEW, PRICE_PRIORITY_USED

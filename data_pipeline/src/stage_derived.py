@@ -390,7 +390,7 @@ def build_derived(cfg, paths, main_rows, camera_rows, aux_rows, model_by_key,
                 "protocol_detail": cond_raw,
                 "conditions_json": json.dumps(conditions, ensure_ascii=False),
                 "run_date": conditions.get("run_period", ""),
-                "os_version": conditions.get("os", ""),
+                "os_version": conditions.get("os_version") or conditions.get("os", ""),
                 "comparison_group": comparison_group("honor_of_kings_avg_fps", None, cond_raw),
                 "applicable_scope": "model",
                 "scope_note": "源表注明同机型各配置共用参考，非逐配置实测",
@@ -718,6 +718,18 @@ def derive_institution(raw):
     return s[:60]
 
 
+_QUALITY_WORDS = ('最高可用画质', '最高画质', '极致画质', '画质拉满', '超高分辨率',
+                  '极致', '极高', '高清', '顶级', '均衡', '流畅')
+
+
+def _quality_word(text):
+    """从条件原文里认出画质词；长词优先，避免"极致画质"被"极致"抢先截断。"""
+    for word in _QUALITY_WORDS:
+        if word in (text or ''):
+            return word
+    return None
+
+
 def parse_game_conditions(raw):
     """把「60帧+极致；10V10；25±0.5℃；350nit；iOS18.0」拆成结构化条件。"""
     cond = {}
@@ -735,15 +747,24 @@ def parse_game_conditions(raw):
             continue
         if re.search(r"\d+\s*帧", p):
             cond["frame_mode"] = p
-            match = re.fullmatch(r'(\d+)\s*帧(?:\+[^；;]+)?', p)
+            match = re.fullmatch(r'(\d+)\s*帧(?:\+(.+))?', p)
             if match:
                 cond['fps_target'] = int(match.group(1))
+                # "60帧+极致" 里的画质词单独抽出来，供可比组使用
+                quality = _quality_word(match.group(2) or '')
+                if quality:
+                    cond['quality'] = quality
+            if 'quality' not in cond:
+                quality = _quality_word(p)
+                if quality:
+                    cond['quality'] = quality
         elif re.fullmatch(r'渲染分辨率\s*[=:：]\s*\d+\s*[xX×]\s*\d+', p):
             cond['render_resolution'] = re.split(r'[=:：]', p, maxsplit=1)[1].strip().replace('×','x').replace('X','x')
         elif "画质" in p or p in ("极致", "高清", "均衡", "流畅"):
             cond["quality"] = p
         elif "℃" in p:
             cond["ambient_temp"] = p
+            cond['ambient_temp_c'] = p          # 规范键：可比组与展示都用它
         elif "nit" in p.lower():
             cond["screen_brightness"] = p
         elif re.search(r"iOS|Android|鸿蒙|HarmonyOS|MagicOS|HyperOS|ColorOS|OriginOS|MIUI|One UI", p, re.I):
@@ -753,6 +774,10 @@ def parse_game_conditions(raw):
             cond["run_period"] = p.replace("评测", "")
         elif re.match(r"^\d+V\d+$", p):
             cond["match_mode"] = p
+            cond['scene'] = p                   # 规范键：10V10 / 5V5
+        elif re.fullmatch(r'约?\d+\s*分钟', p):
+            cond['duration_min'] = int(re.search(r'\d+', p).group())
+            cond.setdefault("other", []).append(p)
         else:
             cond.setdefault("other", []).append(p)
     if "other" in cond:

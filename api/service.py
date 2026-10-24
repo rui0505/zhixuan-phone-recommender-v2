@@ -103,14 +103,22 @@ class CatalogService:
             excluded_brands=n['brands']['exclude']))
         include=n['brands']['include']; search=query.q.casefold()
         index=self._category_index(release)
-        rows=[self.card(r,release.key,index) for r in rows if (not include or r['brand'] in include)
-              and (not search or search in ' '.join(str(r.get(k) or '') for k in
-                   ('display_name','brand','variant_name','ram_raw','storage_raw','sku_id')).casefold())]
+        # 先过滤、后建卡：建卡会读图并校验哈希，对整库逐行做只为返回一页是纯浪费。
+        def in_scope(row):
+            if include and row['brand'] not in include:return False
+            return not search or search in ' '.join(str(row.get(k) or '') for k in
+                ('display_name','brand','variant_name','ram_raw','storage_raw','sku_id')).casefold()
+        def in_category(row):
+            if query.category=='all':return True
+            return any(c['id']==query.category and c['status']==query.category_status
+                       for c in index.get(row.get('model_id'),[]))
+        rows=[r for r in rows if in_scope(r)]
+        # 分类计数统计的是"当前品牌/搜索范围内各场景有多少机型"，与当前选中的分类无关，
+        # 因此必须在分类筛选之前算，否则切换分类会让其他分类的计数变成 0。
         counts=self._category_counts(index,[r['model_id'] for r in rows])
-        if query.category!='all':
-            rows=[r for r in rows if any(c['id']==query.category and c['status']==query.category_status
-                                         for c in r['category_assessments'])]
+        rows=[r for r in rows if in_category(r)]
         rows.sort(key=lambda r:r['sku_id'])
+        items=[self.card(r,release.key,index) for r in page_rows(rows,query.pagination)]
         notice=('场景分类按现有资料整理，不代表性能认证；同一机型可以有多个标签。'
                 if query.category=='all' else
                 '当前尚缺少已核实的简易模式、大字、通话和紧急联系等适老资料。待评估不等于不适合，可切换资料状态查看。'
@@ -120,7 +128,7 @@ class CatalogService:
                 '有游戏评测资料，可按原测试条件了解表现；这不是全游戏性能认证，具体配置也未独立实测。'
                 if query.category=='gaming' else
                 '有照片评测资料，可查看各自的协议和优势场景；不同机构或协议的成绩不混合比较。')
-        result={'items':page_rows(rows,query.pagination),'total':len(rows),
+        result={'items':items,'total':len(rows),
                 'page':query.pagination.page,'page_size':query.pagination.page_size,'release':deepcopy(release.key),
                 'category':query.category,'category_status':query.category_status,'category_counts':counts,'category_notice':notice}
         self._unchanged(release.key); return result
@@ -156,7 +164,8 @@ class CatalogService:
         try:
             di=build_input(release.repo,needs,weights,request.target_screen,request.mode)
             result=rank_decision_input(di,target_screen=request.target_screen)
-            bundle=build_evidence(di,result,needs) if result.status=='ready' else None
+            # 排名刚由这份 di 算出，指纹是它自己写的，无需再验一遍。
+            bundle=build_evidence(di,result,needs,verified=True) if result.status=='ready' else None
         except ValueError:
             self._unchanged(release.key)
             raise
@@ -165,7 +174,10 @@ class CatalogService:
 
     def recommendation_payload(self, outcome, pagination: Pagination):
         di,result=outcome.di,outcome.result
-        ranked=page_rows(CatalogRepository.as_records(result.ranked),pagination)
+        # 每页要为每条结果单独装配证据；DataFrame->records 的转换只做一次，别再逐条重算。
+        ranked_all=CatalogRepository.as_records(result.ranked)
+        prepared={'candidates':CatalogRepository.as_records(di['candidates']),'ranked':ranked_all}
+        ranked=page_rows(ranked_all,pagination)
         def unscored(frame):
             evidence={r['sku_id']:deepcopy(r['criteria']) for r in di['provenance']}
             rows=[]
@@ -175,7 +187,7 @@ class CatalogService:
                     for source in criterion.get('sources',[]):source['url']=safe_url(source.get('url'))
                 rows.append({**project(r,CARD_FIELDS),'criteria':criteria})
             return rows
-        explanations={r['sku_id']:render_template(build_evidence(di,result,outcome.needs,sku_ids=[r['sku_id']])) for r in ranked}
+        explanations={r['sku_id']:render_template(build_evidence(di,result,outcome.needs,sku_ids=[r['sku_id']],verified=True,prepared=prepared)) for r in ranked}
         reasons={r['sku_id']:recommendation_reason(outcome.bundle,r['sku_id']) for r in ranked}
         payload={'status':result.status,'reason':result.reason,'ranked':[self.card(r,outcome.release_key) for r in ranked],
                  'ranked_total':len(result.ranked),'page':pagination.page,'page_size':pagination.page_size,

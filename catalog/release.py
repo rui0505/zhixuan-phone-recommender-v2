@@ -54,24 +54,53 @@ def verify_release(db_path: Path, manifest_sha: str, snapshot_sha: str) -> Verif
 
 
 class ReleaseStore:
-    """Only validated resources are cached; both actual file hashes are checked per use."""
+    """Only validated resources are cached; change detection uses stat, hashing on change.
+
+    早先的实现每次 `get()` 都先对 2.9 MB 的库做一次 SHA256，**算完才判断缓存是否命中**，
+    所以缓存只省了对象重建、没省任何 I/O；而 `_lock` 又让所有请求排队过这把锁。
+    现在先用 (mtime_ns, size) 判断是否变更，只有真的变了才做全文件哈希——
+    安全性不降：`verify_release` 内部仍然双次全文件哈希并校验清单，只是从"每请求"
+    变成"每变更"。
+    """
+
     def __init__(self, db_path: Path):
         self.db_path = Path(db_path).resolve()
         self._verified = None
+        self._stamp = None
         self._lock = RLock()
 
+    def _stat_stamp(self):
+        db = self.db_path.stat()
+        manifest = self.db_path.with_name('release_manifest.json').stat()
+        return (db.st_mtime_ns, db.st_size, manifest.st_mtime_ns, manifest.st_size)
+
     def get(self) -> VerifiedRelease:
+        try:
+            stamp = self._stat_stamp()
+        except OSError as exc:
+            self._verified = None
+            self._stamp = None
+            raise ValueError('发布数据不可读取') from exc
+        cached = self._verified
+        if cached is not None and self._stamp == stamp:
+            return cached
         with self._lock:
+            # 双重检查：等锁期间别的线程可能已经完成校验。
+            if self._verified is not None and self._stamp == stamp:
+                return self._verified
+            self._verified = None
+            self._stamp = None
             try:
+                before = self._stat_stamp()
                 db_sha = file_sha(self.db_path)
                 mp_sha = file_sha(self.db_path.with_name('release_manifest.json'))
             except OSError as exc:
-                self._verified = None
                 raise ValueError('发布数据不可读取') from exc
-            cached = self._verified
-            if cached and (cached.key['snapshot_sha256'], cached.key['manifest_sha256']) == (db_sha, mp_sha):
-                return cached
-            self._verified = None
             verified = verify_release(self.db_path, mp_sha, db_sha)
+            after = self._stat_stamp()
+            if after != before:
+                # 校验期间文件被动过：不缓存，让下一次重新走完整校验。
+                raise ValueError('发布数据在校验期间发生变化')
             self._verified = verified
+            self._stamp = after
             return verified

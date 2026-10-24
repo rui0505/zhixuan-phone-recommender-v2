@@ -18,14 +18,26 @@ def verify_bundle(bundle):
         raise ValueError('证据内容已变化，必须按同一数据版本重新生成')
 
 
-def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
-    verify_result(result)
-    if decision_fingerprint(di,result.decision_context['target_screen'])!=result.decision_sha256:
-        raise ValueError('排名与当前决策输入内容不一致')
+def build_evidence(di,result,needs: dict, *, sku_ids=None, verified=False, prepared=None) -> dict:
+    """把决策输入与排名结果装配成可追溯的证据包。
+
+    `verified=True` 表示调用方刚刚用这份 `di`/`result` 算出排名，跳过重复指纹校验。
+    `prepared` 可传入已转换好的 `{'candidates': [...], 'ranked': [...]}`——
+    `as_records()` 要把 484 行 DataFrame 转成 dict 列表，实测约 290 ms，
+    同一请求里对同一份数据重复转换几十次是纯浪费。
+    """
+    if not verified:
+        verify_result(result)
+        if decision_fingerprint(di,result.decision_context['target_screen'])!=result.decision_sha256:
+            raise ValueError('排名与当前决策输入内容不一致')
     if (result.dataset_version!=di['dataset_version'] or result.feature_rule_version!=di['feature_rule_version']):
         raise ValueError('排名和证据数据版本不一致')
-    candidates=CatalogRepository.as_records(di['candidates']);models=[];facts={}
-    ranked=CatalogRepository.as_records(result.ranked)
+    if prepared is None:
+        candidates=CatalogRepository.as_records(di['candidates'])
+        ranked=CatalogRepository.as_records(result.ranked)
+    else:
+        candidates=prepared['candidates']; ranked=prepared['ranked']
+    models=[];facts={}
     if sku_ids is not None:
         if len(set(sku_ids))!=len(sku_ids) or not set(sku_ids)<=set(r['sku_id'] for r in ranked):
             raise ValueError('展示 SKU 必须是本次排名的无重复子集')
