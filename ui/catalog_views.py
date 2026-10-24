@@ -1,19 +1,12 @@
 """Hash-keyed read-only release loading; safe canonical SKU details."""
-import hashlib
-import json
 from pathlib import Path
-import sqlite3
-from contextlib import closing
-from urllib.parse import urlsplit
 import streamlit as st
-from catalog.repository import CatalogRepository
-
-
-def file_sha(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+from catalog.release import file_sha, verify_release
+from catalog.read_views import safe_url, safe_urls, sku_details
 
 
 def load_release(db_path: str, manifest_sha: str):
+    import json
     path=Path(db_path);mp=path.with_name('release_manifest.json')
     if file_sha(mp)!=manifest_sha:raise ValueError('发布清单已变动')
     manifest=json.loads(mp.read_text(encoding='utf-8'))
@@ -24,17 +17,8 @@ def load_release(db_path: str, manifest_sha: str):
 
 @st.cache_resource(show_spinner=False)
 def _load_verified(db_path,manifest_sha,snapshot_sha):
-    manifest=json.loads(Path(db_path).with_name('release_manifest.json').read_text(encoding='utf-8'))
-    if manifest['status']!='PASS' or manifest['acceptance']['machine_acceptance']!='PASS':
-        raise ValueError('发布数据机器验收未通过')
-    with closing(sqlite3.connect(Path(db_path).as_uri()+'?mode=ro',uri=True)) as con:
-        if con.execute('PRAGMA integrity_check').fetchone()[0]!='ok' or con.execute('PRAGMA foreign_key_check').fetchall():
-            raise ValueError('数据库完整性校验失败')
-    repo=CatalogRepository(db_path)
-    version=repo.dataset_version()
-    if version.get('dataset_version')!=manifest['dataset_version'] or version.get('rule_version')!=manifest['feature_rule_version']:
-        raise ValueError('数据版本与发布清单不一致')
-    return repo,manifest
+    release=verify_release(Path(db_path),manifest_sha,snapshot_sha)
+    return release.repo,release.manifest
 
 
 def clear_result(state):
@@ -51,20 +35,6 @@ def invalidate_confirmation(state,release_key):
     return changed
 
 
-def safe_url(value):
-    if not isinstance(value,str):return None
-    try:
-        p=urlsplit(value)
-        return value if p.scheme in ('http','https') and p.hostname and not p.username and not p.password and not any(c in value for c in '\r\n\x00') else None
-    except ValueError:return None
-
-
-def safe_urls(value):
-    """A source may contain newline-separated URLs; validate each, not the blob."""
-    if not isinstance(value,str):return []
-    return list(dict.fromkeys(url for line in value.splitlines() if (url:=safe_url(line.strip()))))
-
-
 def display_records(records):
     if not records:st.info('暂无记录');return
     import pandas as pd
@@ -74,17 +44,6 @@ def display_records(records):
             'comparison_group':'比较组','subject_type':'作用域','reason':'未进入排名原因','conditions_json':'测试条件'}
     st.dataframe(pd.DataFrame(records),hide_index=True,width='stretch',
                  column_config={key:st.column_config.Column(label) for key,label in labels.items()})
-
-
-def sku_details(repo,sku_id):
-    rows=repo.as_records(repo._q('SELECT s.*,m.display_name,v.variant_name FROM skus s JOIN phone_models m USING(model_id) JOIN phone_variants v USING(variant_id) WHERE sku_id=?',(sku_id,)))
-    if not rows:return None
-    sku=rows[0];details=repo.get_model_details(sku['model_id'])
-    details['sku']=sku
-    identities={'sku':sku_id,'variant':sku['variant_id'],'model':sku['model_id']}
-    details['specifications']=[r for r in details['specifications'] if identities.get(r['subject_type'])==r['subject_id']]
-    details['prices']=[r for r in details['prices'] if r['sku_id']==sku_id]
-    return details
 
 
 def render_details(repo,sku_id: str):

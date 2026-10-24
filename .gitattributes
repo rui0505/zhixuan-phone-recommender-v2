@@ -1,0 +1,5 @@
+deploy/*.sh text eol=lf
+deploy/*.service text eol=lf
+deploy/*.conf text eol=lf
+data/catalog.sqlite -text
+data/release_manifest.json -text
