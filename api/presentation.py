@@ -12,7 +12,7 @@ from catalog.read_views import safe_url
 _LABELS = {'price_cny': '价格', 'weight_g': '重量', 'storage_gb': '存储',
            'refresh_rate_hz': '屏幕刷新率', 'screen_size_inch': '屏幕尺寸',
            'battery_capacity_mah': '电池容量', 'dxomark_photo': '照片子分',
-           'honor_of_kings_avg_fps': '王者荣耀测试'}
+           'honor_of_kings_avg_fps': '王者荣耀测试', 'chipset_tier': '处理器档位'}
 _PHOTO_RULES = {'dxomark_v4': '第4版', 'dxomark_v5': '第5版', 'dxomark_v6': '第6版'}
 _MEASURED = {'dxomark_photo', 'honor_of_kings_avg_fps'}
 
@@ -120,6 +120,10 @@ def _match(fact, model, needs, target):
                 f'相差 {_fmt(abs(fact["value"] - target))} 英寸。')
     if key == 'battery_capacity_mah':
         return f'电池标称容量为 {value} mAh，供你参考容量大小。'
+    if key == 'chipset_tier':
+        # 引用第三方榜单换算的档位分，必须当场说明它不是本站实测。
+        return (f'处理器档位为 {value} 分（第三方综合性能榜单换算，非本站实测；'
+                '同分不代表实际体验相同）。')
     if key == 'dxomark_photo':
         return (f'DXOMARK {_PHOTO_RULES[fact["comparison_group"]]}规则下，'
                 f'照片子分为 {value} 分（仅指照片这一项）。')

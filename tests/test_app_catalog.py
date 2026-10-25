@@ -20,6 +20,8 @@ class CatalogAppTests(IsolatedEnvTest):
         super().setUp();self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
         shutil.copy2(BASE/'data/catalog.sqlite',self.root/'catalog.sqlite')
         shutil.copy2(BASE/'data/release_manifest.json',self.root/'release_manifest.json')
+        # 芯片档位表是排名矩阵的运行时依赖，必须跟着库一起走。
+        shutil.copy2(BASE/'data/chipset-tiers.json',self.root/'chipset-tiers.json')
         self.env=patch.dict(os.environ,{'PHONE_CATALOG_PATH':str(self.root/'catalog.sqlite')})
         self.env.start();self.at=AppTest.from_file(APP,default_timeout=60).run()
     def tearDown(self):self.env.stop();self.temp.cleanup();super().tearDown()

@@ -7,8 +7,8 @@ import re
 from catalog.adapter import resolve_brands
 
 METRICS = ('price_cny','weight_g','storage_gb','refresh_rate_hz','screen_size_inch',
-           'dxomark_photo','honor_of_kings_avg_fps')
-DEFAULT_WEIGHTS = dict(zip(METRICS, (5,2,2,1,0,0,0)))
+           'dxomark_photo','honor_of_kings_avg_fps','chipset_tier')
+DEFAULT_WEIGHTS = dict(zip(METRICS, (5,2,2,1,0,0,0,0)))
 RELEASE_FIELDS = {'dataset_version','feature_rule_version','snapshot_sha256','manifest_sha256'}
 REQUEST_FIELDS = {'needs','weights','target_screen','mode','confirmed','expected_release'}
 

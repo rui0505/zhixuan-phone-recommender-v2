@@ -5,7 +5,8 @@ from .repository import CatalogRepository
 
 CONTROL_MAP={'price':'price_cny','weight':'weight_g','storage':'storage_gb',
              'refresh':'refresh_rate_hz','screen':'screen_size_inch',
-             'photo':'dxomark_photo','game':'honor_of_kings_avg_fps'}
+             'photo':'dxomark_photo','game':'honor_of_kings_avg_fps',
+             'chipset':'chipset_tier'}
 FRAME_FIELDS={'price':'price_cny','weight':'weight_g','storage':'storage_gb',
               'refresh':'refresh_rate_hz','screen':'screen_size_inch'}
 

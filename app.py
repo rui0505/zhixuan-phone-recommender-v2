@@ -89,8 +89,9 @@ if st.button('清空需求与结果'):
     st.rerun()
 
 labels={'price':'价格更低','weight':'机身更轻','storage':'存储更大','refresh':'屏幕刷新率更高（非游戏性能）',
-    'screen':'屏幕接近目标','photo':'拍照：DXOMARK 照片子分','game':'游戏：王者荣耀实测平均帧率'}
-defaults={'price':5,'weight':2,'storage':2,'refresh':1,'screen':0,'photo':0,'game':0}
+    'screen':'屏幕接近目标','photo':'拍照：DXOMARK 照片子分','game':'游戏：王者荣耀实测平均帧率',
+    'chipset':'处理器档位（第三方综合性能榜单换算，非实测）'}
+defaults={'price':5,'weight':2,'storage':2,'refresh':1,'screen':0,'photo':0,'game':0,'chipset':0}
 for key,value in {'manual_min':0.0,'manual_max':5000.0,'manual_storage':0.0,'manual_target':6.5,
                   **{'manual_w_'+key:value for key,value in defaults.items()}}.items():state.setdefault(key,value)
 with st.sidebar:

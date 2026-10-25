@@ -9,6 +9,7 @@ def build(root,output):
     root=Path(root).resolve(); output=Path(output).resolve()
     names=['engine.py','schemas.py','needs_extraction.py','requirements-api.txt','scripts/api_smoke.py',
            'ui/__init__.py','ui/export_results.py','data/catalog.sqlite','data/release_manifest.json','data/image_manifest.json',
+           'data/chipset-tiers.json',
            'frontend/assets/zhixuan-ai-network.jpg','frontend/assets/credits.json']
     for folder in ('api','catalog','providers'):
         names.extend(str(p.relative_to(root)).replace('\\','/') for p in (root/folder).glob('*.py'))
