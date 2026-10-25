@@ -25,6 +25,14 @@ from typing import Any, Iterable, Mapping
 # --- 排序维度（与 engine.rank 的 keys 保持单一事实来源） -------------------
 
 CRITERIA: tuple[str, ...] = ("price", "weight", "storage", "refresh", "screen")
+# Extraction can record desired performance beyond the legacy engine's five keys.
+PERFORMANCE_CRITERIA = ("game", "photo", "battery")
+EXTRACTION_CRITERIA = CRITERIA + PERFORMANCE_CRITERIA
+PERFORMANCE_CONTROL_KEYS = {
+    "game": "honor_of_kings_avg_fps",
+    "photo": "dxomark_photo",
+    "battery": "battery_mixed_usage_duration_min",
+}
 
 CRITERIA_LABELS: dict[str, str] = {
     "price": "价格更低",
@@ -168,9 +176,9 @@ class PreferenceItem:
     confidence: float | None = None  # 供应商 confidence，仅作记录
 
     def __post_init__(self) -> None:
-        if self.criterion not in CRITERIA:
+        if self.criterion not in EXTRACTION_CRITERIA:
             raise SchemaError(
-                f"未知维度 {self.criterion!r}，只支持 {list(CRITERIA)}。"
+                f"未知维度 {self.criterion!r}，只支持 {list(EXTRACTION_CRITERIA)}。"
             )
         if self.choice not in CHOICES:
             raise SchemaError(
@@ -196,10 +204,10 @@ class PreferenceItem:
     def mapped_level(self) -> int:
         """确定性权重映射：不在意的 0 / 一般 1 / 重要 2 / 非常重要 3。
 
-        未提及映射到 1（中性先验），但调用方应同时检查 is_default。
+        基础五维未提及映射到 1，新性能偏好未提及映射到 0；同时保留 is_default。
         """
         if self.choice == "未提及":
-            return UNMENTIONED_LEVEL
+            return 0 if self.criterion in PERFORMANCE_CRITERIA else UNMENTIONED_LEVEL
         return LEVEL_MAP[self.choice]
 
 

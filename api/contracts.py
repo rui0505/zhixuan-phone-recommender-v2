@@ -13,7 +13,7 @@ METRICS = ('price_cny','weight_g','storage_gb','refresh_rate_hz','screen_size_in
 DEFAULT_WEIGHTS = dict(zip(METRICS, (5,2,2,1,0,0,0)))
 RELEASE_FIELDS = {'dataset_version','feature_rule_version','snapshot_sha256','manifest_sha256'}
 REQUEST_FIELDS = {'needs','weights','target_screen','mode','confirmed','expected_release'}
-OPTIONAL_REQUEST_FIELDS = {'method', 'expected_algorithm_version'}
+OPTIONAL_REQUEST_FIELDS = {'method', 'expected_algorithm_version', 'game_scope'}
 
 
 class ApiError(Exception):
@@ -32,6 +32,7 @@ class RecommendationRequest:
     expected_release: dict[str,str]
     method: str = 'topsis'
     expected_algorithm_version: str | None = None
+    game_scope: str = 'honor_of_kings'
 
 
 @dataclass(frozen=True)
@@ -124,6 +125,8 @@ def parse_recommendation(body: dict, known_brands: list[str]) -> RecommendationR
     if not weights:
         invalid('至少一项偏好权重必须大于 0')
     canonical = {k:_real(weights[k],maximum=10) for k in METRICS if k in weights}
+    game_scope = obj.get('game_scope', 'honor_of_kings')
+    validate_game_scope(game_scope, canonical)
     if not any(canonical.values()):
         invalid('至少一项偏好权重必须大于 0')
     target = _real(obj['target_screen'],minimum=3,maximum=10,nullable=True)
@@ -136,7 +139,15 @@ def parse_recommendation(body: dict, known_brands: list[str]) -> RecommendationR
     for key in ('snapshot_sha256','manifest_sha256'):
         _hash(release[key])
     return RecommendationRequest(_needs(obj['needs'],known_brands),canonical,target,
-                                 _mode(obj['mode']),True,deepcopy(release),method,version)
+                                 _mode(obj['mode']),True,deepcopy(release),method,version,game_scope)
+
+
+def validate_game_scope(scope, weights):
+    if type(scope) is not str or scope not in ('honor_of_kings', 'unconfirmed', 'unsupported'):
+        invalid('请确认游戏实测参考范围')
+    if weights.get('honor_of_kings_avg_fps', 0)>0 and scope != 'honor_of_kings':
+        code = 'unsupported_game' if scope == 'unsupported' else 'game_scope_unconfirmed'
+        raise ApiError(422, code, '当前仅支持王者荣耀平均帧率；请明确选择参考该游戏，或主动将游戏权重设为0')
 
 
 def _queries(items, allowed, repeat=()):

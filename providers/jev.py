@@ -39,6 +39,8 @@ from typing import Any, Mapping, Protocol, Sequence
 from schemas import (
     CHOICES,
     CRITERIA,
+    EXTRACTION_CRITERIA,
+    PERFORMANCE_CRITERIA,
     HardConstraints,
     Needs,
     PreferenceItem,
@@ -89,7 +91,7 @@ VAGUE_MARKERS: tuple[str, ...] = ("左右", "多", "上下", "来", "把", "大�
 UNSUPPORTED_RULES: tuple[tuple[tuple[str, ...], str], ...] = (
     (("拍照", "影像", "相机好"), "影像"),
     (("续航", "电池耐用", "待机"), "续航"),
-    (("打游戏", "游戏性能", "不卡"), "真实游戏性能"),
+    (("打游戏", "游戏性能", "不卡", "王者荣耀", "和平精英", "原神", "崩坏：星穹铁道", "绝区零"), "真实游戏性能"),
     (("分辨率", "清晰度"), "分辨率"),
     (("单手", "手感", "拿得住"), "机身尺寸手感"),
     (("性价比",), "处理器性能"),
@@ -101,6 +103,19 @@ ASK_BUDGET_MAX = "budget_max"
 ASK_MIN_STORAGE = "min_storage"
 ASK_TARGET_SCREEN = "target_screen"
 ASK_EXCLUDED_BRANDS = "excluded_brands"
+
+GAME_NAMES = ('王者荣耀', '和平精英', '原神', '崩坏：星穹铁道', '绝区零', '三角洲行动')
+PERFORMANCE_EVIDENCE_PATTERNS = {
+    'photo': r'拍照|影像|相机|摄影',
+    'battery': r'续航|电池耐用|待机|使用时长',
+    'game': r'游戏|爱打|爱玩|喜欢玩|只玩|平均帧率|' + '|'.join(GAME_NAMES),
+}
+
+
+def performance_evidence_valid(criterion: str, evidence: str, source: str) -> bool:
+    """A performance grade requires source text that actually concerns that dimension."""
+    return bool(evidence and evidence in source
+                and re.search(PERFORMANCE_EVIDENCE_PATTERNS[criterion], evidence))
 
 
 @dataclass(frozen=True)
@@ -114,7 +129,7 @@ class CriterionJudgement:
     confidence: float | None = None
 
     def __post_init__(self) -> None:
-        if self.criterion not in CRITERIA:
+        if self.criterion not in EXTRACTION_CRITERIA:
             raise SchemaError(f"未知维度：{self.criterion!r}")
         if self.choice not in CHOICES:
             raise SchemaError(f"{self.criterion} 的 choice 非法：{self.choice!r}")
@@ -190,7 +205,7 @@ class MockClassifier:
 
     def classify(self, text: str) -> JevResult:
         source = text or ""
-        judgements = [self._judge(criterion, source) for criterion in CRITERIA]
+        judgements = [self._judge(criterion, source) for criterion in EXTRACTION_CRITERIA]
         judgements = self._apply_blanket(source, judgements)
 
         hard, asks = self._hard_constraints(source)
@@ -272,7 +287,7 @@ class MockClassifier:
             return list(judgements)
         patched: list[CriterionJudgement] = []
         for item in judgements:
-            if item.choice == "未提及":
+            if item.choice == "未提及" and item.criterion in CRITERIA:
                 patched.append(
                     CriterionJudgement(
                         criterion=item.criterion,
@@ -363,6 +378,34 @@ class MockClassifier:
         return CriterionJudgement(
             criterion="screen", choice="未提及", verdict=VERDICT_UNKNOWN,
         )
+
+    def _judge_performance(self, criterion: str, text: str) -> CriterionJudgement:
+        # Last clause that names this preference wins; unrelated later turns do not erase it.
+        relevant = [part.strip() for part in re.split(r'[，。；,;\n]', text)
+                    if re.search(PERFORMANCE_EVIDENCE_PATTERNS[criterion], part)]
+        if not relevant:
+            return CriterionJudgement(criterion, '未提及')
+        evidence = re.sub(r'^\s*\d+[.、]\s*', '', relevant[-1])
+        if re.search(r'不在意|不重要|无所谓|不太在意|不玩|不打游戏', evidence):
+            choice, verdict = '不在意', VERDICT_EXTRACTED
+        elif re.search(r'最重要|最看重|必须|一定要|优先级最高', evidence):
+            choice, verdict = '非常重要', VERDICT_EXTRACTED
+        elif re.search(r'重要|优先|越.+越好|要好|要强', evidence):
+            choice, verdict = '重要', VERDICT_EXTRACTED
+        elif re.search(r'一般|够用|好一点|好点', evidence):
+            choice, verdict = '一般', VERDICT_EXTRACTED
+        else:
+            choice, verdict = '重要', VERDICT_INFERRED
+        return CriterionJudgement(criterion, choice, evidence, verdict)
+
+    def _judge_game(self, text: str) -> CriterionJudgement:
+        return self._judge_performance('game', text)
+
+    def _judge_photo(self, text: str) -> CriterionJudgement:
+        return self._judge_performance('photo', text)
+
+    def _judge_battery(self, text: str) -> CriterionJudgement:
+        return self._judge_performance('battery', text)
 
     # --- 硬约束 ---------------------------------------------------------
 
@@ -514,6 +557,7 @@ class MockClassifier:
     @staticmethod
     def _brands(text: str) -> list[str]:
         """品牌白名单。排除式表达（不要华为）不转成白名单。"""
+        text = text.replace('王者荣耀', '')
         names: list[str] = []
         for alias, label in BRAND_ALIASES.items():
             if alias not in text or label in names:
@@ -560,16 +604,18 @@ def normalise_response(
     `source_text` 传入原始需求文本时，额外校验 `evidence` 是否真的出现在
     原文里：不在则把 verdict 从 extracted 降级为 inferred（模型可能编造
     证据），但**不丢弃 choice**——choice 是模型判断，evidence 只是佐证。
-    不传则跳过该校验，保持既有调用方行为不变。
+    新性能偏好必须有对应维度的原文证据；无依据时退回未提及。
+    不传 source_text 则跳过原文包含校验，保持既有调用方行为不变；
+    对外 extraction 入口仍会在 shaping 时再次核对性能证据。
     """
     judgements: list[CriterionJudgement] = []
     raw_items = body.get("judgements") or body.get("results") or []
     by_criterion: dict[str, Mapping[str, Any]] = {}
     for item in raw_items:
-        if isinstance(item, Mapping) and item.get("criterion") in CRITERIA:
+        if isinstance(item, Mapping) and item.get("criterion") in EXTRACTION_CRITERIA:
             by_criterion[item["criterion"]] = item
 
-    for criterion in CRITERIA:
+    for criterion in EXTRACTION_CRITERIA:
         item = by_criterion.get(criterion)
         if item is None:
             judgements.append(
@@ -592,6 +638,17 @@ def normalise_response(
             )
             continue
         verdict = item.get("verdict", VERDICT_INFERRED)
+        if verdict not in (VERDICT_EXTRACTED, VERDICT_INFERRED, VERDICT_UNKNOWN):
+            verdict = VERDICT_UNKNOWN
+        if (criterion in PERFORMANCE_CRITERIA and choice != '未提及'
+                and source_text is not None and not performance_evidence_valid(criterion, evidence, source_text)):
+            # Performance intent needs actual source, even if the provider labels it inferred.
+            choice, verdict = '未提及', VERDICT_UNKNOWN
+        if (criterion in PERFORMANCE_CRITERIA and choice not in ('未提及', '不在意')
+                and evidence and not re.search(r'重要|最看重|必须|一定要|优先|越.+越好|要好|要强|一般|够用|好一点|好点', evidence)):
+            verdict = VERDICT_INFERRED
+            if choice == '非常重要':
+                choice = '重要'
         if (
             source_text is not None
             and verdict == VERDICT_EXTRACTED
@@ -670,7 +727,7 @@ class HttpClassifier:
                 f"环境变量 {self.api_key_env} 未设置。密钥不写入代码或日志。"
             )
         payload = json.dumps(
-            {"text": text, "criteria": list(CRITERIA), "choices": list(CHOICES)}
+            {"text": text, "criteria": list(EXTRACTION_CRITERIA), "choices": list(CHOICES)}
         ).encode("utf-8")
 
         last_error: Exception | None = None
@@ -682,7 +739,8 @@ class HttpClassifier:
             try:
                 with urllib.request.urlopen(request, timeout=self.timeout) as response:
                     body = json.loads(response.read().decode("utf-8"))
-                return self._normalise(body)
+                return normalise_response(body, provider=self.name,
+                                          model_version=self.model_version, source_text=text)
             except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
                 last_error = error
         raise JevUnavailable(
@@ -745,6 +803,7 @@ def parse_needs(
 
     preferences = [
         item.to_preference(confirmed=confirmed) for item in result.judgements
+        if item.criterion in CRITERIA
     ]
 
     # 排除式品牌用带值形式（便于确认页直接展示「排除了谁」），

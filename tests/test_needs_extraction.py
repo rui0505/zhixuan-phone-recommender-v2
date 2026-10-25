@@ -36,7 +36,7 @@ from providers.jev import (  # noqa: E402
     MockClassifier,
     normalise_response,
 )
-from schemas import CHOICES, CRITERIA, HardConstraints  # noqa: E402
+from schemas import CHOICES, EXTRACTION_CRITERIA as CRITERIA, HardConstraints  # noqa: E402
 
 REFERENCE_TEXT = "想买 2000 元左右、拍照好点、轻一点的手机。"
 
@@ -128,8 +128,8 @@ class ReferenceExampleTests(unittest.TestCase):
         self.assertEqual(needs, ["影像"])
         self.assertEqual(self.result["unsupported_needs"][0]["evidence"], "拍照")
 
-    def test_photography_is_not_converted_to_a_criterion(self):
-        """拍照不得变成像素/影像权重——本模块只输出 5 个约定维度。"""
+    def test_photography_has_a_preference_without_manufacturing_product_scores(self):
+        """八维抽取记录拍照愿望，商品评分仍由目录可比资料决定。"""
         seen = {item["criterion"] for item in self.result["preferences"]}
         self.assertEqual(seen, set(CRITERIA))
 

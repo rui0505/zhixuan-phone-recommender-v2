@@ -9,7 +9,7 @@ from catalog.release import ReleaseStore
 from catalog.repository import CatalogRepository
 from ranking_modes import rank, ALGORITHM_VERSIONS, SCORE_LABELS, HYBRID_PARAMETERS
 from ui.export_results import export_results
-from .contracts import ApiError, RecommendationRequest, Pagination, METRICS, DEFAULT_WEIGHTS
+from .contracts import ApiError, RecommendationRequest, Pagination, METRICS, DEFAULT_WEIGHTS, validate_game_scope
 from .categories import CATEGORY_LABELS, CATEGORY_RULE_VERSION, model_categories
 from .presentation import recommendation_reason
 from .performance import performance_capabilities, BATTERY_METRIC
@@ -168,10 +168,13 @@ class CatalogService:
         if request.expected_algorithm_version is not None and request.expected_algorithm_version!=ALGORITHM_VERSIONS[request.method]:
             raise ApiError(409,'algorithm_changed','算法版本已变化，请刷新并重新确认')
         needs=deepcopy(request.needs); weights=deepcopy(request.weights)
+        validate_game_scope(request.game_scope, weights)
         if weights.pop(BATTERY_METRIC,0)>0:
             raise ApiError(422,'unsupported_metric','当前发布不支持续航实测排序')
         try:
             di=build_input(release.repo,needs,weights,request.target_screen,request.mode)
+            if request.game_scope != 'honor_of_kings':
+                di['selection_rules']['game_scope'] = request.game_scope
             result=rank(di,target_screen=request.target_screen,method=request.method)
             bundle=build_evidence(di,result,needs) if result.status=='ready' else None
             capabilities=performance_capabilities(release.repo,needs,request.mode)

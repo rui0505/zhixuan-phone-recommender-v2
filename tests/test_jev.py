@@ -21,7 +21,7 @@ from providers.jev import (  # noqa: E402
     classify_preferences,
     parse_needs,
 )
-from schemas import CHOICES, CRITERIA, Needs  # noqa: E402
+from schemas import CHOICES, CRITERIA, EXTRACTION_CRITERIA, Needs  # noqa: E402
 
 
 class MockDeterminismTests(unittest.TestCase):
@@ -40,7 +40,7 @@ class MockDeterminismTests(unittest.TestCase):
 
     def test_all_criteria_present(self):
         result = MockClassifier().classify("随便看看")
-        self.assertEqual({j.criterion for j in result.judgements}, set(CRITERIA))
+        self.assertEqual({j.criterion for j in result.judgements}, set(EXTRACTION_CRITERIA))
 
     def test_choices_always_legal(self):
         for text in ("随便", "最轻的", "越便宜越好", "别太重", ""):
@@ -280,9 +280,9 @@ class HttpClassifierTests(unittest.TestCase):
     def test_unknown_criterion_in_payload_ignored(self):
         classifier = HttpClassifier(endpoint="https://example.invalid/jev")
         normalised = classifier._normalise(
-            {"judgements": [{"criterion": "battery", "choice": "重要"}]}
+            {"judgements": [{"criterion": "made_up", "choice": "重要"}]}
         )
-        self.assertEqual({j.criterion for j in normalised.judgements}, set(CRITERIA))
+        self.assertEqual({j.criterion for j in normalised.judgements}, set(EXTRACTION_CRITERIA))
         self.assertEqual(
             normalised.judgement_for("price").choice, "未提及"
         )

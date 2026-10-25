@@ -2,6 +2,7 @@
 from copy import deepcopy
 from needs_extraction import validate_result
 from preferences import validate_needs
+from schemas import CRITERIA
 
 LEVEL_TO_BLUE = {
     '未提及': 'unknown', '不在意': 'unimportant', '一般': 'normal',
@@ -17,7 +18,7 @@ def to_blue_needs(result):
         raise ValueError('需求抽取失败，请重新输入或使用手动模式。')
     budget = result['budget']
     preferences = {item['criterion']: LEVEL_TO_BLUE[item['level']]
-                   for item in result['preferences']}
+                   for item in result['preferences'] if item['criterion'] in CRITERIA}
     evidence = {item['criterion']: item['evidence'] for item in result['preferences']}
     evidence['budget'] = budget['evidence']
     out = {

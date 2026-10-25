@@ -53,11 +53,11 @@ from providers.jev import JevUnavailable, JevResult, normalise_response
 
 # Prompt 版本号。**改动 SYSTEM_PROMPT 必须同步升版本**，并写进返回结构，
 # 否则无法追溯某次结果是哪个 prompt 产出的。命名规则：extract-needs-v<主>.<次>。
-PROMPT_VERSION = "extract-needs-v1.1"
+PROMPT_VERSION = "extract-needs-v1.2"
 
 SYSTEM_PROMPT = """\
 你是手机选购需求的结构化抽取器。只做抽取，不做推荐，不替用户补充他没说出口的偏好。
-prompt_version: extract-needs-v1.1
+prompt_version: extract-needs-v1.2
 
 ## 多轮补充
 输入可能是用户**先后说的几句话**，用「1. 2. 3.」编号。此时：
@@ -65,8 +65,16 @@ prompt_version: extract-needs-v1.1
 - 每一句都是**用户本人**说的，不要当成问答记录。
 - 早期提到的、后面没有推翻的条件仍然有效。
 
-## 可评分维度（5 个，每个都必须给判断）
+## 偏好维度（8 个，每个都必须给判断；不表示数据库已支持排序）
 price=价格更低　weight=机身更轻　storage=存储更大　refresh=刷新率更高　screen=屏幕接近偏好
+game=游戏表现　photo=拍照表现　battery=续航表现
+游戏、拍照、续航没提到必须填未提及；基础偏好默认1、新性能偏好默认0，由代码映射。
+你只抽取用户愿望，不能判断数据库覆盖、商品表现、排名或生成数值权重。
+显式「拍照最重要」=非常重要/extracted；「续航重要」=重要/extracted。
+「爱打和平精英」支持游戏用途：game=重要/inferred，证据保留「爱打和平精英」，需用户确认强度与范围。
+所有推断必须 verdict=inferred，不得伪装显式最高等级；未提及用unknown，明确表达用extracted。
+当前游戏指标只指同条件王者荣耀平均帧率；不得把和平精英、其他游戏或泛游戏用途改写为王者荣耀。
+照片仅指同版DXOMARK照片子分，不代表视频/自拍；电池容量和充电功率不得代替实测续航。
 
 ## 取值（只能从这五个里选，一个都不能少）
 未提及 / 不在意 / 一般 / 重要 / 非常重要
@@ -119,9 +127,9 @@ judgements 里每项的 evidence 对应各自的偏好维度；顶层 evidence �
 
 ## 输出
 只输出一个 JSON 对象。不要解释、不要 markdown 代码块、不要前后缀文字。
-judgements 里 5 个维度必须齐全，顺序不限。
+judgements 里 8 个维度必须齐全，顺序不限。每项只含criterion、choice、evidence、verdict。
 
-{"judgements":[{"criterion":"price","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"weight","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"storage","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"refresh","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"screen","choice":"未提及","evidence":"","verdict":"unknown"}],"hard_constraints":{"budget_min":null,"budget_max":null,"budget_reference":null,"min_storage":null,"brands":[],"target_screen":null},"evidence":{"budget":"","min_storage":"","target_screen":"","brands":""},"excluded_brands":[],"asks":[],"unsupported_needs":[]}\
+{"judgements":[{"criterion":"price","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"weight","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"storage","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"refresh","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"screen","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"game","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"photo","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"battery","choice":"未提及","evidence":"","verdict":"unknown"}],"hard_constraints":{"budget_min":null,"budget_max":null,"budget_reference":null,"min_storage":null,"brands":[],"target_screen":null},"evidence":{"budget":"","min_storage":"","target_screen":"","brands":""},"excluded_brands":[],"asks":[],"unsupported_needs":[]}\
 """
 
 USER_TEMPLATE = "用户需求原文：\n{text}\n\n按上述 JSON 结构输出。"

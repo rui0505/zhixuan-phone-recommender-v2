@@ -9,10 +9,12 @@ import threading
 from needs_extraction import extract_needs, validate_result, budget_bound_has_source
 from providers.jev import JevUnavailable, normalise_response
 from providers.llm import SYSTEM_PROMPT, USER_TEMPLATE, post_chat, content_of, extract_json_object
-from schemas import LEVEL_MAP, UNMENTIONED_LEVEL
+from schemas import LEVEL_MAP, UNMENTIONED_LEVEL, PERFORMANCE_CONTROL_KEYS, PERFORMANCE_CRITERIA
 from .contracts import ApiError, METRICS, _needs
+from .performance import PERFORMANCE_METRICS, BATTERY_METRIC
 
 CONTROL_KEYS = dict(zip(('price','weight','storage','refresh','screen'), METRICS[:5]))
+CONTROL_KEYS.update(PERFORMANCE_CONTROL_KEYS)
 
 
 class OfficialNeedsClassifier:
@@ -92,9 +94,10 @@ class NeedsService:
                     raise ValueError('invalid extraction')
                 needs = _needs({'budget':{k:result['budget'][k] for k in ('min','max')},
                                 'min_storage':result['min_storage'], 'brands':result['brands']}, known_brands)
-                weights = dict.fromkeys(METRICS, 0)
+                weights = dict.fromkeys((*METRICS, BATTERY_METRIC), 0)
                 for pref in result['preferences']:
-                    weights[CONTROL_KEYS[pref['criterion']]] = (UNMENTIONED_LEVEL if pref['level']=='未提及'
+                    default = 0 if pref['criterion'] in PERFORMANCE_CRITERIA else UNMENTIONED_LEVEL
+                    weights[CONTROL_KEYS[pref['criterion']]] = (default if pref['level']=='未提及'
                                                                else LEVEL_MAP[pref['level']])
                 if result['target_screen'] is None:
                     weights['screen_size_inch']=0
@@ -103,9 +106,26 @@ class NeedsService:
             except (ValueError, TypeError, KeyError, ApiError):
                 return {'status':'degraded', 'extraction':result, 'draft':None,
                         'notice':'条件、品牌或偏好未能可靠匹配，请在下方手动确认；没有自动放宽条件'}
+            performance = {}
+            if result['game_use']['needs_scope_confirmation']:
+                result['clarifications'].append({'field': 'game_scope',
+                    'question': '是否明确选择参考王者荣耀平均帧率，或暂不按游戏排序？',
+                    'reason': '其他游戏或泛游戏用途不能直接使用王者荣耀实测作为依据'})
+            for metric, info in PERFORMANCE_METRICS.items():
+                scope_pending = metric == 'honor_of_kings_avg_fps' and result['game_use']['needs_scope_confirmation']
+                status = ('scope_confirmation_required' if scope_pending else
+                          'unsupported_metric' if metric == BATTERY_METRIC else 'requires_catalog_validation')
+                performance[metric] = {**info, 'desired_weight': weights[metric], 'status': status,
+                    'requires_confirmation': weights[metric] > 0,
+                    'reason': ('所需游戏范围尚未覆盖或确认，不能自动使用王者荣耀实测' if scope_pending else
+                               '当前没有合格续航实测，电池容量不能代替续航' if metric == BATTERY_METRIC else
+                               '是否可用须由当前筛选下同口径可比资料判定')}
             return {'status':result['status'], 'extraction':result,
-                    'draft':{'needs':needs, 'weights':weights, 'target_screen':result['target_screen'], 'confirmed':False},
-                    'notice':'已生成待确认草稿。未提及的基础偏好使用系统默认1；拍照和游戏未自动计权，新机/二手请手动选择'}
+                    'performance_preferences': performance,
+                    'draft':{'needs':needs, 'weights':weights, 'desired_weights':dict(weights),
+                             'game_scope': result['game_use']['game_scope'],
+                             'target_screen':result['target_screen'], 'confirmed':False},
+                    'notice':'已生成待确认草稿。基础偏好未提及默认1，游戏、拍照和续航未提及默认0；已提及的性能需求保留，缺资料或游戏范围未确认时不能排序。新机/二手请手动选择'}
         finally:
             self.lock.release()
 

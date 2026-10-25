@@ -29,7 +29,7 @@ from providers.llm import (  # noqa: E402
     thinking_from_env,
     thinking_payload,
 )
-from schemas import CHOICES, CRITERIA, VERDICT_EXTRACTED, VERDICT_INFERRED  # noqa: E402
+from schemas import CHOICES, EXTRACTION_CRITERIA as CRITERIA, VERDICT_EXTRACTED, VERDICT_INFERRED  # noqa: E402
 
 VALID_BODY = {
     "judgements": [
