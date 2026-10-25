@@ -134,6 +134,50 @@ class PerformanceNeedsTests(unittest.TestCase):
         self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 0)
         self.assertEqual([p['need'] for p in result['extraction']['unsupported_needs']], ['影像'])
 
+    def test_rejecting_another_game_preserves_hok_priority(self):
+        result = self.draft('王者荣耀平均帧率最重要，不玩和平精英')
+        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 3)
+        self.assertEqual(result['draft']['game_scope'], 'honor_of_kings')
+        self.assertEqual(result['extraction']['game_use']['names'], ['王者荣耀'])
+        self.assertEqual(next(p['evidence'] for p in result['extraction']['preferences']
+                              if p['criterion']=='game'), '王者荣耀平均帧率最重要')
+
+    def test_rejecting_hok_preserves_other_positive_game_use(self):
+        result = self.draft('爱打和平精英，完全不玩王者荣耀')
+        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 2)
+        self.assertEqual(result['draft']['game_scope'], 'unsupported')
+        self.assertEqual(result['extraction']['game_use']['names'], ['和平精英'])
+        self.assertTrue(result['extraction']['game_use']['needs_scope_confirmation'])
+
+    def test_mixed_dimension_negation_only_changes_its_named_dimension(self):
+        for text, photo, battery in (
+                ('拍照不重要但续航最重要', 0, 3),
+                ('续航不重要但拍照最重要', 3, 0),
+                ('拍照不重要续航最重要', 0, 3),
+                ('续航最重要拍照不重要', 0, 3),
+                ('拍照和续航最重要', 3, 3)):
+            with self.subTest(text=text):
+                result = self.draft(text)
+                self.assertEqual(result['draft']['weights']['dxomark_photo'], photo)
+                self.assertEqual(result['draft']['weights']['battery_mixed_usage_duration_min'], battery)
+
+    def test_postposed_hok_rejection_cannot_authorize_generic_game_scope(self):
+        payload = legacy_payload()
+        payload['judgements'].append(dict(criterion='game', choice='非常重要',
+                                          evidence='游戏性能最重要', verdict='extracted'))
+        for rejection in ('王者荣耀不玩', '王者荣耀我不玩', '王者荣耀完全不玩'):
+            with self.subTest(rejection=rejection):
+                result = self.draft('游戏性能最重要，' + rejection, FixedClassifier(payload))
+                self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 3)
+                self.assertEqual(result['extraction']['game_use']['names'], [])
+                self.assertEqual(result['draft']['game_scope'], 'unconfirmed')
+                self.assertTrue(result['extraction']['game_use']['needs_scope_confirmation'])
+
+    def test_rejecting_the_only_previously_played_game_does_not_resurrect_its_use(self):
+        result = self.draft('爱打和平精英，不玩和平精英')
+        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 0)
+        self.assertEqual(result['extraction']['game_use']['names'], [])
+
     def test_five_dimension_provider_remains_compatible_without_false_missing_alert(self):
         result = self.extract('预算2000元左右', FixedClassifier(legacy_payload()))
         self.assertEqual(result['status'], 'ok')

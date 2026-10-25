@@ -38,7 +38,8 @@ from providers.jev import (
     JevUnavailable,
     classify_preferences,
     performance_evidence_valid,
-    GAME_NAMES,
+    performance_clauses,
+    game_name_polarities,
 )
 from schemas import CHOICES, CRITERIA, EXTRACTION_CRITERIA, PERFORMANCE_CRITERIA
 
@@ -685,15 +686,11 @@ def _shape(text: str, result: JevResult, started: float) -> dict[str, Any]:
 
 def _game_use(text: str, game: Mapping[str, Any]) -> dict[str, Any]:
     evidence = game['evidence'] if game['evidence'] and game['evidence'] in text else ''
-    active_names = {}
-    for clause in re.split(r'[，。；,;\n]', text):
-        for name in GAME_NAMES:
-            if name in clause:
-                active_names[name] = not bool(re.search(r'(?:不玩|不打|不要|不考虑)\s*' + re.escape(name), clause))
+    active_names = game_name_polarities(text)
     names = [name for name, active in active_names.items() if active]
     source_fragments = [evidence] if evidence else []
-    source_fragments.extend(clause.strip() for clause in re.split(r'[，。；,;\n]', text)
-                            if any(name in clause for name in names))
+    source_fragments.extend(clause for clause in performance_clauses(text)
+                            if any(name in clause for name in active_names))
     scope = ('unsupported' if any(name != '王者荣耀' for name in names)
              else 'honor_of_kings' if names == ['王者荣耀'] else 'unconfirmed')
     return {'names': names, 'evidence': evidence, 'game_scope': scope,

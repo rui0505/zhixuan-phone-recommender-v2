@@ -118,6 +118,40 @@ def performance_evidence_valid(criterion: str, evidence: str, source: str) -> bo
                 and re.search(PERFORMANCE_EVIDENCE_PATTERNS[criterion], evidence))
 
 
+def performance_clauses(text: str) -> list[str]:
+    """Keep contrastive statements separate so one dimension's negation stays local."""
+    subjects = '|'.join(f'(?P<{key}>{pattern})'
+                        for key, pattern in PERFORMANCE_EVIDENCE_PATTERNS.items())
+    clauses = []
+    for part in re.split(r'[，。；,;\n]|但是|但|不过|而且|并且|同时', text):
+        start, previous = 0, None
+        for match in re.finditer(subjects, part):
+            if previous and match.lastgroup != previous.lastgroup:
+                gap = part[previous.end():match.start()]
+                # Coordinated subjects may share a grade; distinct assertions may not.
+                if not re.fullmatch(r'\s*(?:和|与|及|、)\s*', gap):
+                    clauses.append(part[start:match.start()].strip())
+                    start = match.start()
+            previous = match
+        clauses.append(part[start:].strip())
+    return [clause for clause in clauses if clause]
+
+
+def game_name_polarities(text: str) -> dict[str, bool]:
+    """Track each named game's latest local acceptance, including postposed rejection."""
+    states: dict[str, bool] = {}
+    rejection = r'(?:不(?:太|怎么|再)?(?:玩|打|考虑|要|在意|重要)|无所谓)'
+    modifiers = r'(?:(?:我|也|都|完全|从来|基本|根本|一直|现在|已经|就)\s*)*'
+    for clause in performance_clauses(text):
+        for name in GAME_NAMES:
+            if name in clause:
+                token = re.escape(name)
+                rejected = (re.search(rejection + r'\s*' + token, clause)
+                            or re.search(token + r'\s*' + modifiers + rejection, clause))
+                states[name] = not bool(rejected)
+    return states
+
+
 @dataclass(frozen=True)
 class CriterionJudgement:
     """单个维度的判断结果，带原文证据。"""
@@ -381,12 +415,28 @@ class MockClassifier:
 
     def _judge_performance(self, criterion: str, text: str) -> CriterionJudgement:
         # Last clause that names this preference wins; unrelated later turns do not erase it.
-        relevant = [part.strip() for part in re.split(r'[，。；,;\n]', text)
+        relevant = [part for part in performance_clauses(text)
                     if re.search(PERFORMANCE_EVIDENCE_PATTERNS[criterion], part)]
+        if criterion == 'game':
+            states = game_name_polarities(text)
+            general_positive = any(not game_name_polarities(part)
+                                   and not re.search(r'不在意|不重要|无所谓|不太在意|不玩|不打', part)
+                                   for part in relevant)
+            scoped = []
+            for part in relevant:
+                local = game_name_polarities(part)
+                if local and not any(local.values()):
+                    # Rejecting one title does not cancel a different active title or generic priority.
+                    if any(states.values()) or general_positive:
+                        continue
+                elif local and not any(states[name] for name in local):
+                    continue  # A later rejection of the same title superseded this use.
+                scoped.append(part)
+            relevant = scoped
         if not relevant:
             return CriterionJudgement(criterion, '未提及')
         evidence = re.sub(r'^\s*\d+[.、]\s*', '', relevant[-1])
-        if re.search(r'不在意|不重要|无所谓|不太在意|不玩|不打游戏', evidence):
+        if re.search(r'不在意|不重要|无所谓|不太在意|不(?:太|怎么|再)?(?:玩|打)', evidence):
             choice, verdict = '不在意', VERDICT_EXTRACTED
         elif re.search(r'最重要|最看重|必须|一定要|优先级最高', evidence):
             choice, verdict = '非常重要', VERDICT_EXTRACTED
