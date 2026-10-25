@@ -1,0 +1,59 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createState,applyMeta,setPreferences,beginRequest,acceptResponse} from '../../frontend/state.mjs';
+import {draftFields} from '../../frontend/needs.mjs';
+const preferences=await import('../../frontend/preferences.mjs').catch(()=>({}));
+const invoke=(name,...args)=>{assert.equal(typeof preferences[name],'function',`${name} behavior missing`);return preferences[name](...args);};
+const release={dataset_version:'d',feature_rule_version:'f',snapshot_sha256:'s',manifest_sha256:'m'};
+const algorithms=[{method:'topsis',algorithm_version:'topsis-1.0.0'},{method:'hybrid_rrf',algorithm_version:'hybrid-rrf-1.0.0-experimental'}];
+const base={needs:{budget:{min:100,max:3000},min_storage:256,brands:{include:['华为'],exclude:[]}},mode:'new',target_screen:6.5,weights:{price_cny:1,weight_g:1,storage_gb:1,refresh_rate_hz:1,screen_size_inch:0,dxomark_photo:0,honor_of_kings_avg_fps:0,battery_mixed_usage_duration_min:0}};
+
+test('strict request serialization binds default or explicit method to available version',()=>{
+  const input={...base,desired_weights:{battery_mixed_usage_duration_min:3},confirmed:false,source_fragments:['原话']};
+  const regular=invoke('requestFields',input,{algorithms});
+  assert.equal(regular.method,'topsis');assert.equal(regular.expected_algorithm_version,'topsis-1.0.0');
+  assert.equal(regular.desired_weights,undefined);assert.equal(regular.source_fragments,undefined);assert.equal(regular.confirmed,undefined);
+  const hybrid=invoke('requestFields',{...input,method:'hybrid_rrf',game_scope:'unsupported'},{algorithms});
+  assert.equal(hybrid.method,'hybrid_rrf');assert.equal(hybrid.expected_algorithm_version,'hybrid-rrf-1.0.0-experimental');assert.equal(hybrid.game_scope,'unsupported');
+  assert.deepEqual(hybrid.needs,base.needs);
+});
+
+test('runtime change invalidates confirmed result even when release remains identical',()=>{
+  const state=createState();applyMeta(state,{release,algorithms});setPreferences(state,{...base,method:'hybrid_rrf'});
+  state.confirmedRequest={method:'hybrid_rrf'};state.results={status:'ready'};const token=beginRequest(state,'recommend');
+  assert.equal(applyMeta(state,{release,algorithms:algorithms.map(a=>({...a}))}),false);
+  assert.ok(state.confirmedRequest);
+  assert.equal(applyMeta(state,{release,algorithms:[algorithms[0],{...algorithms[1],algorithm_version:'new'}]}),true);
+  assert.equal(state.confirmedRequest,null);assert.equal(state.results,null);assert.equal(acceptResponse(state,'recommend',token,{status:'ready'}),false);
+});
+
+test('wrong method or version response cannot be accepted into current recommendation',()=>{
+  const state=createState();applyMeta(state,{release,algorithms});setPreferences(state,{...base,method:'hybrid_rrf',expected_algorithm_version:algorithms[1].algorithm_version});
+  let token=beginRequest(state,'recommend');
+  assert.equal(acceptResponse(state,'recommend',token,{status:'ready',method:'topsis',algorithm_version:'topsis-1.0.0'}),false);
+  token=beginRequest(state,'recommend');
+  assert.equal(acceptResponse(state,'recommend',token,{status:'ready',method:'hybrid_rrf',algorithm_version:'old'}),false);
+});
+
+test('extracted unsupported preference retains evidence intent while reset preserves hard filters',()=>{
+  const payload={status:'ok',extraction:{game_use:{names:['和平精英'],game_scope:'unsupported'},preferences:[{criterion:'game',level:'重要',evidence:'爱打和平精英',verdict:'inferred',needs_confirmation:true}]},performance_preferences:{},draft:{...base,confirmed:false,game_scope:'unsupported',desired_weights:{...base.weights,honor_of_kings_avg_fps:2},weights:{...base.weights,honor_of_kings_avg_fps:2,battery_mixed_usage_duration_min:3}}};
+  const draft=draftFields(payload,{mode:'used',method:'hybrid_rrf'});
+  assert.equal(draft.method,'hybrid_rrf');assert.equal(draft.game_scope,'unsupported');assert.equal(draft.weights.honor_of_kings_avg_fps,2);
+  const reset=invoke('withoutCriterion',draft,'honor_of_kings_avg_fps');
+  assert.equal(reset.weights.honor_of_kings_avg_fps,0);assert.equal(reset.weights.battery_mixed_usage_duration_min,3);assert.deepEqual(reset.needs,base.needs);assert.equal(reset.game_scope,'unsupported');
+  assert.equal(reset.desired_weights.honor_of_kings_avg_fps,2);assert.equal(payload.extraction.preferences[0].evidence,'爱打和平精英');
+});
+
+test('old extraction defaults only absent performance preferences to not counted',()=>{
+  const weights={...base.weights};delete weights.battery_mixed_usage_duration_min;
+  const draft=draftFields({status:'ok',draft:{...base,weights,confirmed:false}},{mode:'new',method:'topsis'});
+  assert.equal(draft.weights.battery_mixed_usage_duration_min,0);
+});
+
+test('needs text revision clears confirmations, all result channels and pending extraction',()=>{
+  const state=createState();state.confirmedRequest={confirmed:true};state.results={status:'ready'};
+  const pending=beginRequest(state,'needs'),download=beginRequest(state,'download');
+  invoke('reviseNeedsText',state,base);
+  assert.equal(state.confirmedRequest,null);assert.equal(state.results,null);
+  assert.equal(acceptResponse(state,'needs',pending,{status:'ok'}),false);assert.equal(acceptResponse(state,'download',download,{}),false);
+});

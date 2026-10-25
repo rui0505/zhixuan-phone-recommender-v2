@@ -1,7 +1,8 @@
 import {createState,setPreferences,applyMeta,beginRequest,acceptResponse,addComparison,removeComparison} from './state.mjs';
 import {fetchJson,fetchDownload} from './api.mjs';
-import {element,button,labels,renderCard,renderDecision,renderComparison,renderDetail} from './render.mjs';
+import {element,button,labels,renderCard,renderDecision,renderComparison,renderDetail,renderPerformance} from './render.mjs';
 import {draftFields} from './needs.mjs';
+import {requestFields,withoutCriterion,reviseNeedsText} from './preferences.mjs';
 
 const $=id=>document.getElementById(id),state=createState(),controllers=new Map();
 let view='recommend',metaSequence=0,needsPendingBudget=false,catalogCategory='all';
@@ -10,12 +11,20 @@ function notify(message,error=false){const node=$('message');node.textContent=me
 function abortRequests(){for(const controller of controllers.values())controller.abort();controllers.clear();}
 function numeric(id){return $(id).value.trim()===''?null:Number($(id).value);}
 function selected(id){return [...$(id).selectedOptions].map(option=>option.value);}
-function fields(){return {needs:{budget:{min:numeric('min-price'),max:numeric('max-price')},min_storage:numeric('min-storage'),brands:{include:selected('include-brands'),exclude:selected('exclude-brands')}},
-  weights:Object.fromEntries(metrics.map(key=>[key,Number($(key).value)])),target_screen:numeric('target-screen'),mode:$('mode').value};}
+function fields(){return requestFields({needs:{budget:{min:numeric('min-price'),max:numeric('max-price')},min_storage:numeric('min-storage'),brands:{include:selected('include-brands'),exclude:selected('exclude-brands')}},
+  weights:Object.fromEntries(metrics.map(key=>[key,Number($(key).value)])),target_screen:numeric('target-screen'),mode:$('mode').value,method:$('method').value,game_scope:$('game-scope').value},state.meta);}
 function preferencesSummary(){
   const f=fields(),budget=f.needs.budget;
   $('preferences-summary').textContent=`${{new:'新机',used:'二手',all:'全部成色（含未知）'}[f.mode]} · ${budget.min??'不限'}—${budget.max??'不限'} 元 · ${f.needs.min_storage?`${f.needs.min_storage}GB 起`:'存储不限'} · ${f.needs.brands.include.join('、')||'全部品牌'}`;
   for(const key of metrics)document.querySelector(`output[for="${key}"]`).textContent=$(key).value;
+  const current=Boolean(state.results?.performance_capabilities),caps=state.results?.performance_capabilities??state.meta?.performance_capabilities;
+  $('performance-summary').replaceChildren(renderPerformance(caps,f.weights,state.needsIntent,current));
+  $('performance-counts').textContent=`${current?'本次条件':'当前条件待验证；默认新机参考'}：${[['dxomark_photo','拍照'],['honor_of_kings_avg_fps','游戏'],['battery_mixed_usage_duration_min','续航']].map(([key,name])=>`${name} ${caps?.[key]?.eligible_model_count??'—'} 机型 / ${caps?.[key]?.eligible_sku_count??'—'} 配置`).join(' · ')}。各指标独立计数。`;
+  $('method-status').textContent=`本次${f.method==='hybrid_rrf'?'实验混合排序':'默认 TOPSIS'} · ${f.expected_algorithm_version??'版本待读取'}`;
+  const blockers=[];
+  if(f.weights.battery_mixed_usage_duration_min>0)blockers.push('续航尚无对应实测，请选择“续航暂不计入”后重新确认，或保留需求等待资料。');
+  if(f.weights.honor_of_kings_avg_fps>0&&f.game_scope!=='honor_of_kings')blockers.push('游戏范围尚未覆盖或确认。可明确改用王者荣耀作参考，或选择“游戏暂不计入”；原始意图仍保留。');
+  $('performance-blocker').textContent=blockers.join(' ');
   const pendingBudget=needsPendingBudget&&budget.max===null&&!$('budget-unlimited').checked;
   $('generate').disabled=!state.release||!$('confirmed').checked||state.loading.recommend||pendingBudget;
   $('extract-needs').disabled=!state.meta?.features.needs_extraction||state.loading.needs||!$('needs-text').value.trim();
@@ -43,13 +52,16 @@ async function refreshMeta(initial=false){
     const meta=await fetchJson('/api/v1/meta');if(ordinal!==metaSequence)return;
     const changedRelease=applyMeta(state,meta);
     if(changedRelease){abortRequests();clearResults();compareCount();$('compare-content').replaceChildren(renderComparison([]));}
-    if(initial){for(const key of meta.metrics)$(key).value=meta.defaults.weights[key]??0;$('mode').value=meta.defaults.mode;$('target-screen').value=meta.defaults.target_screen;}
+    if(initial){for(const key of metrics)$(key).value=meta.defaults.weights[key]??0;$('mode').value=meta.defaults.mode;$('target-screen').value=meta.defaults.target_screen;}
+    for(const option of $('method').options)option.disabled=Boolean(meta.algorithms)&&!meta.algorithms.some(a=>a.method===option.value);
+    if($('method').selectedOptions[0]?.disabled)$('method').value='topsis';
     fillBrands('include-brands',meta.brands);fillBrands('exclude-brands',meta.brands);state.preferences=structuredClone(fields());preferencesSummary();
-    $('needs-status').textContent=meta.features.needs_extraction?'可用：先理解需求，再检查下方条件与偏好。':'自然语言理解暂未启用，仍可直接手动填写。';
+    $('needs-status').textContent=meta.features.offline_fixture?'离线测试夹具可用：仅用于本地验证，未调用 DeepSeek。':meta.features.needs_extraction?'可用：先理解需求，再检查下方条件与偏好。':'自然语言理解暂未启用，仍可直接手动填写。';
+    $('needs-service-notice').textContent=meta.features.offline_fixture?'本地离线测试：使用确定性规则夹具解析需求，不调用付费服务，也不代表真实 DeepSeek 输出。':'点击后将这段购机需求发送给 DeepSeek，提取预算和偏好；你确认后，再由算法生成推荐。';
     const acceptance=meta.acceptance;
     $('release-status').textContent=`${meta.counts.phone_models} 机型 · ${meta.counts.skus} 配置 · 机器 ${acceptance.machine_acceptance||'未知'} / 总体 ${acceptance.overall_acceptance||'未知'} · WPS ${acceptance.wps_review||'未知'}`;
-    $('release-info').replaceChildren(element('p',`数据 ${meta.release.dataset_version} / 规则 ${meta.release.feature_rule_version}`),element('p',`人工抽查仍待完成；当前发布未提供人工全通过证明。已关联 ${meta.features.image_models??0} 个机型展示图；DeepSeek ${meta.features.needs_extraction?'需求理解已配置':meta.features.llm?'已配置（仅解释）':'未启用'}；VIKOR 未实现。`),element('p','照片子分需协议可比；游戏仅限同条件王者荣耀实测帧率。1% Low 缺失，不推算完整游戏总分。'),element('p',`数据库指纹 ${meta.release.snapshot_sha256}`,'small'));
-    if(!initial)notify(changedRelease?'数据版本已变化，请重新确认并生成推荐。':'数据状态已刷新，版本未变化。');
+    $('release-info').replaceChildren(element('p',`数据 ${meta.release.dataset_version} / 规则 ${meta.release.feature_rule_version}`),element('p',`人工抽查仍待完成；当前发布未提供人工全通过证明。已关联 ${meta.features.image_models??0} 个机型展示图；${meta.features.offline_fixture?'需求理解为本地离线测试夹具':`DeepSeek ${meta.features.needs_extraction?'需求理解已配置':meta.features.llm?'已配置（仅解释）':'未启用'}`}；VIKOR 未实现。`),element('p','照片子分需协议可比；游戏仅限同条件王者荣耀实测帧率。1% Low 缺失，不推算完整游戏总分。'),element('p',`数据库指纹 ${meta.release.snapshot_sha256}`,'small'));
+    if(!initial)notify(changedRelease?'数据或算法版本已变化，请重新确认并生成推荐。':'数据和算法状态已刷新，版本未变化。');
   }catch(error){if(ordinal!==metaSequence)return;abortRequests();state.release=null;setPreferences(state,fields());clearResults();$('release-status').textContent='数据服务暂不可用';notify(error.message,true);}
 }
 async function request(channel,path,options,onSuccess){
@@ -63,7 +75,7 @@ async function request(channel,path,options,onSuccess){
   }catch(error){
     if(error.name==='AbortError')return;
     if(!acceptResponse(state,channel,token,{error}))return;
-    if(['release_changed','decision_changed','release_unavailable'].includes(error.code)){setPreferences(state,fields());clearResults();await refreshMeta();}
+    if(['release_changed','decision_changed','release_unavailable','algorithm_changed'].includes(error.code)){setPreferences(state,fields());clearResults();await refreshMeta();}
     notify(error.message,true);
   }finally{
     if(controllers.get(channel)===controller){controllers.delete(channel);for(const id of ['results','catalog-results','detail-content','compare-content'])$(id).setAttribute('aria-busy','false');preferencesSummary();}
@@ -77,15 +89,16 @@ function showNeeds(payload){
   const panel=$('needs-result');panel.replaceChildren(element('p',payload.notice));
   const extracted=payload.extraction;if(!extracted)return;
   if(extracted.budget.reference!==null)panel.append(element('p',`预算参考：${extracted.budget.reference} 元；参考值不会自动作为预算上限。`));
-  const list=element('ul');const titles={price:'价格',weight:'轻巧',storage:'存储',refresh:'刷新率',screen:'尺寸匹配'};
-  for(const p of extracted.preferences)list.append(element('li',`${titles[p.criterion]}：${p.level}${p.evidence?`（原话：${p.evidence}）`:'（没有明确提及）'}`));panel.append(list);
+  const list=element('ul');const titles={price:'价格',weight:'轻巧',storage:'存储',refresh:'刷新率',screen:'尺寸匹配',game:'游戏',photo:'拍照',battery:'续航'};
+  for(const p of extracted.preferences)list.append(element('li',`${titles[p.criterion]??p.criterion}：${p.level}${p.verdict==='inferred'?' · 使用场景推断，待确认':''}${p.evidence?`（原话：${p.evidence}）`:'（没有明确提及）'}`));panel.append(list);
+  if(extracted.game_use)panel.append(element('p',`原始游戏意图：${extracted.game_use.names?.join('、')||extracted.game_use.evidence||'游戏未明确'}。仅有王者荣耀测试；改用该参考或暂不计入均由你决定。`,'small'));
   for(const c of extracted.clarifications){const item=element('p',`待确认：${c.question}`,'warning');item.dataset.clarification=c.field;panel.append(item);}
   for(const n of extracted.unsupported_needs)panel.append(element('p',`未自动参与排序：${n.need}${n.evidence?`（原话：${n.evidence}）`:''}。请查看数据限制，或在下方手动设置可用指标。`,'warning'));
 }
 async function understandNeeds(event){
   event.preventDefault();const text=$('needs-text').value.trim();if(!text||!state.meta?.features.needs_extraction)return;
   controllers.get('needs')?.abort();const controller=new AbortController();controllers.set('needs',controller);
-  const token=beginRequest(state,'needs');preferencesSummary();$('needs-status').textContent='DeepSeek 正在理解需求，请稍候…';
+  const token=beginRequest(state,'needs');preferencesSummary();$('needs-status').textContent=state.meta?.features.offline_fixture?'离线测试夹具正在解析需求…':'DeepSeek 正在理解需求，请稍候…';
   try{
     const payload=await fetchJson('/api/v1/needs',{method:'POST',body:{text},signal:controller.signal});
     if(!acceptResponse(state,'needs',token,payload))return;
@@ -93,7 +106,8 @@ async function understandNeeds(event){
     if(draft){
       abortRequests();for(const [id,value] of [['min-price',draft.needs.budget.min],['max-price',draft.needs.budget.max],['min-storage',draft.needs.min_storage],['target-screen',draft.target_screen]])$(id).value=value??'';
       for(const k of ['include','exclude'])for(const o of $(`${k}-brands`).options)o.selected=draft.needs.brands[k].includes(o.value);
-      for(const [key,value] of Object.entries(draft.weights))$(key).value=value;
+      for(const key of metrics)$(key).value=draft.weights[key]??0;
+      $('game-scope').value=draft.game_scope??'honor_of_kings';state.needsIntent=structuredClone(payload);
       needsPendingBudget=payload.extraction.clarifications.some(c=>c.field==='budget.max');$('budget-unlimited').checked=false;$('budget-unlimited-line').hidden=!needsPendingBudget;
       setPreferences(state,fields());clearResults();notify('已填入待确认草稿，请检查条件与权重；尚未生成推荐。');
     }
@@ -106,7 +120,7 @@ async function understandNeeds(event){
     if(controllers.get('needs')===controller)controllers.delete('needs');preferencesSummary();
   }
 }
-function cardContext(id,explanations={},reasons={}){return {explanation:explanations[id],reason:reasons[id],selected:state.comparisonIds.includes(id),onDetails:loadDetail,onCompare:addToCompare,onExplain:explain,llmEnabled:state.meta?.features.llm};}
+function cardContext(id,explanations={},reasons={}){return {explanation:explanations[id],reason:reasons[id],method:state.results?.method,scoreLabel:state.results?.score_label,selected:state.comparisonIds.includes(id),onDetails:loadDetail,onCompare:addToCompare,onExplain:explain,llmEnabled:state.meta?.features.llm};}
 function explain(id,container){
   if(!state.confirmedRequest||state.results?.status!=='ready')return;
   const body={request:structuredClone(state.confirmedRequest),fingerprints:{decision_sha256:state.results.decision_sha256,ranking_sha256:state.results.ranking_sha256},sku_id:id};
@@ -182,7 +196,7 @@ async function download(format){
   try{
     const blob=await fetchDownload(format,body,{signal:controller.signal});if(!acceptResponse(state,'download',token,{}))return;
     const url=URL.createObjectURL(blob),link=element('a');link.href=url;link.download=`zhixuan-recommendation.${format}`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('已导出完整排名，非当前页；数值与证据按服务器重新核验。');
-  }catch(error){if(error.name==='AbortError'||!acceptResponse(state,'download',token,{error}))return;if(['decision_changed','release_changed','release_unavailable'].includes(error.code)){setPreferences(state,fields());clearResults();await refreshMeta();}notify(error.message,true);}
+  }catch(error){if(error.name==='AbortError'||!acceptResponse(state,'download',token,{error}))return;if(['decision_changed','release_changed','release_unavailable','algorithm_changed'].includes(error.code)){setPreferences(state,fields());clearResults();await refreshMeta();}notify(error.message,true);}
   finally{if(controllers.get('download')===controller)controllers.delete('download');}
 }
 for(const node of document.querySelectorAll('[data-view]'))node.addEventListener('click',()=>setView(node.dataset.view));
@@ -193,7 +207,11 @@ $('preferences').addEventListener('input',event=>{
 });
 $('preferences').addEventListener('submit',event=>{event.preventDefault();if(!$('confirmed').checked||!state.release||$('generate').disabled)return;state.confirmedRequest={...structuredClone(fields()),confirmed:true,expected_release:structuredClone(state.release)};for(const item of $('needs-result').querySelectorAll('[data-clarification]'))item.textContent=`已检查确认：${item.textContent.replace(/^待确认：/,'')}`;if($('needs-result').childElementCount)$('needs-status').textContent='表单已确认，推荐将按下方结果显示。';$('preferences-panel').open=false;setView('recommend');generate();});
 $('natural-needs').addEventListener('submit',understandNeeds);
-$('needs-text').addEventListener('input',()=>{controllers.get('needs')?.abort();state.sequence.needs++;state.loading.needs=false;$('needs-result').replaceChildren();$('needs-status').textContent='输入后点击理解需求。';preferencesSummary();});
+$('needs-text').addEventListener('input',()=>{abortRequests();reviseNeedsText(state,fields());clearResults();$('needs-result').replaceChildren();$('needs-status').textContent='需求文字已改变，请重新理解并确认；也可检查表单后手动确认。';});
+for(const node of document.querySelectorAll('[data-not-count]'))node.addEventListener('click',()=>{
+  const reset=withoutCriterion(fields(),node.dataset.notCount);$(node.dataset.notCount).value=reset.weights[node.dataset.notCount];changed();
+  notify('本次已暂不计入该项；原始需求和硬条件已保留，请重新检查并确认。');
+});
 $('manual-needs').addEventListener('click',()=>{$('preferences-panel').open=true;$('mode').focus();});
 $('edit-preferences').addEventListener('click',()=>{$('preferences-panel').open=true;$('mode').focus();});
 $('refresh-meta').addEventListener('click',()=>refreshMeta());$('catalog-search').addEventListener('submit',event=>{event.preventDefault();loadCatalog();});$('apply-catalog').addEventListener('click',()=>loadCatalog());

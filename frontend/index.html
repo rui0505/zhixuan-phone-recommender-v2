@@ -17,7 +17,7 @@
         <div class="section-top"><span class="section-number">01</span><span class="small">描述你的需求</span></div><h2 id="needs-title">用一句话，告诉我你想要什么</h2><p class="muted">预算、容量、手感……像和朋友聊天一样说就好。</p>
         <form id="natural-needs"><label for="needs-text"><span class="sr-only">你的购机需求</span><textarea id="needs-text" rows="3" maxlength="2000" placeholder="例如：3000元以内，至少256GB，轻一点，不要苹果"></textarea></label>
           <div class="examples"><span>试着说</span><button type="button" data-example="3000元以内，至少256GB，轻一点，不要苹果。">通勤 · 轻巧</button><button type="button" data-example="2000元左右，最多2500元，至少256GB。">日常 · 省预算</button><button type="button" data-example="3000元以内，至少512GB。">大容量 · 多存一点</button></div><div class="actions"><button id="extract-needs" type="submit" class="primary" disabled>理解我的需求</button><button id="manual-needs" type="button">直接手动填写</button></div>
-          <p class="small">点击后将这段购机需求发送给 DeepSeek，提取预算和偏好；你确认后，再由算法生成推荐。</p>
+          <p id="needs-service-notice" class="small">点击后将这段购机需求发送给 DeepSeek，提取预算和偏好；你确认后，再由算法生成推荐。</p>
         </form>
         <p id="needs-status" role="status" aria-live="polite" class="small">正在检查需求理解服务…</p>
         <div id="needs-result" aria-live="polite"></div>
@@ -32,15 +32,29 @@
         </div><label id="budget-unlimited-line" class="confirm-line" hidden><input id="budget-unlimited" type="checkbox">我确认预算不设上限</label><details class="advanced brand-preferences"><summary>品牌范围（可选）</summary><div class="field-grid">          <label for="include-brands">仅包含品牌<select id="include-brands" multiple size="4" aria-describedby="brands-help"></select></label>
           <label for="exclude-brands">排除品牌<select id="exclude-brands" multiple size="4" aria-describedby="brands-help"></select></label>
 </div><p id="brands-help" class="small">不选代表不限品牌。可多选；电脑按 Ctrl / Command 选择，同一品牌不能同时包含和排除。</p></details></fieldset>
-        <details class="advanced weight-preferences"><summary>更多偏好与数据说明</summary><fieldset><legend>再确定取舍</legend><p class="small">0 表示不参与排序；试验默认值并非模型学习结果。各项相对权重由后端归一。</p>
+        <fieldset class="ranking-options"><legend>选择排序方式</legend>
+          <label for="method">排序方式<select id="method" aria-describedby="method-help"><option value="topsis">默认 · TOPSIS</option><option value="hybrid_rrf">实验 · 混合排序</option></select></label>
+          <p id="method-help" class="small">默认按 TOPSIS 排序。实验混合使用固定参数 theta=1、alpha=0.5、k=10；未证明更准确，不是学习所得。切换后需重新确认。</p>
+          <p id="method-status" class="small" aria-live="polite"></p>
+        </fieldset>
+        <fieldset class="performance-preferences"><legend>你在意哪些实际表现？</legend>
+          <p class="small">这里设置你的重视程度，不是手机表现分。未提及默认 0（不计入）；缺失实测不填 0。正权重必须有同条件可比资料。</p>
+          <div class="performance-controls">
+            <div><label for="dxomark_photo">拍照 <output for="dxomark_photo">0</output><input id="dxomark_photo" type="range" min="0" max="10" step="1" value="0" aria-describedby="photo-help"></label><p id="photo-help" class="small">仅比较同协议 DXOMARK 照片子分。</p><button type="button" data-not-count="dxomark_photo">拍照暂不计入</button></div>
+            <div><label for="honor_of_kings_avg_fps">游戏 <output for="honor_of_kings_avg_fps">0</output><input id="honor_of_kings_avg_fps" type="range" min="0" max="10" step="1" value="0" aria-describedby="game-help"></label><p id="game-help" class="small">仅有同条件王者荣耀平均帧率；不能代表和平精英等其他游戏。</p><label for="game-scope">本次游戏比较范围<select id="game-scope"><option value="unconfirmed">尚未确认游戏范围</option><option value="honor_of_kings">使用王者荣耀测试参考</option><option value="unsupported">其他游戏暂无实测</option></select></label><button type="button" data-not-count="honor_of_kings_avg_fps">游戏暂不计入</button></div>
+            <div><label for="battery_mixed_usage_duration_min">续航 <output for="battery_mixed_usage_duration_min">0</output><input id="battery_mixed_usage_duration_min" type="range" min="0" max="10" step="1" value="0" aria-describedby="battery-help"></label><p id="battery-help" class="small">暂无可用的混合使用实测时长，正权重将无法排序；不以电池容量代替。</p><button type="button" data-not-count="battery_mixed_usage_duration_min">续航暂不计入</button></div>
+          </div>
+          <p id="performance-blocker" class="warning" role="status" aria-live="polite"></p>
+          <p id="performance-counts" class="small" aria-live="polite">正在读取可比资料覆盖…</p>
+          <details class="advanced"><summary>查看偏好原话与可比资料覆盖</summary><div id="performance-summary" aria-live="polite"></div></details>
+        </fieldset>
+        <details class="advanced weight-preferences"><summary>更多偏好与数据说明</summary><fieldset><legend>再确定取舍</legend><p class="small">0 表示不参与排序；默认值并非模型学习结果。各项相对权重由后端归一。</p>
           <div class="weight-grid">
             <label for="price_cny">价格 <output for="price_cny">0</output><input id="price_cny" type="range" min="0" max="10" step="1" value="0"></label>
             <label for="weight_g">轻巧 <output for="weight_g">0</output><input id="weight_g" type="range" min="0" max="10" step="1" value="0"></label>
             <label for="storage_gb">存储 <output for="storage_gb">0</output><input id="storage_gb" type="range" min="0" max="10" step="1" value="0"></label>
             <label for="refresh_rate_hz">刷新率 <output for="refresh_rate_hz">0</output><input id="refresh_rate_hz" type="range" min="0" max="10" step="1" value="0"></label>
             <label for="screen_size_inch">尺寸匹配 <output for="screen_size_inch">0</output><input id="screen_size_inch" type="range" min="0" max="10" step="1" value="0"></label>
-            <label for="dxomark_photo">DXOMARK 照片 <output for="dxomark_photo">0</output><input id="dxomark_photo" type="range" min="0" max="10" step="1" value="0"></label>
-            <label for="honor_of_kings_avg_fps">王者荣耀帧率 <output for="honor_of_kings_avg_fps">0</output><input id="honor_of_kings_avg_fps" type="range" min="0" max="10" step="1" value="0"></label>
           </div>
           <label for="target-screen" class="target">理想屏幕尺寸（英寸）<input id="target-screen" type="number" min="3" max="10" step="0.1" value="6.5"></label>
           <p class="small">尺寸按距目标的偏差计算，不是越大越好。照片分须协议可比；游戏只比同条件的王者荣耀平均帧率。缺失不填 0，不提供完整游戏总分。</p>

@@ -1,4 +1,4 @@
-export const labels={price_cny:'记录价格',weight_g:'重量',storage_gb:'存储',refresh_rate_hz:'刷新率',screen_size_inch:'屏幕尺寸',dxomark_photo:'DXOMARK 照片子分',honor_of_kings_avg_fps:'王者荣耀平均帧率'};
+export const labels={price_cny:'记录价格',weight_g:'重量',storage_gb:'存储',refresh_rate_hz:'刷新率',screen_size_inch:'屏幕尺寸',dxomark_photo:'DXOMARK 照片子分',honor_of_kings_avg_fps:'王者荣耀平均帧率',battery_mixed_usage_duration_min:'混合使用实测续航'};
 export const conditionLabel=value=>({new:'新机',used:'二手',unknown:'成色未知'}[value]??'成色未记载');
 export const valueText=(value,unit='')=>value===null||value===undefined||value===''?'未记载':`${value}${unit}`;
 export function element(tag,text,className){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;}
@@ -27,7 +27,7 @@ export function renderCard(record,context={}){
   if(context.explanation||record.score!=null){
     const detail=element('details',undefined,'technical-evidence');detail.append(element('summary','查看数据与计算依据'));
     detail.append(element('p',`配置编号：${record.sku_id}`,'small'));
-    if(record.score!=null)detail.append(element('div',`TOPSIS 相对贴近度 ${Number(record.score).toFixed(4)}`,'score'));
+    if(record.score!=null)detail.append(element('div',`${context.scoreLabel??(context.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度')} ${Number(record.score).toFixed(4)}`,'score'));
     if(context.explanation)detail.append(element('p',context.explanation,'explanation'));
     if(context.reason?.fact_ids?.length)detail.append(element('p',`上述理由引用：${context.reason.fact_ids.join('、')}`,'small'));
     if(context.onExplain){const ai=button('DeepSeek 辅助核查',()=>context.onExplain(record.sku_id,detail));ai.disabled=!context.llmEnabled;detail.append(ai,element('p',context.llmEnabled?'仅向服务方发送本配置推荐证据；不改变分数与排名。':'自然语言理由由程序依据数据生成，不需要大模型调用。','small'));}body.append(detail);
@@ -55,7 +55,8 @@ export function renderDecision(state){
   if(!result){note.append(element('p','设置需求、检查权重并确认后，生成你的推荐。'));return note;}
   note.append(element('h3',result.status==='ready'?`${result.ranked_total} 个可比配置 · 当前候选集内相对排序`:'当前条件暂不生成成绩'));
   note.append(element('p',result.reason,result.status==='ready'?'small':'warning'));
-  note.append(element('p','TOPSIS 分数不是绝对性能、购买概率；不同条件下的分数不能直接比较。','small'));
+  note.append(element('p',`${result.score_label??'TOPSIS 相对贴近度'}不是绝对性能或购买概率；不同条件下的分数不能直接比较。`,'small'));
+  if(result.method==='hybrid_rrf')note.append(element('p','实验融合：theta=1、alpha=0.5、k=10，使用固定参数；未证明比默认排序更准确，也不是学习所得。','warning'));
   const more=element('details');more.append(element('summary','查看权重、版本与未评分说明'));
   more.append(element('p',`数据 ${result.dataset_version} / 规则 ${result.feature_rule_version} / ${result.algorithm_version}`,'small'));
   more.append(element('p',`有效权重：${Object.entries(result.effective_weights).map(([k,v])=>`${labels[k]??k} ${v}`).join(' · ')}`,'small'));
@@ -64,6 +65,26 @@ export function renderDecision(state){
     const missing=row.criteria.filter(c=>c.missing_reason).map(c=>`${labels[c.metric_key]??c.metric_key}: ${c.missing_reason}`).join('；');
     more.append(element('p',`${row.display_name} · ${row.sku_id} · ${missing||'独立机型不足，未评分'}`,'small'));
   }note.append(more);return note;
+}
+export function renderPerformance(capabilities,weights,intent,current=false){
+  const content=element('div',undefined,'performance-coverage');
+  content.append(element('p',current?'以下为本次已计算条件下的独立指标覆盖；不代表三项共同可比。':'当前条件待验证。以下计数仅为默认新机、未加筛选的参考覆盖；生成推荐后核验当前范围。','small'));
+  const dimensions={dxomark_photo:'photo',honor_of_kings_avg_fps:'game',battery_mixed_usage_duration_min:'battery'};
+  for(const [key,criterion] of Object.entries(dimensions)){
+    const cap=capabilities?.[key],preference=intent?.extraction?.preferences?.find(p=>p.criterion===criterion);
+    const block=element('div',undefined,'performance-record');
+    block.append(element('p',`${labels[key]} · 你的权重 ${weights[key]??0}${Number(weights[key])>0?'':'（不参与排序）'}`));
+    if(cap)block.append(element('p',`${cap.eligible_model_count??0} 个机型 / ${cap.eligible_sku_count??0} 个配置 · ${cap.scope??''}。${cap.reason??''}`,'small'));
+    else block.append(element('p','覆盖资料尚未载入，不能据此判断手机表现。','small'));
+    if(preference)block.append(element('p',`${preference.verdict==='inferred'?'使用场景推断，待你确认':preference.evidence?'原话提取，待你确认':'未明确提及'}：${preference.level}${preference.evidence?`；原话「${preference.evidence}」`:''}`,'small'));
+    if(key==='honor_of_kings_avg_fps'&&intent?.extraction?.game_use){
+      const game=intent.extraction.game_use;
+      block.append(element('p',`原始游戏意图：${game.names?.join('、')||game.evidence||'游戏名称未明确'}。王者荣耀测试不能代表其他游戏。`,'small'));
+      if(game.source_fragments?.length)block.append(element('p',`游戏原话记录：${game.source_fragments.join('；')}`,'small'));
+    }
+    content.append(block);
+  }
+  return content;
 }
 function table(headers,rows){const wrap=element('div',undefined,'table-scroll');const t=element('table');const head=element('thead'),h=element('tr');for(const value of headers)h.append(element('th',value));head.append(h);t.append(head);const body=element('tbody');for(const values of rows){const row=element('tr');for(const v of values)row.append(element('td',valueText(v)));body.append(row);}t.append(body);wrap.append(t);return wrap;}
 export function renderDetail(item){

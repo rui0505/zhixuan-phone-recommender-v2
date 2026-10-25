@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {renderCard,renderDetail} from '../../frontend/render.mjs';
+import * as rendering from '../../frontend/render.mjs';
+const {renderCard,renderDetail}=rendering;
 
 class Node {
   constructor(tag){this.tagName=tag;this.children=[];this.attributes={};this.dataset={};this.listeners={};this.className='';this.open=false;this._text='';this.classList={add:(name)=>{this.className+=` ${name}`;}};}
@@ -48,4 +49,22 @@ test('detail shows pending category reasons even with no observations',()=>{
     {id:'senior',label:'长辈友好',status:'pending_review',reason:'尚未核实简易模式',evidence_refs:[],rule_version:'v1'}]},
     specifications:[],prices:[],benchmark_runs:[],observations:[],sources:[]});
   assert.match(node.textContent,/尚未核实简易模式/);assert.match(node.textContent,/待评估/);
+});
+
+test('hybrid card and decision use their bound score label without promising accuracy',()=>{
+  const card=renderCard(row,{method:'hybrid_rrf',scoreLabel:'实验融合分'});
+  assert.match(card.textContent,/实验融合分 0.8000/);assert.doesNotMatch(card.textContent,/TOPSIS 相对贴近度/);
+  const decision=rendering.renderDecision({results:{status:'ready',ranked_total:3,reason:'可比',method:'hybrid_rrf',score_label:'实验融合分',algorithm_version:'hybrid-v1',effective_weights:{price_cny:1},unscored:[],backups:[]}});
+  assert.match(decision.textContent,/实验/);assert.match(decision.textContent,/theta=1/);assert.match(decision.textContent,/未证明.*更准确/);assert.doesNotMatch(decision.textContent,/TOPSIS 分数/);
+});
+
+test('performance summary distinguishes user importance, inferred evidence and default coverage',()=>{
+  assert.equal(typeof rendering.renderPerformance,'function');
+  const capabilities={honor_of_kings_avg_fps:{label:'王者荣耀平均帧率',eligible_model_count:7,eligible_sku_count:9,scope:'仅王者荣耀',reason:'同条件'}};
+  const intent={extraction:{game_use:{names:['和平精英'],game_scope:'unsupported'},preferences:[{criterion:'game',level:'重要',verdict:'inferred',evidence:'爱打和平精英',needs_confirmation:true}]}};
+  const node=rendering.renderPerformance(capabilities,{honor_of_kings_avg_fps:2},intent,false);
+  assert.match(node.textContent,/默认新机/);assert.match(node.textContent,/当前条件待验证/);assert.match(node.textContent,/7.*9/);assert.match(node.textContent,/推断/);assert.match(node.textContent,/爱打和平精英/);assert.match(node.textContent,/和平精英/);
+  assert.doesNotMatch(node.textContent,/当前条件有 7/);
+  const current=rendering.renderPerformance(capabilities,{honor_of_kings_avg_fps:0},intent,true);
+  assert.match(current.textContent,/不参与排序/);assert.match(current.textContent,/本次已计算条件/);assert.doesNotMatch(current.textContent,/默认新机/);
 });
