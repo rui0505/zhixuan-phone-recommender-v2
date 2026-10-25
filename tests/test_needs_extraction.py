@@ -133,15 +133,10 @@ class ReferenceExampleTests(unittest.TestCase):
         seen = {item["criterion"] for item in self.result["preferences"]}
         self.assertEqual(seen, set(CRITERIA))
 
-    def test_clarification_asks_for_budget_ceiling(self):
+    def test_clarification_does_not_ask_for_budget_ceiling(self):
+        """有锚点时不再追问上限——改由 bridge 推断区间并回显（2026-10-25 修订）。"""
         fields = [item["field"] for item in self.result["clarifications"]]
-        self.assertIn("budget.max", fields)
-
-    def test_clarification_question_mentions_the_number(self):
-        item = next(
-            i for i in self.result["clarifications"] if i["field"] == "budget.max"
-        )
-        self.assertIn("2000", item["question"])
+        self.assertNotIn("budget.max", fields)
 
     def test_validate_result_passes(self):
         self.assertEqual(validate_result(self.result), [])
@@ -491,12 +486,15 @@ class ReferenceIsNotAFilterTests(unittest.TestCase):
 
 
 class BudgetMaxBackstopTests(unittest.TestCase):
-    """「预算上限是多少」必须问，且**不能依赖模型是否记得填 `asks`**。
+    """预算上界的追问口径（2026-10-25 修订）。
 
-    实测 DeepSeek 对「预算三千左右，想要轻一点的，主要看价格，256G 起步就行」
-    返回 `asks: []`——它把数字记在了 `budget_reference` 上，却没列进 `asks`。
-    若只信模型，界面就不追问，契约 §4.1 的红线「含糊预算不自动封顶，由确认页
-    问用户」就落空了。所以判定改成从**抽取出的字段**推导，不看 `asks`。
+    旧口径：只要 `budget_max is None` 就追问「最多能接受到多少」。
+    新口径：用户给了锚点（「三千左右」）时**不再追问**，改由
+    `bridge._snap_budget` 按非对称阶梯推断区间并回显（见
+    `test_bridge.BridgeBudgetInferenceTests`）；既无锚点也无上界时才必须问。
+
+    不变的部分：判定从**抽取出的字段**推导，不看模型的 `asks`——实测 DeepSeek 会
+    把数字记进 `budget_reference` 却漏填 `asks`，只信模型就永远不问。
     """
 
     def _clarifications(self, **hard):
@@ -521,21 +519,32 @@ class BudgetMaxBackstopTests(unittest.TestCase):
         result = extract_needs(REFERENCE_TEXT, classifier=_StubClassifier(body))
         return result["clarifications"]
 
-    def test_vague_budget_asks_even_when_model_forgot(self):
-        """模型漏填 asks 也要问——这是本类存在的理由。"""
-        items = self._clarifications(budget_reference=3000)
-        fields = [item["field"] for item in items]
-        self.assertIn("budget.max", fields)
+    def test_vague_budget_with_reference_is_not_asked(self):
+        """有锚点就不追问：改为推断区间 + 回显，用户直接改控件更省事。"""
+        fields = [item["field"] for item in self._clarifications(budget_reference=3000)]
+        self.assertNotIn("budget.max", fields)
 
-    def test_question_mentions_the_reference_number(self):
-        items = self._clarifications(budget_reference=3000)
-        question = next(i["question"] for i in items if i["field"] == "budget.max")
-        self.assertIn("3000", question)
-        self.assertIn("上限", question)
+    def test_model_asks_do_not_reintroduce_the_question_when_reference_exists(self):
+        """模型自己填了 asks 也不能改变口径，否则行为取决于模型输出。"""
+        fields = [
+            item["field"]
+            for item in self._clarifications(budget_reference=3000, asks=["budget_max"])
+        ]
+        self.assertNotIn("budget.max", fields)
 
     def test_no_budget_at_all_also_asks(self):
+        """既无锚点也无边界：程序没有任何依据，必须问。"""
         items = self._clarifications()
-        self.assertIn("budget.max", [i["field"] for i in items])
+        self.assertIn("budget.max", [item["field"] for item in items])
+
+    def test_lower_bound_only_still_asks(self):
+        """只有下界没有上界：没有可推断的中心，必须问上限。"""
+        fields = [item["field"] for item in self._clarifications(budget_min=8000)]
+        self.assertIn("budget.max", fields)
+
+    def test_explicit_upper_bound_never_asks(self):
+        fields = [item["field"] for item in self._clarifications(budget_max=5000)]
+        self.assertNotIn("budget.max", fields)
 
     def test_explicit_upper_bound_does_not_ask(self):
         """「3000 以内」是明确上界，不该再问。"""
@@ -546,8 +555,8 @@ class BudgetMaxBackstopTests(unittest.TestCase):
         items = self._clarifications(budget_min=2000, budget_max=4000)
         self.assertNotIn("budget.max", [i["field"] for i in items])
 
-    def test_asked_only_once_when_model_also_lists_it(self):
-        """模型自己列了 budget_max 时不重复。"""
+    def test_model_asks_are_ignored_when_reference_exists(self):
+        """有锚点时，模型自己列 budget_max 也不追问——否则行为取决于模型输出。"""
         body = _payload(
             hard_constraints={
                 "budget_min": None,
@@ -561,15 +570,18 @@ class BudgetMaxBackstopTests(unittest.TestCase):
         )
         result = extract_needs(REFERENCE_TEXT, classifier=_StubClassifier(body))
         fields = [item["field"] for item in result["clarifications"]]
-        self.assertEqual(fields.count("budget.max"), 1)
+        self.assertNotIn("budget.max", fields)
 
     def test_budget_question_comes_first(self):
-        """预算最影响候选集，排在待确认清单最前。"""
+        """预算最影响候选集，排在待确认清单最前。
+
+        用「只有下界没有上界」触发追问——有锚点的场景已不再追问。
+        """
         body = _payload(
             hard_constraints={
-                "budget_min": None,
+                "budget_min": 8000,
                 "budget_max": None,
-                "budget_reference": 3000,
+                "budget_reference": None,
                 "min_storage": None,
                 "brands": [],
                 "target_screen": None,

@@ -227,23 +227,27 @@ class HandleStageTests(PipelineTest):
 
 
 class ClarifyTests(PipelineTest):
-    def test_vague_budget_asks_instead_of_capping(self):
-        # 契约红线：含糊预算不得由程序推断上限。
+    def test_vague_budget_is_inferred_instead_of_asked(self):
+        # 2026-10-25 修订：有锚点时不再追问上限，改为推断区间 + 回显。
+        # 其他字段（如存储门槛）仍可能触发追问，所以这里只断言预算这一项。
         turn = self.turn('预算三千左右，想要轻一点的')
-        self.assertEqual(turn.stage, 'clarify')
-        self.assertTrue(turn.questions)
-        self.assertIn('budget.max', [item['field'] for item in turn.questions])
-        self.assertEqual(turn.models, [])
+        self.assertNotIn('budget.max', [item['field'] for item in turn.questions])
+        low, high = turn.bridged.budget
+        self.assertLess(low, 3000)
+        self.assertGreater(high, 3000)
 
-    def test_question_text_mentions_the_reference_number(self):
+    def test_inferred_range_is_reported_in_notes(self):
+        """推断可以，但不得静默——区间必须出现在给用户看的说明里。"""
         turn = self.turn('预算三千左右')
-        question = next(item['question'] for item in turn.questions
-                        if item['field'] == 'budget.max')
-        self.assertIn('3000', question)
-        self.assertIn('上限', question)
+        notes = ' '.join(turn.bridged.notes)
+        low, high = turn.bridged.budget
+        self.assertIn('推断', notes)
+        self.assertIn(f'{low:,}', notes)
+        self.assertIn(f'{high:,}', notes)
 
     def test_asked_fields_are_reported_back(self):
-        turn = self.turn('预算三千左右')
+        # 完全没提预算：没有任何可推断的锚点，必须问。
+        turn = self.turn('想要轻一点的，主要看价格')
         self.assertIn('budget.max', turn.asked)
         self.assertEqual(turn.ask_rounds, 1)
 

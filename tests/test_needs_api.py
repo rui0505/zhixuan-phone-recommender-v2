@@ -57,12 +57,22 @@ class NeedsApiTests(unittest.TestCase):
         options.update(kwargs)
         return NeedsService(**options)
 
-    def test_vague_budget_stays_reference_and_draft_requires_confirmation(self):
+    def test_vague_budget_is_inferred_and_draft_stays_unconfirmed(self):
+        """含糊预算：推断区间填进草稿，但必须标成推断值且仍需用户确认。
+
+        2026-10-25 修订：旧口径是"预算边界一律留空 + 追问上限"。改为推断，
+        但红线不变——推断值必须显式告知（`budget_inferred` + notice 文案）。
+        """
         value = self.service().extract('2000元左右，轻一点，至少256G，不要苹果', ['Apple'])
         self.assertEqual(value['extraction']['budget']['reference'], 2000)
-        self.assertEqual(value['draft']['needs']['budget'], {'min':None, 'max':None})
+        budget = value['draft']['needs']['budget']
+        self.assertLess(budget['min'], 2000)
+        self.assertGreater(budget['max'], 2000)
+        self.assertTrue(value['draft']['budget_inferred'])
         self.assertFalse(value['draft']['confirmed'])
-        self.assertTrue(any(c['field']=='budget.max' for c in value['extraction']['clarifications']))
+        self.assertIn('推断', value['notice'])
+        self.assertNotIn('budget.max',
+                         [c['field'] for c in value['extraction']['clarifications']])
         self.assertEqual(value['draft']['weights']['dxomark_photo'], 0)
         self.assertEqual(value['draft']['weights']['screen_size_inch'], 0)
 
@@ -75,21 +85,26 @@ class NeedsApiTests(unittest.TestCase):
                               if p['criterion']=='storage'), '未提及')
 
     def test_model_cannot_invent_different_boundaries_for_vague_budget(self):
+        """模型编的 1800–2200 必须被丢掉，草稿里的区间只能是程序按锚点推断的。"""
         value=self.service(classifier=InventedCapClassifier()).extract('2000元左右，轻一点', ['Apple'])
-        self.assertEqual(value['draft']['needs']['budget'],{'min':None,'max':None})
-        self.assertEqual(value['status'],'degraded')
-        self.assertTrue(any(c['field']=='budget.max' for c in value['extraction']['clarifications']))
+        budget=value['draft']['needs']['budget']
+        self.assertNotEqual(budget,{'min':1800,'max':2200})
+        # 2000 左右的推断区间：下浮 15%、上浮 25%
+        self.assertEqual(budget,{'min':1700,'max':2500})
+        self.assertTrue(value['draft']['budget_inferred'])
 
     def test_explicit_cap_after_vague_budget_is_preserved(self):
         value=self.service(classifier=InventedCapClassifier()).extract('2000元左右，最多2200元，轻一点', ['Apple'])
         self.assertEqual(value['draft']['needs']['budget'],{'min':None,'max':2200})
+        self.assertFalse(value['draft']['budget_inferred'])
 
     def test_source_guard_rejects_partial_chinese_numbers_and_vague_suffix(self):
+        """原文没有依据的边界必须被清掉——推断区间不是模型那个数。"""
         for text,value in [('1500元左右，最多二千五百元，轻一点',2000),
                            ('2000元左右，最多2200元左右，轻一点',2200)]:
             result=self.service(classifier=FixedCapClassifier(value)).extract(text,['Apple'])
-            self.assertIsNone(result['draft']['needs']['budget']['max'])
-            self.assertTrue(any(c['field']=='budget.max' for c in result['extraction']['clarifications']))
+            self.assertNotEqual(result['draft']['needs']['budget']['max'],value)
+            self.assertTrue(result['draft']['budget_inferred'])
         from needs_extraction import budget_bound_has_source
         self.assertFalse(budget_bound_has_source('2000元左右，至少256 GB',256,'min'))
 
@@ -126,7 +141,9 @@ class NeedsApiTests(unittest.TestCase):
         with TestClient(app) as client:
             response = client.post('/api/v1/needs', json={'text':'2000元左右，轻一点'})
             self.assertEqual(response.status_code, 200)
-            self.assertIsNone(response.json()['draft']['needs']['budget']['max'])
+            # 含糊预算被推断成区间（2000 下浮 15%、上浮 25%），不是留空
+            self.assertEqual(response.json()['draft']['needs']['budget'], {'min':1700,'max':2500})
+            self.assertTrue(response.json()['draft']['budget_inferred'])
             for body in ({'text':''}, {'text':True}, {'text':'x'*2001},
                          {'text':'轻一点','api_key':'SECRET'}, {'text':'轻一点','weights':{'price':10}}):
                 self.assertEqual(client.post('/api/v1/needs', json=body).status_code, 422)

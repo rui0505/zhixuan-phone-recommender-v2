@@ -6,6 +6,7 @@ from pathlib import Path
 import sqlite3
 import threading
 
+from bridge import infer_budget_range
 from needs_extraction import extract_needs, validate_result, budget_bound_has_source
 from providers.jev import JevUnavailable, normalise_response
 from providers.llm import SYSTEM_PROMPT, USER_TEMPLATE, post_chat, content_of, extract_json_object
@@ -87,10 +88,18 @@ class NeedsService:
                         if not any(c['field']==f'budget.{bound}' for c in result['clarifications']):
                             result['clarifications'].append({'field':f'budget.{bound}',
                                 'question':'预算上限是多少？也可以明确选择不限。' if bound=='max' else '是否需要设置预算下限？请在表单中确认。',
-                                'reason':'含糊预算不能推断筛选边界，已清除没有明确原文依据的数值'})
+                                'reason':'模型给出了原文没有依据的预算边界，已清除'})
                 if validate_result(result):
                     raise ValueError('invalid extraction')
-                needs = _needs({'budget':{k:result['budget'][k] for k in ('min','max')},
+                # 含糊预算（「5000左右」）：用户没有明确边界，但给了锚点。
+                # 按非对称阶梯推断一个区间填进草稿，并在 notice 里明说是推断值——
+                # 红线是"不得静默封顶"，不是"不得封顶"。既无锚点也无边界时留空。
+                budget_min, budget_max = result['budget']['min'], result['budget']['max']
+                inferred = None
+                if budget_min is None and budget_max is None and result['budget'].get('reference') is not None:
+                    inferred = infer_budget_range(result['budget']['reference'])
+                    budget_min, budget_max = inferred[0], inferred[1]
+                needs = _needs({'budget':{'min':budget_min,'max':budget_max},
                                 'min_storage':result['min_storage'], 'brands':result['brands']}, known_brands)
                 weights = dict.fromkeys(METRICS, 0)
                 for pref in result['preferences']:
@@ -103,9 +112,15 @@ class NeedsService:
             except (ValueError, TypeError, KeyError, ApiError):
                 return {'status':'degraded', 'extraction':result, 'draft':None,
                         'notice':'条件、品牌或偏好未能可靠匹配，请在下方手动确认；没有自动放宽条件'}
+            notice='已生成待确认草稿。未提及的基础偏好使用系统默认1；拍照和游戏未自动计权，新机/二手请手动选择'
+            if inferred is not None:
+                notice=(f'你说的是「{result["budget"]["reference"]:g} 元左右」，'
+                        f'已按 ¥{inferred[0]:,}–¥{inferred[1]:,} 推断预算范围（推断值，可修改）。'
+                        + notice)
             return {'status':result['status'], 'extraction':result,
-                    'draft':{'needs':needs, 'weights':weights, 'target_screen':result['target_screen'], 'confirmed':False},
-                    'notice':'已生成待确认草稿。未提及的基础偏好使用系统默认1；拍照和游戏未自动计权，新机/二手请手动选择'}
+                    'draft':{'needs':needs, 'weights':weights, 'target_screen':result['target_screen'],
+                             'confirmed':False, 'budget_inferred':inferred is not None},
+                    'notice':notice}
         finally:
             self.lock.release()
 

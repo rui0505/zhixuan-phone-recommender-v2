@@ -37,6 +37,7 @@ def make(
     *,
     budget_min: float | None = None,
     budget_max: float | None = None,
+    budget_reference: float | None = None,
     min_storage: float | None = None,
     brands: tuple[str, ...] = (),
     target_screen: float | None = None,
@@ -54,6 +55,7 @@ def make(
         hard=HardConstraints(
             budget_min=budget_min,
             budget_max=budget_max,
+            budget_reference=budget_reference,
             min_storage=min_storage,
             brands=brands,
             target_screen=target_screen,
@@ -97,6 +99,82 @@ class BudgetTests(unittest.TestCase):
         """下界向下取整，宁可放宽也不要错误排除。"""
         result = bridge(make(budget_min=3950), known_brands=BRANDS)
         self.assertEqual(result.budget[0], 3900)
+
+
+class BudgetInferenceTests(unittest.TestCase):
+    """含糊锚点（「5000左右」）→ 可用区间。
+
+    2026-10-25 新增：锚点定中心，候选密度定宽度，区间必须回显。
+    旧行为是锚点被完全丢弃、落到系统默认 (1000,6000)——说「8000左右」会被
+    砍掉 10 个机型，这是本类存在的原因。
+    """
+
+    def infer(self, reference, price_index=None):
+        result = bridge(
+            make(budget_reference=reference), known_brands=BRANDS, price_index=price_index
+        )
+        return result
+
+    def test_reference_produces_an_asymmetric_range(self):
+        result = self.infer(5000)
+        low, high = result.budget
+        # 上浮幅度大于下浮：价格分布右偏，用户对「贵一点」更宽容
+        self.assertLess(5000 - low, high - 5000)
+        self.assertLess(low, 5000)
+        self.assertGreater(high, 5000)
+
+    def test_reference_range_is_displayed_not_silent(self):
+        """红线：推断可以，但不得静默。区间必须写进 notes。"""
+        result = self.infer(5000)
+        joined = " ".join(result.notes)
+        self.assertIn("推断", joined)
+        self.assertIn("可修改", joined)
+
+    def test_reference_does_not_ask_for_upper_bound(self):
+        result = self.infer(5000)
+        self.assertNotIn("预算上界", result.pending)
+        self.assertFalse(result.needs_user_confirmation)
+
+    def test_high_reference_is_not_clipped_by_the_default_upper_bound(self):
+        """「8000左右」不得被系统默认上界 6000 卡死。"""
+        result = self.infer(8000)
+        self.assertGreater(result.budget[1], 8000)
+
+    def test_explicit_bounds_beat_inference(self):
+        """明确表达永远优先于推断。"""
+        explicit = bridge(
+            make(budget_min=4000, budget_max=6000, budget_reference=5000),
+            known_brands=BRANDS,
+        )
+        self.assertEqual(explicit.budget, (4000, 6000))
+        self.assertEqual(explicit.pending, [])
+
+    def test_density_widens_the_range_when_candidates_are_sparse(self):
+        """区间内机型太少时逐级放宽，而不是返回一个空集。"""
+        # 只在 4000–4100 放 1 个机型，其余机型离得很远
+        sparse = [(4050.0, "M1"), (15000.0, "M2"), (18000.0, "M3")]
+        result = self.infer(4000, price_index=sparse)
+        low, high = result.budget
+        self.assertGreater(high, 4000 * 1.25, "候选不足时必须放宽")
+        self.assertTrue(any("放宽" in note for note in result.notes))
+
+    def test_density_keeps_the_tight_range_when_candidates_are_dense(self):
+        dense = [(p, f"M{i}") for i, p in enumerate(range(3400, 5000, 100))]
+        result = self.infer(4000, price_index=dense)
+        self.assertFalse(any("放宽" in note for note in result.notes))
+
+    def test_no_reference_and_no_bounds_falls_back_to_default_and_asks(self):
+        result = bridge(make(), known_brands=BRANDS)
+        self.assertEqual(result.budget, BUDGET_DEFAULT)
+        self.assertIn("预算上界", result.pending)
+
+    def test_invalid_reference_is_rejected(self):
+        from bridge import infer_budget_range
+
+        for bad in (0, -1, float("nan"), float("inf"), True, "5000"):
+            with self.subTest(reference=bad):
+                with self.assertRaises(ValueError):
+                    infer_budget_range(bad)
 
     def test_upper_bound_rounds_up(self):
         """上界向上取整，宁可放宽也不要错误排除。"""

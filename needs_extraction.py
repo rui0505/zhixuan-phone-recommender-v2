@@ -552,26 +552,30 @@ def _clarifications(
     """组装澄清清单。顺序即优先级：预算最影响候选集，排最前。"""
     items: list[dict[str, str]] = []
 
-    # **确定性兜底，不依赖模型**：上界没定就必须问。
+    # **确定性兜底，不依赖模型**：既没有明确上界、也没有可推断的锚点时，必须问。
     #
-    # 契约 §4.1 的红线是「含糊预算不自动封顶，由确认页问用户」。实测
-    # DeepSeek 对「预算三千左右，想要轻一点的，主要看价格，256G 起步就行」
-    # 返回 `asks: []`——它把预算上限记在了 `budget_reference` 上，却没把它
-    # 列进 `asks`。若只信模型的 `asks`，界面就不会追问，用户永远拿不到
-    # 「最多能接受到多少」这个问题，红线也就落空了。
+    # 口径已于 2026-10-25 修订：用户给了锚点（「5000左右」「三千多」）时不再追问
+    # 上界，改由 `bridge._snap_budget` 按非对称阶梯推断区间并回显，用户直接改控件
+    # 比回答开放式问题省事。红线「不得静默封顶」仍成立——推断值会写进 notes。
+    # 真正没有任何依据（`reference` 与 `high` 都为空）时才必须问。
+    #
+    # 实测依据：DeepSeek 对「预算三千左右，想要轻一点的…」返回 `asks: []`，
+    # 若只信模型的 `asks`，用户永远拿不到这个问题。所以这里必须自己判。
     #
     # 判定条件与 `bridge._snap_budget` 的 pending 逻辑**保持一致**：
-    # `high is None`（原文没给明确上界）→ 问。两处口径必须同源，
+    # `high is None and reference is None` → 问。两处口径必须同源，
     # 否则会出现「结果区提示未确认、对话里却不问」这种自相矛盾。
-    if high is None:
+    if high is None and reference is None:
         items.append(_budget_max_item(reference))
 
     for field in result.asks:
         if field == "excluded_brands":
             continue  # 下面按实际品牌给更具体的问题
         if field == "budget_max":
-            # 兜底已经放过了，这里再来一次由去重合并；文案同源
-            items.append(_budget_max_item(reference))
+            # 有锚点就不问——否则是否追问取决于模型是否填了 asks，行为不确定。
+            # 兜底分支已经在上面处理过，这里只补「无锚点」的情况。
+            if reference is None:
+                items.append(_budget_max_item(reference))
         else:
             items.append(_clarification(field))
 
