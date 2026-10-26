@@ -42,6 +42,7 @@ from schemas import (
     Needs,
     PreferenceItem,
     SchemaError,
+    WEIGHT_MAX,
     initial_weights,
 )
 
@@ -205,31 +206,31 @@ def _clamp_screen(value: float | None) -> tuple[float, list[str]]:
 
 
 def _to_slider_weights(needs: Needs) -> tuple[dict[str, float], list[str]]:
-    """偏好等级 → 0–100 滑块值。
+    """偏好等级 → 0–10 滑块值（**绝对值**，不做占比归一化）。
 
-    走 `schemas.initial_weights` 的确定性映射（等级 ÷ 等级总和），再缩放到
-    100 并对齐到滑块步长。全部维度都被标为「不在意」时等级总和为 0，
-    改用均匀先验并提示用户确认。
+    直接查 `schemas.WEIGHT_TABLE`。引擎侧装配矩阵时会自行归一化，所以这里保持
+    绝对值——用户说「非常重要」的那一维才能真的压过其他维度的默认值。
+
+    2026-10-26 修订：旧实现返回 0-100 的**占比**值，而 app.py 用 `value*10` 换算到
+    0-10 滑块，结果每一维都被 clamp 到 10——LLM 抽出的偏好从来没有在界面上生效过。
+    现在两端口径统一为 0-10，且不再做占比换算。
     """
     notes: list[str] = []
     try:
-        fractions = initial_weights(needs)
+        raw = initial_weights(needs)
     except SchemaError:
-        fractions = {key: 1.0 / len(CRITERIA) for key in CRITERIA}
+        raw = {key: 1.0 for key in CRITERIA}
         notes.append(
             "所有维度都被标为「不在意」，无法生成权重，改用均匀先验；请确认是否真的都不在意"
         )
 
-    weights: dict[str, float] = {}
-    for key in CRITERIA:
-        fraction = fractions.get(key, 0.0)
-        snapped = round(fraction * WEIGHT_SCALE / WEIGHT_STEP) * WEIGHT_STEP
-        weights[key] = float(max(0, min(WEIGHT_SCALE, snapped)))
-
-    # 步长对齐后可能全部落到 0（极端偏斜时不会，但兜底）
+    weights: dict[str, float] = {
+        key: float(max(0, min(WEIGHT_MAX, int(round(value))))) for key, value in raw.items()
+    }
+    # 取整后可能全部落到 0（极端偏斜时不会，但兜底）
     if sum(weights.values()) <= 0:
-        weights = {key: float(WEIGHT_SCALE // len(CRITERIA)) for key in CRITERIA}
-        notes.append("权重对齐后全为零，改用均匀权重")
+        weights = {key: 1.0 for key in CRITERIA}
+        notes.append("权重取整后全为零，改用均匀权重")
 
     stated = [
         f"{item.criterion}={item.choice}"

@@ -10,10 +10,14 @@ from bridge import infer_budget_range
 from needs_extraction import extract_needs, validate_result, budget_bound_has_source
 from providers.jev import JevUnavailable, normalise_response
 from providers.llm import SYSTEM_PROMPT, USER_TEMPLATE, post_chat, content_of, extract_json_object
-from schemas import LEVEL_MAP, UNMENTIONED_LEVEL
+from schemas import WEIGHT_TABLE
 from .contracts import ApiError, METRICS, _needs
 
-CONTROL_KEYS = dict(zip(('price','weight','storage','refresh','screen'), METRICS[:5]))
+# 维度 → 矩阵指标。**必须显式写，不能用 METRICS 的位置切片**：
+# CRITERIA 已经不含 price，按位置映射会让 weight 错位到 price_cny。
+CONTROL_KEYS = {'weight':'weight_g','storage':'storage_gb','screen':'screen_size_inch',
+                'photo':'dxomark_photo','game':'honor_of_kings_avg_fps',
+                'battery':'battery_capacity_mah','chipset':'chipset_tier'}
 
 
 class OfficialNeedsClassifier:
@@ -103,8 +107,9 @@ class NeedsService:
                                 'min_storage':result['min_storage'], 'brands':result['brands']}, known_brands)
                 weights = dict.fromkeys(METRICS, 0)
                 for pref in result['preferences']:
-                    weights[CONTROL_KEYS[pref['criterion']]] = (UNMENTIONED_LEVEL if pref['level']=='未提及'
-                                                               else LEVEL_MAP[pref['level']])
+                    metric = CONTROL_KEYS.get(pref['criterion'])
+                    if metric:
+                        weights[metric] = WEIGHT_TABLE[pref['criterion']][pref['level']]
                 if result['target_screen'] is None:
                     weights['screen_size_inch']=0
                 if not any(weights.values()):

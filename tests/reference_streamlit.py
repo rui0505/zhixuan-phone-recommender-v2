@@ -35,6 +35,7 @@ from needs_extraction import (
 from providers.env import load_dotenv
 from providers.recommend import Brief, fallback_text, write_recommendation
 from schemas import CRITERIA
+from catalog.adapter import FRAME_FIELDS
 from needs_adapter import to_blue_needs
 from preferences import filter_candidates
 from preference_panel import render_preference_panel
@@ -68,7 +69,9 @@ FILTER_KEYS = {
 }
 WIDGET_KEYS = (*FILTER_KEYS.values(), *CRITERIA)
 # 权重滑块默认值。只属于界面——`pipeline` 不关心默认值长什么样。
-WEIGHT_DEFAULTS = {'price':35,'weight':20,'storage':20,'refresh':15,'screen':10}
+# 参考实现用 0-100 滑块；默认值取 WEIGHT_TABLE 未提及列 ×10。
+WEIGHT_DEFAULTS = {'weight':20,'storage':30,'screen':10,'photo':0,
+                   'game':0,'battery':20,'chipset':20}
 
 CHAT_STATE_KEYS = (
     'chat', 'need_history', 'asked', 'ask_rounds',
@@ -419,13 +422,18 @@ if sum(weights.values()) == 0:
     st.warning('请至少将一项重要程度设为大于 0。')
     st.stop()
 
-result = rank(candidates, weights, target)
+# 旧夹具只有 价格/重量/存储/屏幕 四列可评分；其余维度显式过滤，
+# 不能当 0 分或全缺失塞进矩阵（那会让所有候选失去资格）。
+legacy_weights = {k: v for k, v in weights.items() if k in FRAME_FIELDS}
+result = rank(candidates, legacy_weights, target)
 st.session_state['active_ranking_ids'] = result.id.tolist()
 models = result.drop_duplicates('产品名称').head(TOP_N)
 
 if blue_session is not None:
     with st.expander('追问前后的推荐对比'):
-        initial_rank = rank(candidates, blue_session['initial']['weights'], target)
+        initial_rank = rank(candidates,
+                            {k: v for k, v in blue_session['initial']['weights'].items()
+                             if k in FRAME_FIELDS}, target)
         left, right = st.columns(2)
         fields = ['产品名称', '配置', 'price', 'weight', 'score']
         with left:
@@ -468,7 +476,8 @@ with tab1:
             st.progress(float(row.score), text=f'TOPSIS 相对匹配度 {row.score*100:.1f}%')
             st.write(f'重量 {row.weight:g}g　·　屏幕 {row.screen:g} 英寸　·　{row.refresh:g}Hz　·　存储 {row.storage:g}GB')
             facts = []
-            if weights['price'] and budget_upper is not None: facts.append(f'比预算上限低 {budget_upper-row.price:,.0f} 元')
+            # 价格不再是偏好维度（由预算区间表达），只要设了上限就给出差额。
+            if budget_upper is not None: facts.append(f'比预算上限低 {budget_upper-row.price:,.0f} 元')
             if weights['screen']: facts.append(f'距目标尺寸 {abs(row.screen-target):.2f} 英寸')
             if weights['weight']: facts.append(f'候选配置重量中位数 {candidates.weight.median():g}g，本配置 {row.weight:g}g')
             st.caption('参数依据：' + '；'.join(facts) if facts else '参数依据见对比页。上述数据描述不代表独立的分数贡献。')

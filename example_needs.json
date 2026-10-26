@@ -6,11 +6,13 @@
   },
   "target_screen_inches": 6.5,
   "preferences": {
-    "price": "unknown",
     "weight": "very_important",
     "storage": "unknown",
-    "refresh": "unknown",
-    "screen": "unknown"
+    "screen": "unknown",
+    "photo": "unknown",
+    "game": "unknown",
+    "battery": "unknown",
+    "chipset": "unknown"
   },
   "unsupported_needs": [],
   "clarification_questions": [],

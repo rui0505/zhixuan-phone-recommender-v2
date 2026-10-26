@@ -91,7 +91,6 @@ class TestNeedsTestSetIntegrity(unittest.TestCase):
         """「越…越好」不得升格为「非常重要」。"""
         by_id = {case["id"]: case for case in self.cases}
         for case_id, criterion in (
-            ("CN-01", "price"),
             ("CN-04", "storage"),
             ("CN-09", "weight"),
             ("CN-10", "screen"),
@@ -124,7 +123,7 @@ class TestWeightContract(unittest.TestCase):
     def test_negative_weight_rejected(self):
         with self.assertRaises(SchemaError):
             validate_weights(
-                {"price": -1.0, "weight": 1, "storage": 1, "refresh": 1, "screen": 1}
+                {"weight": -1.0, "storage": 1, "screen": 1, "photo": 1, "game": 1, "battery": 1, "chipset": 1}
             )
 
     def test_all_zero_weight_rejected(self):
@@ -134,28 +133,29 @@ class TestWeightContract(unittest.TestCase):
     def test_nan_weight_rejected(self):
         with self.assertRaises(SchemaError):
             validate_weights(
-                {"price": float("nan"), "weight": 1, "storage": 1, "refresh": 1, "screen": 1}
+                {"weight": float("nan"), "storage": 1, "screen": 1, "photo": 1, "game": 1, "battery": 1, "chipset": 1}
             )
 
     def test_infinite_weight_rejected(self):
         with self.assertRaises(SchemaError):
             validate_weights(
-                {"price": float("inf"), "weight": 1, "storage": 1, "refresh": 1, "screen": 1}
+                {"weight": float("inf"), "storage": 1, "screen": 1, "photo": 1, "game": 1, "battery": 1, "chipset": 1}
             )
 
     def test_missing_criterion_rejected(self):
         with self.assertRaises(SchemaError):
-            validate_weights({"price": 1, "weight": 1})
+            validate_weights({"weight": 1, "storage": 1})
 
     def test_unknown_criterion_rejected(self):
         with self.assertRaises(SchemaError):
             validate_weights(
-                {"price": 1, "weight": 1, "storage": 1, "refresh": 1, "screen": 1, "battery": 1}
+                {"weight": 1, "storage": 1, "screen": 1, "photo": 1, "game": 1, "battery": 1,
+                 "chipset": 1, "price": 1}
             )
 
     def test_valid_weights_normalized(self):
         clean = validate_weights(
-            {"price": 30, "weight": 20, "storage": 20, "refresh": 20, "screen": 10}
+            {"weight": 20, "storage": 20, "screen": 10, "photo": 20, "game": 10, "battery": 10, "chipset": 10}
         )
         self.assertEqual(sum(clean.values()), 100)
 
@@ -170,47 +170,70 @@ class TestPreferenceMapping(unittest.TestCase):
             ("重要", 2),
             ("非常重要", 3),
         ):
-            item = PreferenceItem(criterion="price", choice=choice)
+            item = PreferenceItem(criterion="weight", choice=choice)
             self.assertEqual(item.mapped_level, level, choice)
 
     def test_unmentioned_marks_default(self):
-        item = PreferenceItem(criterion="price", choice="未提及")
+        item = PreferenceItem(criterion="weight", choice="未提及")
         self.assertTrue(item.is_default)
         self.assertEqual(item.mapped_level, 1)
 
     def test_explicit_indifference_is_not_default(self):
-        item = PreferenceItem(criterion="price", choice="不在意")
+        item = PreferenceItem(criterion="weight", choice="不在意")
         self.assertFalse(item.is_default)
         self.assertEqual(item.mapped_level, 0)
 
-    def test_initial_weights_sum_to_one(self):
+    def test_initial_weights_come_from_the_table_as_absolute_values(self):
+        """2026-10-26 修订：不再返回「占比」，直接查 WEIGHT_TABLE 拿绝对值。
+
+        旧实现是 level/Σlevel，导致只突出一个维度时它也压不住其他维度
+        （N=7 时最高只占 3/(3+6)=33%），也无法区分「样样都要好」和「什么都没说」。
+        """
         needs = Needs(
             preferences=[
-                PreferenceItem(criterion="price", choice="非常重要", confirmed=True),
-                PreferenceItem(criterion="weight", choice="重要", confirmed=True),
+                PreferenceItem(criterion="weight", choice="非常重要", confirmed=True),
+                PreferenceItem(criterion="photo", choice="重要", confirmed=True),
             ]
         )
         weights = initial_weights(needs)
-        self.assertAlmostEqual(sum(weights.values()), 1.0, places=9)
-        # price=3、weight=2，未提及的三项各 1 → 总和 3+2+1+1+1=8
-        self.assertAlmostEqual(weights["price"], 3 / 8, places=9)
-        self.assertAlmostEqual(weights["weight"], 2 / 8, places=9)
-        self.assertAlmostEqual(weights["screen"], 1 / 8, places=9)
+        self.assertEqual(weights["weight"], 9.0)     # 非常重要
+        self.assertEqual(weights["photo"], 7.0)      # 重要
+        self.assertEqual(weights["storage"], 3.0)    # 未提及，按维度默认值
+        self.assertEqual(weights["screen"], 1.0)
+        self.assertEqual(weights["battery"], 2.0)
+        self.assertEqual(weights["chipset"], 2.0)
+        self.assertEqual(weights["game"], 0.0)       # 不提就是不打游戏
+        # 关键差异：绝对值不再强制和为 1，用户的「非常重要」才压得住默认值
+        self.assertGreater(sum(weights.values()), 1.0)
+
+    def test_unmentioned_defaults_differ_per_dimension(self):
+        """未提及不是统一的 1——每个维度有自己的常识默认值。"""
+        weights = initial_weights(Needs(preferences=[]))
+        self.assertEqual(weights["storage"], 3.0)
+        self.assertEqual(weights["game"], 0.0)
+        self.assertNotEqual(weights["storage"], weights["screen"])
+
+    def test_all_indifferent_is_rejected(self):
+        needs = Needs(preferences=[
+            PreferenceItem(criterion=key, choice="不在意") for key in CRITERIA
+        ])
+        with self.assertRaises(SchemaError):
+            initial_weights(needs)
 
     def test_all_zero_levels_rejected(self):
         needs = Needs(
-            preferences=[PreferenceItem(criterion="price", choice="不在意")]
+            preferences=[PreferenceItem(criterion="weight", choice="不在意")]
         )
         with self.assertRaises(SchemaError):
             initial_weights(needs, criteria=["price"])
 
     def test_confidence_out_of_range_rejected(self):
         with self.assertRaises(SchemaError):
-            PreferenceItem(criterion="price", choice="重要", confidence=1.5)
+            PreferenceItem(criterion="weight", choice="重要", confidence=1.5)
 
     def test_unknown_choice_rejected(self):
         with self.assertRaises(SchemaError):
-            PreferenceItem(criterion="price", choice="有点想要")
+            PreferenceItem(criterion="weight", choice="有点想要")
 
 
 class TestHardConstraintContract(unittest.TestCase):
@@ -285,19 +308,23 @@ class TestCandidateFrameContract(unittest.TestCase):
         frame = [
             {
                 "id": "SKU-GOOD",
-                "price": 3000.0,
                 "weight": 180.0,
                 "storage": 256.0,
-                "refresh": 120.0,
                 "screen": 6.1,
+                "photo": 80.0,
+                "game": 120.0,
+                "battery": 5000.0,
+                "chipset": 66.0,
             },
             {
                 "id": "SKU-BAD",
-                "price": 3000.0,
                 "weight": float("nan"),
                 "storage": 256.0,
-                "refresh": 120.0,
                 "screen": 6.1,
+                "photo": 80.0,
+                "game": 120.0,
+                "battery": 5000.0,
+                "chipset": 66.0,
             },
         ]
         notices = validate_candidate_frame(frame)

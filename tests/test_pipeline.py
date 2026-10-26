@@ -146,7 +146,10 @@ class ModelsPayloadTests(PipelineTest):
              'target_screen': None, 'input_text': ''}
         )
         from engine import rank
-        return rank(candidate_frame(self.df, bridged), bridged.weights, bridged.target)
+        from pipeline import LEGACY_SCORE_KEYS
+        # 旧夹具只有 重量/存储/屏幕 可评分，其余维度在新库里才有。
+        weights = {k: v for k, v in bridged.weights.items() if k in LEGACY_SCORE_KEYS}
+        return rank(candidate_frame(self.df, bridged), weights, bridged.target)
 
     def test_dedupes_to_one_config_per_model(self):
         payload = models_payload(self._ranked(), TOP_N, 6000)
@@ -291,7 +294,8 @@ class AdviceTests(PipelineTest):
             self.assertIn(model['name'], turn.advice)
 
     def test_unsupported_needs_are_surfaced(self):
-        turn = self.turn('预算2000到3000，拍照要好，游戏要流畅')
+        # 「拍照」已是 photo 维度；用仍然没有实测数据的「续航」「信号」举例。
+        turn = self.turn('预算2000到3000，续航要久，信号要好')
         self.assertTrue(turn.unsupported)
 
 

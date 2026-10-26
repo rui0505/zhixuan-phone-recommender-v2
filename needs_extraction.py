@@ -47,22 +47,26 @@ except ImportError:  # pragma: no cover - 只在 providers 缺失时触发
 
 SCHEMA_VERSION = "1.0"
 
+# 必须与 `schemas.CRITERIA` / `schemas.CRITERIA_LABELS` 保持一致。
+# 价格不在这里——它由预算区间单独表达，不是偏好维度。
 CRITERION_LABELS = {
-    "price": "价格更低",
     "weight": "机身更轻",
     "storage": "存储更大",
-    "refresh": "刷新率更高",
     "screen": "屏幕接近偏好",
+    "photo": "拍照更好",
+    "game": "王者荣耀帧率更高",
+    "battery": "电池容量更大",
+    "chipset": "处理器档位更高",
 }
 
+# 数据覆盖不到的需求。「影像」「处理器性能」已移出：它们分别由 photo 和
+# chipset 维度覆盖，再标成未覆盖会自相矛盾。
 UNSUPPORTED_VALUES = (
-    "影像",
     "续航",
     "真实游戏性能",
     "分辨率",
     "机身尺寸手感",
     "信号质量",
-    "处理器性能",
 )
 
 # 字段名 → (契约字段路径, 给用户看的问题, 为什么要问)

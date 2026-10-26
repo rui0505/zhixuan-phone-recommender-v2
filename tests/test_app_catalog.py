@@ -40,7 +40,7 @@ class CatalogAppTests(IsolatedEnvTest):
     def test_confirmation_is_required_and_all_zero_has_no_score(self):
         next(b for b in self.at.button if b.label=='确认需求并生成推荐').click().run()
         self.assertNotIn('catalog_result',self.at.session_state)
-        for key in ('price','weight','storage','refresh','screen','photo','game'):
+        for key in ('price','weight','storage','screen','photo','battery','chipset','game'):
             self.at.slider(key='manual_w_'+key).set_value(0)
         self.confirm();self.assertNotIn('catalog_result',self.at.session_state)
         self.assertTrue(self.at.error)
@@ -50,7 +50,7 @@ class CatalogAppTests(IsolatedEnvTest):
         self.assertEqual(len({r['variant_id'] for r in rows}),2)
         self.assertTrue(any(r['satellite_support'] for r in rows))
     def test_incomplete_game_shows_backups_not_score(self):
-        for key in ('price','weight','storage','refresh','screen','photo'):self.at.slider(key='manual_w_'+key).set_value(0)
+        for key in ('price','weight','storage','screen','photo','battery','chipset','game'):self.at.slider(key='manual_w_'+key).set_value(0)
         self.at.slider(key='manual_w_game').set_value(10);self.confirm()
         result=self.at.session_state['catalog_result']
         self.assertEqual(result.status,'insufficient_comparable_data');self.assertTrue(result.ranked.empty)
@@ -145,7 +145,9 @@ class CatalogAppTests(IsolatedEnvTest):
 
     def test_single_matching_apple_is_displayed_without_score(self):
         self.at.multiselect(key='manual_brands').set_value(['Apple'])
-        for key in ('weight','storage','refresh','screen','photo','game'):
+        # 保留价格权重：这个用例验证的是「只有一台匹配机型时不评分」，
+        # 不是「全零权重被拒」。其余维度清零即可。
+        for key in ('weight','storage','screen','photo','battery','chipset','game'):
             self.at.slider(key='manual_w_'+key).set_value(0)
         self.at.checkbox(key='manual_use_min').check()
         self.at.checkbox(key='manual_use_max').check()

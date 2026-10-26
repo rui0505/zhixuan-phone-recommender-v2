@@ -21,7 +21,6 @@ from bridge import (  # noqa: E402
     SCREEN_RANGE,
     STORAGE_DEFAULT,
     STORAGE_OPTIONS,
-    WEIGHT_STEP,
     bridge,
     bridge_contract,
     needs_from_contract,
@@ -312,9 +311,9 @@ class WeightTests(unittest.TestCase):
 
     def test_indifferent_maps_to_zero(self):
         result = bridge(
-            make(choices={"price": "不在意"}), known_brands=BRANDS
+            make(choices={"weight": "不在意"}), known_brands=BRANDS
         )
-        self.assertEqual(result.weights["price"], 0)
+        self.assertEqual(result.weights["weight"], 0)
 
     def test_highest_level_dominates(self):
         result = bridge(
@@ -337,19 +336,29 @@ class WeightTests(unittest.TestCase):
         result = bridge(make(), known_brands=BRANDS)
         self.assertTrue(all(value >= 0 for value in result.weights.values()))
 
-    def test_weights_on_slider_grid(self):
+    def test_weights_are_integers_within_slider_range(self):
+        """权重是 0-10 的整数绝对值，不再对齐到 5 的倍数。
+
+        2026-10-26 修订：旧实现返回 0-100 的占比值并对齐 WEIGHT_STEP，
+        app.py 再用 `value*10` 换算到 0-10 滑块，结果每维都被 clamp 到 10。
+        现在两端口径统一为 0-10 整数。
+        """
         result = bridge(
-            make(choices={"price": "非常重要", "weight": "重要"}),
+            make(choices={"photo": "非常重要", "weight": "重要"}),
             known_brands=BRANDS,
         )
         for key, value in result.weights.items():
             with self.subTest(criterion=key):
-                self.assertEqual(value % WEIGHT_STEP, 0)
+                self.assertEqual(value, int(value))
+                self.assertGreaterEqual(value, 0)
+                self.assertLessEqual(value, 10)
+        self.assertGreater(result.weights["photo"], result.weights["weight"])
+        self.assertGreater(result.weights["photo"], result.weights["storage"])
 
     def test_unmentioned_is_neutral_not_zero(self):
-        """未提及走中性先验，不能被当成不在意。"""
+        """未提及按维度默认值处理，不能被当成不在意（游戏除外，见下一个用例）。"""
         result = bridge(
-            make(choices={"price": "非常重要"}), known_brands=BRANDS
+            make(choices={"weight": "非常重要"}), known_brands=BRANDS
         )
         self.assertGreater(result.weights["weight"], 0)
 
@@ -410,16 +419,18 @@ class ContractAdapterTests(unittest.TestCase):
         self.assertEqual(needs.hard.budget_max, 6000.0)
 
     def test_preferences_and_evidence_are_carried_over(self):
-        needs, _ = needs_from_contract(self._result("越轻越好，价格无所谓"))
+        # 价格已不是偏好维度（由预算区间表达），这里用重量和拍照验证搬运。
+        needs, _ = needs_from_contract(self._result("越轻越好，拍照无所谓"))
         weight = needs.preference_for("weight")
-        price = needs.preference_for("price")
+        photo = needs.preference_for("photo")
         self.assertEqual(weight.choice, "重要")
         self.assertEqual(weight.raw_text, "越轻越好")
-        self.assertEqual(price.choice, "不在意")
+        self.assertEqual(photo.choice, "不在意")
 
     def test_unsupported_needs_are_carried_over(self):
-        needs, _ = needs_from_contract(self._result("拍照要好的，预算 4000 以内"))
-        self.assertIn("影像", needs.unsupported_needs)
+        # 「续航」仍属数据覆盖不到；「影像」已改为 photo 维度，不再走这条通道。
+        needs, _ = needs_from_contract(self._result("续航久一点，预算 4000 以内"))
+        self.assertIn("续航", needs.unsupported_needs)
 
     def test_excluded_brands_use_the_existing_encoding(self):
         """排除品牌要靠 `needs_confirmation` 传下去，`bridge()` 才认得。"""
@@ -464,12 +475,13 @@ class ContractAdapterTests(unittest.TestCase):
         self.assertIsNone(needs.hard.target_screen)
 
     def test_unknown_criterion_is_skipped(self):
+        # battery 现在是合法维度了，用一个真正不存在的维度名验证跳过逻辑。
         result = self._result("预算 3000 以内")
         result["preferences"].append(
-            {"criterion": "battery", "level": "重要", "evidence": ""}
+            {"criterion": "camera_score", "level": "重要", "evidence": ""}
         )
         needs, _ = needs_from_contract(result)
-        self.assertIsNone(needs.preference_for("battery"))
+        self.assertIsNone(needs.preference_for("camera_score"))
 
     def test_unknown_brand_is_dropped_with_a_note(self):
         result = self._result("只看诺基亚")

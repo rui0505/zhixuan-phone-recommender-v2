@@ -15,7 +15,8 @@ class FixtureClassifier:
         payload = {
             'judgements': [dict(criterion=k, choice='一般' if k == 'weight' else '未提及',
                                 evidence='轻一点' if k == 'weight' else '', verdict='extracted')
-                           for k in ('price', 'weight', 'storage', 'refresh', 'screen')],
+                           for k in ('weight', 'storage', 'screen', 'photo',
+                                     'game', 'battery', 'chipset')],
             'hard_constraints': {'budget_reference': 2000 if '左右' in text else 3000,
                                  'budget_min': None, 'budget_max': None if '左右' in text else 3000,
                                  'min_storage': 256, 'brands': [], 'target_screen': None},
@@ -73,14 +74,17 @@ class NeedsApiTests(unittest.TestCase):
         self.assertIn('推断', value['notice'])
         self.assertNotIn('budget.max',
                          [c['field'] for c in value['extraction']['clarifications']])
+        # 拍照「未提及」默认 0：DXOMARK 覆盖只有 11/51 个 SKU，给正权重会塌候选池。
         self.assertEqual(value['draft']['weights']['dxomark_photo'], 0)
+        # 屏幕是目标型指标：没有目标尺寸时必须关闭，否则算不出偏差。
         self.assertEqual(value['draft']['weights']['screen_size_inch'], 0)
 
     def test_storage_threshold_and_excluded_brand_do_not_become_preferences(self):
         value = self.service().extract('3000元以内，轻一点，至少256G，不要苹果', ['Apple'])
         self.assertEqual(value['draft']['needs']['min_storage'], 256)
         self.assertEqual(value['draft']['needs']['brands'], {'include':[], 'exclude':['Apple']})
-        self.assertEqual(value['draft']['weights']['storage_gb'], 1)
+        # 存储未提及 → WEIGHT_TABLE 的默认值 3（不再是统一的 1）
+        self.assertEqual(value['draft']['weights']['storage_gb'], 3)
         self.assertEqual(next(p['level'] for p in value['extraction']['preferences']
                               if p['criterion']=='storage'), '未提及')
 

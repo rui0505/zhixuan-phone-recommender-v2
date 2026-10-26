@@ -66,12 +66,18 @@ TOP_N = 5
 # 否则用户一直答不到点子上就会陷入无限追问。
 MAX_ASK_ROUNDS = 2
 
+# 旧版 Excel 夹具可评分的维度（其余维度只有新目录库才有）。
+LEGACY_SCORE_KEYS = frozenset({'weight', 'storage', 'screen'})
+
+# 与 schemas.CRITERIA 保持一致（7 个体验维度，价格不在此列）。
 WEIGHT_LABELS = {
-    'price': '价格更低',
     'weight': '机身更轻',
     'storage': '存储更大',
-    'refresh': '刷新率更高',
     'screen': '屏幕接近偏好',
+    'photo': '拍照更好',
+    'game': '王者荣耀帧率更高',
+    'battery': '电池容量更大',
+    'chipset': '处理器档位更高',
 }
 
 # 用户表示「不答了，你看着办」的短语。
@@ -429,7 +435,15 @@ def handle(
 
     # --- 出结果 ---
     candidates = candidate_frame(df, bridged) if decision_builder is None else pd.DataFrame()
-    weights = dict(bridged.weights)
+    # 旧 Excel 夹具只有 价格/重量/存储/屏幕 四列可评分；拍照、王者帧率、
+    # 电池容量、处理器档位在新库里才有。这里**显式过滤**掉旧表没有的维度，
+    # 不能把它们当 0 分或全缺失塞进矩阵——那会让所有候选都失去资格。
+    weights = {key: value for key, value in bridged.weights.items()
+               if key in LEGACY_SCORE_KEYS}
+    dropped = sorted(set(bridged.weights) - set(weights))
+    if dropped:
+        bridged.notes.append('旧版数据表没有这些维度的数据，本次不参与排序：'
+                             + '、'.join(dropped))
     target = bridged.target
     # 只有用户**明确说了**上限才拿来算「比预算低多少」；含糊预算没封顶，
     # 拿滑块量程上限去减会得到一个巨大的假数字。

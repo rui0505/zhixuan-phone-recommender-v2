@@ -164,21 +164,27 @@ class OptionParsingTests(unittest.TestCase):
                 self.assertNotIn('budget.max', asked,
                                  f'{key} 不该触发预算追问')
 
-    def test_scene_photo_flags_unsupported_image(self):
-        """拍照场景必须被标记为内核算不了——这是诚实性的落点。"""
+    def test_scene_photo_moves_the_photo_dimension(self):
+        """拍照场景现在落到 photo 维度上，不再标成"内核算不了"。"""
         result = self.parse(OPTIONS[('scene', 'photo')].say)
         needs = [item['need'] for item in result['unsupported_needs']]
-        self.assertIn('影像', needs)
+        self.assertNotIn('影像', needs)
+        self.assertEqual(self.levels(result).get('photo'), '重要')
 
     def test_scene_game_flags_unsupported_game(self):
         result = self.parse(OPTIONS[('scene', 'game')].say)
         needs = [item['need'] for item in result['unsupported_needs']]
         self.assertIn('真实游戏性能', needs)
 
-    def test_scene_game_also_moves_refresh(self):
-        """游戏场景给了刷新率一个落点，否则这个选项对结果毫无影响。"""
+    def test_scene_game_is_flagged_not_scored(self):
+        """「打游戏」不指定王者荣耀 → 不设 game 权重，只如实标未覆盖。
+
+        这是刻意的：库里只有王者荣耀的实测帧率，拿它顶替别的游戏就是造假。
+        """
         result = self.parse(OPTIONS[('scene', 'game')].say)
-        self.assertEqual(self.levels(result).get('refresh'), '非常重要')
+        self.assertNotIn('game', self.levels(result))   # levels() 只返回非「未提及」的项
+        self.assertIn('真实游戏性能',
+                      [item['need'] for item in result['unsupported_needs']])
 
     def test_scene_photo_also_moves_storage(self):
         """拍照场景给了存储一个落点（照片视频占地方）。"""
@@ -305,13 +311,12 @@ class UnsupportedTests(unittest.TestCase):
     """「问了但算不了」的处理。"""
 
     def test_expected_unsupported_matches_scene(self):
-        self.assertEqual(expected_unsupported({'scene': 'photo'}), ['影像'])
+        self.assertEqual(expected_unsupported({'scene': 'photo'}), [])
         self.assertEqual(expected_unsupported({'scene': 'game'}), ['真实游戏性能'])
         self.assertEqual(expected_unsupported({'scene': 'daily'}), [])
 
     def test_expected_unsupported_is_ordered_and_deduped(self):
-        self.assertEqual(expected_unsupported({'scene': 'photo', 'carry': 'light'}),
-                         ['影像'])
+        self.assertEqual(expected_unsupported({'scene': 'photo', 'carry': 'light'}), [])
 
     def test_expected_unsupported_agrees_with_extraction(self):
         """前端提前提示的口径必须与真正抽取出来的结果一致。

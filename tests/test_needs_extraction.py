@@ -122,14 +122,19 @@ class ReferenceExampleTests(unittest.TestCase):
         self.assertEqual(weight["level"], "一般")
         self.assertEqual(weight["evidence"], "轻一点")
 
-    def test_camera_need_is_preserved_as_unsupported(self):
-        """拍照需求保留，且不得转成任何可评分维度。"""
-        needs = [item["need"] for item in self.result["unsupported_needs"]]
-        self.assertEqual(needs, ["影像"])
-        self.assertEqual(self.result["unsupported_needs"][0]["evidence"], "拍照")
+    def test_camera_need_becomes_the_photo_dimension(self):
+        """2026-10-26 修订：拍照不再是"未覆盖"，它由 photo 维度承接。
 
-    def test_photography_is_not_converted_to_a_criterion(self):
-        """拍照不得变成像素/影像权重——本模块只输出 5 个约定维度。"""
+        旧契约把拍照标成 unsupported_needs=["影像"]，但那样一来用户说"拍照好"
+        就永远不会影响排序。现在改为给出 photo 的偏好等级，并且不再标未覆盖。
+        """
+        needs = [item["need"] for item in self.result["unsupported_needs"]]
+        self.assertNotIn("影像", needs)
+        photo = {i["criterion"]: i for i in self.result["preferences"]}["photo"]
+        self.assertEqual(photo["level"], "重要")
+        self.assertIn("拍照", photo["evidence"])   # 证据取自原文片段
+
+    def test_preferences_cover_exactly_the_agreed_criteria(self):
         seen = {item["criterion"] for item in self.result["preferences"]}
         self.assertEqual(seen, set(CRITERIA))
 
@@ -215,26 +220,26 @@ class StatusDegradedTests(unittest.TestCase):
         payload["judgements"][0]["choice"] = "超级重要"  # 不在 CHOICES 里
         result = extract_needs("随便买个手机", classifier=_StubClassifier(payload))
         self.assertEqual(result["status"], STATUS_DEGRADED)
-        price = {i["criterion"]: i for i in result["preferences"]}["price"]
-        self.assertEqual(price["level"], "未提及")
+        weight = {i["criterion"]: i for i in result["preferences"]}["weight"]
+        self.assertEqual(weight["level"], "未提及")
         fields = [i["field"] for i in result["clarifications"]]
-        self.assertIn("preferences.price", fields)
+        self.assertIn("preferences.weight", fields)
 
     def test_missing_criterion_is_reported(self):
         payload = _payload()
         payload["judgements"] = [
-            item for item in payload["judgements"] if item["criterion"] != "refresh"
+            item for item in payload["judgements"] if item["criterion"] != "photo"
         ]
         result = extract_needs("随便买个手机", classifier=_StubClassifier(payload))
         self.assertEqual(result["status"], STATUS_DEGRADED)
         fields = [i["field"] for i in result["clarifications"]]
-        self.assertIn("preferences.refresh", fields)
+        self.assertIn("preferences.photo", fields)
 
     def test_fabricated_evidence_degrades_but_keeps_level(self):
         """evidence 编造 → 降级，但**不丢弃 level**（level 是模型判断）。"""
         text = "想要轻一点的手机"
         payload = _payload()
-        payload["judgements"][1].update(
+        payload["judgements"][0].update(
             {"choice": "重要", "evidence": "我要最轻的", "verdict": "extracted"}
         )
         result = extract_needs(text, classifier=_StubClassifier(payload))
@@ -276,7 +281,7 @@ class StatusDegradedTests(unittest.TestCase):
 
         result = extract_needs("随便买个手机", classifier=_NoRaw())
         fields = [i["field"] for i in result["clarifications"]]
-        self.assertNotIn("preferences.price", fields)
+        self.assertNotIn("preferences.weight", fields)
 
 
 class ValidateResultTests(unittest.TestCase):
@@ -451,7 +456,10 @@ class ValidateResultTests(unittest.TestCase):
         self.assertTrue(any("却带有 meta.error" in p for p in problems))
 
     def test_unsupported_values_are_the_agreed_set(self):
-        self.assertIn("影像", UNSUPPORTED_VALUES)
+        # 影像 / 处理器性能已由 photo / chipset 维度覆盖，不再属于未覆盖集合。
+        self.assertNotIn("影像", UNSUPPORTED_VALUES)
+        self.assertNotIn("处理器性能", UNSUPPORTED_VALUES)
+        self.assertIn("续航", UNSUPPORTED_VALUES)
         self.assertNotIn("颜值", UNSUPPORTED_VALUES)
 
 
