@@ -6,9 +6,12 @@ import re
 
 from catalog.adapter import resolve_brands
 
-METRICS = ('price_cny','weight_g','storage_gb','refresh_rate_hz','screen_size_inch',
+METRICS = ('price_cny','weight_g','storage_gb','screen_size_inch','battery_capacity_mah',
            'dxomark_photo','honor_of_kings_avg_fps','chipset_tier')
-DEFAULT_WEIGHTS = dict(zip(METRICS, (5,2,2,1,0,0,0,0)))
+# 默认权重与 schemas.WEIGHT_TABLE 的「未提及」列一致；price_cny 单独固定为 5
+# （预算区间负责"多少钱以内"，这个权重负责"预算内偏好便宜"，暂不开放给用户设计）。
+# photo 默认 0：DXOMARK 覆盖只有 11/51 个 new 模式 SKU，给正权重会塌候选池。
+DEFAULT_WEIGHTS = dict(zip(METRICS, (5,2,3,1,2,0,0,2)))
 RELEASE_FIELDS = {'dataset_version','feature_rule_version','snapshot_sha256','manifest_sha256'}
 REQUEST_FIELDS = {'needs','weights','target_screen','mode','confirmed','expected_release'}
 

@@ -22,7 +22,7 @@ class FrontendTests(unittest.TestCase):
         self.assertTrue(any(tag=='form' and a.get('id')=='preferences' for tag,a in nodes))
         controls={a.get('id'):a for tag,a in nodes if tag in ('input','select')}
         labels={a.get('for') for tag,a in nodes if tag=='label'}
-        for metric in ('price_cny','weight_g','storage_gb','refresh_rate_hz','screen_size_inch','dxomark_photo','honor_of_kings_avg_fps'):
+        for metric in ('price_cny','weight_g','storage_gb','screen_size_inch','battery_capacity_mah','dxomark_photo','honor_of_kings_avg_fps','chipset_tier'):
             self.assertIn(metric,controls);self.assertEqual(controls[metric]['type'],'range');self.assertIn(metric,labels)
         self.assertEqual(controls['confirmed']['type'],'checkbox')
         for name in ('min-price','max-price','min-storage','include-brands','exclude-brands','target-screen','mode'):

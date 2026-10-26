@@ -189,8 +189,9 @@ class MetaTests(WebServerTest):
 
     def test_exposes_the_ui_contract(self):
         _, meta = self.get_json('/api/meta')
-        self.assertEqual(meta['criteria'], ['price', 'weight', 'storage', 'refresh', 'screen'])
-        self.assertEqual(meta['weight_labels']['price'], '价格更低')
+        self.assertEqual(meta['criteria'],
+                         ['weight', 'storage', 'screen', 'photo', 'game', 'battery', 'chipset'])
+        self.assertEqual(meta['weight_labels']['weight'], '机身更轻')
         self.assertEqual(meta['budget']['limit'], [0, 20000])
         self.assertEqual(meta['storage']['options'], [64, 128, 256, 512, 1024, 2048])
         self.assertEqual(meta['top_n'], 5)
@@ -294,7 +295,8 @@ class RecommendTests(WebServerTest):
         self.assertTrue(second['models'])
 
     def test_unsupported_needs_are_surfaced_not_replaced(self):
-        body = self.ask('预算2000到3000，拍照要好，游戏要流畅', write=False)
+        # 「拍照」已是 photo 维度；用仍然没有实测数据的「续航」「信号」举例。
+        body = self.ask('预算2000到3000，续航要久，信号要好', write=False)
         self.assertTrue(body['unsupported'])
         self.assertTrue(body['advice'])
         self.assertIn('数据', body['advice'])
@@ -423,19 +425,26 @@ class QuizTests(WebServerTest):
         self.assertEqual(body['answers_text'], build_text(self.ANSWERS))
         self.assertEqual(body['needs']['input_text'], body['answers_text'])
 
-    def test_photo_scene_surfaces_unsupported_not_replaced(self):
-        """拍照需求要如实说出来，不能用别的参数替代。"""
+    def test_photo_scene_moves_the_photo_dimension(self):
+        """2026-10-26 修订：拍照由 photo 维度承接，不再标成"算不了"。"""
         body = self.quiz_ask({'scene': 'photo', 'budget': 'b2', 'storage': 's512'})
         self.assertEqual(body['stage'], 'result')
-        self.assertIn('影像', body['unsupported'])
-        self.assertIn('影像', body['expected_unsupported'])
+        self.assertNotIn('影像', body['unsupported'])
+        self.assertNotIn('影像', body['expected_unsupported'])
+        # 旧 Excel 夹具只有 重量/存储/屏幕 可评分，photo 在这里被显式过滤掉；
+        # 新目录库路径（api/app.py）才完整支持 7 维。
+        self.assertNotIn('photo', body['weights'])
 
-    def test_unsupported_never_appears_as_a_scored_dimension(self):
-        """「影像」不是可评分维度，不得混进权重或排序口径。"""
+    def test_game_scene_is_flagged_not_scored(self):
+        """「打游戏」不指定王者荣耀 → 如实标未覆盖，不进 game 维度。"""
+        body = self.quiz_ask({'scene': 'game', 'budget': 'b2', 'storage': 's512'})
+        self.assertIn('真实游戏性能', body['unsupported'])
+        self.assertNotIn('game', body['weights'])
+
+    def test_legacy_quiz_only_scores_the_three_supported_dimensions(self):
+        """旧夹具没有拍照/游戏/电池/处理器数据，显式过滤，不当 0 分参与。"""
         body = self.quiz_ask({'scene': 'photo', 'budget': 'b2', 'storage': 's512'})
-        self.assertNotIn('影像', body['weights'])
-        self.assertEqual(sorted(body['weights']),
-                         ['price', 'refresh', 'screen', 'storage', 'weight'])
+        self.assertEqual(sorted(body['weights']), ['screen', 'storage', 'weight'])
 
     def test_write_false_skips_the_llm_advice(self):
         body = self.quiz_ask(write=False)

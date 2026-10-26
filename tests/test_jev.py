@@ -158,13 +158,14 @@ class BoundaryRuleTests(unittest.TestCase):
         self.assertEqual(needs.preference_for("screen").choice, "重要")
 
     def test_explicit_indifference_differs_from_unmentioned(self):
-        indifferent = parse_needs("轻一点好，越轻越好，但价格不太在意")
-        self.assertEqual(indifferent.preference_for("price").choice, "不在意")
-        self.assertFalse(indifferent.preference_for("price").is_default)
+        # 价格已不是偏好维度，用拍照验证「不在意」与「未提及」的区别。
+        indifferent = parse_needs("轻一点好，越轻越好，但拍照不太在意")
+        self.assertEqual(indifferent.preference_for("photo").choice, "不在意")
+        self.assertFalse(indifferent.preference_for("photo").is_default)
 
         silent = parse_needs("轻一点好，越轻越好")
-        self.assertEqual(silent.preference_for("price").choice, "未提及")
-        self.assertTrue(silent.preference_for("price").is_default)
+        self.assertEqual(silent.preference_for("photo").choice, "未提及")
+        self.assertTrue(silent.preference_for("photo").is_default)
 
     def test_excluded_brand_is_not_whitelisted(self):
         needs = parse_needs("不要华为，其他牌子都行，存储 512G 以上")
@@ -186,15 +187,17 @@ class BoundaryRuleTests(unittest.TestCase):
 
     def test_unsupported_needs_recorded(self):
         """无数据支撑的需求记为未覆盖，不得用替代指标充数。"""
+        # 「影像」已改为 photo 维度，不再属于未覆盖；「打游戏」不指定王者仍算未覆盖。
         needs = parse_needs("拍照要好的，续航越久越好，打游戏不卡")
-        for label in ("影像", "续航", "真实游戏性能"):
+        for label in ("续航", "真实游戏性能"):
             self.assertIn(label, needs.unsupported_needs)
+        self.assertEqual(needs.preference_for("photo").choice, "重要")
 
     def test_blanket_statement_applies_to_unmentioned(self):
         """「其他都一般」作用于未点名的维度，不覆盖已表态项。"""
-        needs = parse_needs("价格最重要，其他都一般，预算 4000 以内")
-        self.assertEqual(needs.preference_for("price").choice, "非常重要")
-        for key in ("weight", "storage", "refresh", "screen"):
+        needs = parse_needs("重量最重要，其他都一般，预算 4000 以内")
+        self.assertEqual(needs.preference_for("weight").choice, "非常重要")
+        for key in ("storage", "screen", "photo", "battery", "chipset"):
             self.assertEqual(needs.preference_for(key).choice, "一般", key)
 
     def test_strength_convention(self):
@@ -229,10 +232,15 @@ class ParseNeedsContractTests(unittest.TestCase):
         self.assertTrue(needs.preference_for("weight").raw_text)
 
     def test_unsupported_not_in_judgements(self):
-        """未覆盖需求不得混进可评分维度。"""
-        needs = parse_needs("拍照要好的")
+        """未覆盖需求不得混进可评分维度。
+
+        用「续航」举例——它仍然没有实测数据。「拍照」已改为 photo 维度，
+        不再适合做这个例子的主体。
+        """
+        needs = parse_needs("续航越久越好")
         self.assertEqual(len(needs.preferences), len(CRITERIA))
-        self.assertNotIn("影像", {p.criterion for p in needs.preferences})
+        self.assertIn("续航", needs.unsupported_needs)
+        self.assertNotIn("续航", {p.criterion for p in needs.preferences})
 
     def test_classify_preferences_defaults_to_mock(self):
         result = classify_preferences("预算 3000 以内")
@@ -255,9 +263,9 @@ class HttpClassifierTests(unittest.TestCase):
         """供应商返回非法选项时不猜，退回未提及并标 unknown。"""
         classifier = HttpClassifier(endpoint="https://example.invalid/jev")
         normalised = classifier._normalise(
-            {"judgements": [{"criterion": "price", "choice": "有点想要"}]}
+            {"judgements": [{"criterion": "weight", "choice": "有点想要"}]}
         )
-        price = normalised.judgement_for("price")
+        price = normalised.judgement_for("weight")
         self.assertEqual(price.choice, "未提及")
         self.assertEqual(price.verdict, "unknown")
 
@@ -284,17 +292,17 @@ class HttpClassifierTests(unittest.TestCase):
         )
         self.assertEqual({j.criterion for j in normalised.judgements}, set(CRITERIA))
         self.assertEqual(
-            normalised.judgement_for("price").choice, "未提及"
+            normalised.judgement_for("weight").choice, "未提及"
         )
 
     def test_confidence_is_recorded_but_not_strength(self):
         """confidence 只作记录，不得当作偏好强度。"""
         classifier = HttpClassifier(endpoint="https://example.invalid/jev")
         normalised = classifier._normalise(
-            {"judgements": [{"criterion": "price", "choice": "一般",
+            {"judgements": [{"criterion": "weight", "choice": "一般",
                              "confidence": 0.99}]}
         )
-        item = normalised.judgement_for("price").to_preference()
+        item = normalised.judgement_for("weight").to_preference()
         self.assertEqual(item.choice, "一般")
         self.assertEqual(item.mapped_level, 1)  # 由 choice 决定，不由 confidence
         self.assertAlmostEqual(item.confidence, 0.99)
