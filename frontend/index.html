@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark"><title>知选 · 可解释手机推荐</title>
-  <link rel="icon" href="data:,"><link rel="stylesheet" href="/styles.css?v=glass-20261011">
-  <link rel="preload" as="image" href="/assets/zhixuan-ai-network.jpg"><link rel="stylesheet" href="/glass.css?v=seven-dimensions-20261027"><meta name="theme-color" content="#092d35"><script type="module" src="/app.mjs?v=seven-dimensions-20261027"></script><script type="module" src="/motion.mjs?v=20261011-r1"></script>
+  <link rel="icon" href="data:,"><link rel="stylesheet" href="/styles.css?v=reference-scores-20261027">
+  <link rel="preload" as="image" href="/assets/zhixuan-ai-network.jpg"><link rel="stylesheet" href="/glass.css?v=seven-dimensions-20261027"><meta name="theme-color" content="#092d35"><script type="module" src="/app.mjs?v=reference-scores-20261027"></script><script type="module" src="/motion.mjs?v=20261011-r1"></script>
 </head>
 <body id="top">
 <a class="skip-link" href="#needs-text">跳到需求输入</a><div class="app-shell">
@@ -33,28 +33,30 @@
           <label for="exclude-brands">排除品牌<select id="exclude-brands" multiple size="4" aria-describedby="brands-help"></select></label>
 </div><p id="brands-help" class="small">不选代表不限品牌。可多选；电脑按 Ctrl / Command 选择，同一品牌不能同时包含和排除。</p></details></fieldset>
         <fieldset class="ranking-options"><legend>选择排序方式</legend>
+          <label for="evaluation-mode">评分资料<select id="evaluation-mode" aria-describedby="evaluation-help"><option value="spec_reference">默认 · 规格参考分</option><option value="measured">可选 · 可比实测资料</option></select></label>
+          <p id="evaluation-help" class="small">默认用七项固定规则换算为 0—100 分的规格参考，不是实测体验分。游戏按 80% 处理器参考分 + 20% 电池容量参考分估算，容量不代表实际续航。切换资料模式后需重新确认。</p>
           <label for="method">排序方式<select id="method" aria-describedby="method-help"><option value="topsis">默认 · TOPSIS</option><option value="hybrid_rrf">实验 · 混合排序</option></select></label>
           <p id="method-help" class="small">默认按 TOPSIS 排序。实验混合使用固定参数 theta=1、alpha=0.5、k=10；未证明更准确，不是学习所得。切换后需重新确认。</p>
           <p id="method-status" class="small" aria-live="polite"></p>
         </fieldset>
         <fieldset class="performance-preferences"><legend>七项排序偏好</legend>
-          <p class="small">按重视程度选择五个等级，各维度按对应等级赋权。未提及是系统默认；不在意表示主动不计入。价格和品牌只作硬性筛选。</p>
+          <p id="preference-policy" class="small">按重视程度选择五个等级，各维度按对应等级赋权。未提及保留非零系统初值，拍照和游戏各为 1；不在意表示主动不计入。价格和品牌只作硬性筛选。</p>
           <div class="importance-grid">
             <div class="importance-control"><label for="storage_gb">存储 <output for="storage_gb">未提及</output><input id="storage_gb" type="range" min="0" max="4" step="1" value="1" aria-describedby="storage_gb-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="storage_gb-help" class="small">容量越大越优先，最低存储仍由上方条件筛选。</p></div>
             <div class="importance-control"><label for="weight_g">重量 <output for="weight_g">未提及</output><input id="weight_g" type="range" min="0" max="4" step="1" value="1" aria-describedby="weight_g-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="weight_g-help" class="small">机身越轻越优先。</p></div>
             <div class="importance-control"><label for="battery_capacity_mah">电池容量 <output for="battery_capacity_mah">未提及</output><input id="battery_capacity_mah" type="range" min="0" max="4" step="1" value="1" aria-describedby="battery_capacity_mah-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="battery_capacity_mah-help" class="small">按标称容量比较，不代表实际续航时长。</p></div>
             <div class="importance-control"><label for="chipset_tier">处理器档位 <output for="chipset_tier">未提及</output><input id="chipset_tier" type="range" min="0" max="4" step="1" value="1" aria-describedby="chipset_tier-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="chipset_tier-help" class="small">第三方榜单换算，包含估算项，非本站实测；同分不代表体验相同。</p></div>
             <div class="importance-control"><label for="screen_size_inch">屏幕尺寸 <output for="screen_size_inch">未提及</output><input id="screen_size_inch" type="range" min="0" max="4" step="1" value="1" aria-describedby="screen_size_inch-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="screen_size_inch-help" class="small">越接近下方理想尺寸越优先，不是越大越好。</p></div>
-            <div class="importance-control"><label for="dxomark_photo">拍照 <output for="dxomark_photo">未提及</output><input id="dxomark_photo" type="range" min="0" max="4" step="1" value="1" aria-describedby="dxomark_photo-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="dxomark_photo-help" class="small">仅比较同协议 DXOMARK 照片子分；缺失不补零。</p></div>
-            <div class="importance-control"><label for="honor_of_kings_avg_fps">游戏 <output for="honor_of_kings_avg_fps">未提及</output><input id="honor_of_kings_avg_fps" type="range" min="0" max="4" step="1" value="1" aria-describedby="honor_of_kings_avg_fps-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="honor_of_kings_avg_fps-help" class="small">仅比较同条件王者荣耀平均帧率，不代表其他游戏。</p></div>
+            <div class="importance-control"><label for="dxomark_photo">拍照 <output for="dxomark_photo">未提及</output><input id="dxomark_photo" type="range" min="0" max="4" step="1" value="1" aria-describedby="dxomark_photo-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="dxomark_photo-help" class="small">按主摄像素与超广角、长焦规格参考，不代表成像质量；资料缺失不补零。</p></div>
+            <div class="importance-control"><label for="honor_of_kings_avg_fps">游戏 <output for="honor_of_kings_avg_fps">未提及</output><input id="honor_of_kings_avg_fps" type="range" min="0" max="4" step="1" value="1" aria-describedby="honor_of_kings_avg_fps-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="honor_of_kings_avg_fps-help" class="small">规格估算：80% 处理器参考分 + 20% 电池容量参考分；不代表实测帧率或实际续航。</p></div>
           </div>
           <label for="target-screen" class="target">理想屏幕尺寸（英寸）<input id="target-screen" type="number" min="3" max="10" step="0.1" value="6.5"></label>
           <p class="small">未指定理想尺寸时默认 6.5 英寸，可修改；屏幕不在意时不参与排序。</p>
-          <label for="game-scope">游戏实测参考范围<select id="game-scope"><option value="unconfirmed">尚未确认游戏范围</option><option value="honor_of_kings">使用王者荣耀测试参考</option><option value="unsupported">其他游戏暂无实测</option></select></label>
+          <label id="game-scope-control" for="game-scope" hidden>游戏实测参考范围<select id="game-scope"><option value="unconfirmed">尚未确认游戏范围</option><option value="honor_of_kings">使用王者荣耀测试参考</option><option value="unsupported">其他游戏暂无实测</option></select></label>
           <div class="actions"><button type="button" data-not-count="dxomark_photo">拍照暂不计入</button><button type="button" data-not-count="honor_of_kings_avg_fps">游戏暂不计入</button></div>
           <p id="performance-blocker" class="warning" role="status" aria-live="polite"></p>
           <p id="performance-counts" class="small" aria-live="polite">正在读取可比资料覆盖…</p>
-          <details class="advanced"><summary>查看偏好原话与可比资料覆盖</summary><div id="performance-summary" aria-live="polite"></div></details>
+          <details class="advanced"><summary>查看偏好原话与评分依据</summary><div id="performance-summary" aria-live="polite"></div></details>
         </fieldset>
         <div class="confirm-line"><label for="confirmed"><input id="confirmed" type="checkbox">我已检查条件、权重和数据限制</label><button id="generate" type="submit" class="primary" disabled>寻找适合我的手机</button></div>
       </form>

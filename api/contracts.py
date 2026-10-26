@@ -7,16 +7,17 @@ import re
 from catalog.adapter import resolve_brands
 from ranking_modes import ALGORITHM_VERSIONS
 from .performance import BATTERY_METRIC
+from schemas import WEIGHT_TABLE
 
 METRICS = ('weight_g','storage_gb','screen_size_inch','battery_capacity_mah',
            'dxomark_photo','honor_of_kings_avg_fps','chipset_tier')
 # Legacy TOPSIS callers may still send the former metrics. Hybrid accepts
 # only seven preference dimensions; price and brand remain candidate filters.
 LEGACY_METRICS = ('price_cny', 'refresh_rate_hz')
-DEFAULT_WEIGHTS = dict(zip(METRICS, (2,3,1,2,0,0,2)))
+DEFAULT_WEIGHTS = {metric:WEIGHT_TABLE[criterion]['未提及'] for metric,criterion in zip(METRICS,('weight','storage','screen','battery','photo','game','chipset'))}
 RELEASE_FIELDS = {'dataset_version','feature_rule_version','snapshot_sha256','manifest_sha256'}
 REQUEST_FIELDS = {'needs','weights','target_screen','mode','confirmed','expected_release'}
-OPTIONAL_REQUEST_FIELDS = {'method', 'expected_algorithm_version', 'game_scope'}
+OPTIONAL_REQUEST_FIELDS = {'method', 'expected_algorithm_version', 'game_scope', 'defaulted_metrics', 'evaluation_mode', 'expected_reference_rule_version'}
 
 
 class ApiError(Exception):
@@ -36,6 +37,9 @@ class RecommendationRequest:
     method: str = 'topsis'
     expected_algorithm_version: str | None = None
     game_scope: str = 'honor_of_kings'
+    defaulted_metrics: tuple[str,...] = ()
+    evaluation_mode: str = 'measured'
+    expected_reference_rule_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -133,7 +137,14 @@ def parse_recommendation(body: dict, known_brands: list[str]) -> RecommendationR
             invalid('混合排序仅支持七项偏好；价格和品牌请在硬性条件中设置')
         canonical = {k:v for k,v in canonical.items() if k in METRICS}
     game_scope = obj.get('game_scope', 'honor_of_kings')
-    validate_game_scope(game_scope, canonical)
+    defaults = validate_defaulted_metrics(obj.get('defaulted_metrics',[]),canonical)
+    evaluation_mode = validate_evaluation_mode(obj.get('evaluation_mode','measured'))
+    reference_version = obj.get('expected_reference_rule_version')
+    if 'expected_reference_rule_version' in obj and (type(reference_version) is not str or not reference_version or len(reference_version)>256):
+        invalid('参考评分规则版本格式无效')
+    if evaluation_mode=='spec_reference' and any(canonical.get(k,0)>0 for k in LEGACY_METRICS):
+        invalid('规格参考仅支持七项偏好；价格和品牌请使用硬性筛选')
+    validate_game_scope(game_scope, {} if evaluation_mode=='spec_reference' else {k:v for k,v in canonical.items() if k not in defaults})
     if not any(canonical.values()):
         invalid('至少一项偏好权重必须大于 0')
     target = _real(obj['target_screen'],minimum=3,maximum=10,nullable=True)
@@ -146,7 +157,21 @@ def parse_recommendation(body: dict, known_brands: list[str]) -> RecommendationR
     for key in ('snapshot_sha256','manifest_sha256'):
         _hash(release[key])
     return RecommendationRequest(_needs(obj['needs'],known_brands),canonical,target,
-                                 _mode(obj['mode']),True,deepcopy(release),method,version,game_scope)
+                                 _mode(obj['mode']),True,deepcopy(release),method,version,game_scope,defaults,evaluation_mode,reference_version)
+
+
+def validate_evaluation_mode(value):
+    if type(value) is not str or value not in ('measured','spec_reference'):
+        invalid('请选择规格参考或实测资料模式')
+    return value
+
+
+def validate_defaulted_metrics(value, weights):
+    if (type(value) not in (list,tuple) or any(type(k) is not str or k not in METRICS for k in value)
+            or len(set(value))!=len(value)
+            or any(k not in weights or weights[k]!=DEFAULT_WEIGHTS[k] for k in value)):
+        invalid('系统初始偏好标记与权重不一致，请重新确认等级')
+    return tuple(sorted(value))
 
 
 def validate_game_scope(scope, weights):

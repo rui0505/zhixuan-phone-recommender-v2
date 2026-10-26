@@ -143,8 +143,8 @@ class ChatFlowTests(IsolatedEnvTest):
         session = self.at.session_state['blue_session']
         self.assertEqual(session['needs']['preferences']['weight'], 'very_important')
         # 权重改为查表 + 归一化，具体份额随表变化；这里只断言方向：
-        # 用户明说的「最轻」应当过半，而不是被默认值稀释。
-        self.assertGreater(session['current_weights']['weight'], .5)
+        # 明确的重点应大于每个默认维度；七项正初值不要求单项占比过半。
+        self.assertGreater(session['current_weights']['weight'],max(v for k,v in session['current_weights'].items() if k!='weight'))
         self.assertEqual(session['current_weights']['screen'], 0)
         self.assertEqual(self.at.session_state['active_ranking_ids'], self.expected_ranking().id.tolist())
         self.assertEqual(len(self.at.tabs), 3)

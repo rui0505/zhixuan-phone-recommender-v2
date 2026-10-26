@@ -68,3 +68,19 @@ test('performance summary distinguishes user importance, inferred evidence and d
   const current=rendering.renderPerformance(capabilities,{honor_of_kings_avg_fps:0},intent,true);
   assert.match(current.textContent,/不参与排序/);assert.match(current.textContent,/本次已计算条件/);assert.doesNotMatch(current.textContent,/默认新机/);
 });
+
+test('reference scores show all seven dimensions with zero valid and missing values unscored',()=>{
+  const card=renderCard({...row,reference_scores:[
+    {metric_key:'ref_storage',name_cn:'存储',score:0,basis:'容量固定锚点',inputs:{storage_gb:128},estimated:true},
+    {metric_key:'ref_photo',name_cn:'拍照',score:null,basis:'主摄资料缺失',inputs:{main_mp:null},estimated:true},
+    {metric_key:'ref_game',name_cn:'游戏',score:82.5,basis:'80%处理器+20%容量',inputs:{chipset:80,battery:92.5},estimated:true}
+  ]},{referenceRuleVersion:'ref-1'});
+  const scores=byClass(card,'reference-score');assert.equal(scores.length,7);
+  assert.match(scores[0].textContent,/0 \/ 100/);assert.doesNotMatch(scores[0].textContent,/资料不足/);
+  assert.equal(walk(scores[0]).find(n=>n.tagName==='progress').value,0);
+  const photo=scores.find(n=>n.dataset.metricKey==='ref_photo');assert.match(photo.textContent,/资料不足/);assert.equal(walk(photo).some(n=>n.tagName==='progress'),false);
+  assert.match(card.textContent,/游戏.*规格估算/);assert.match(card.textContent,/80%.*处理器.*20%.*电池容量/);
+  assert.match(card.textContent,/不代表实际续航/);assert.match(card.textContent,/尺寸匹配.*不代表屏幕显示质量/);assert.match(card.textContent,/拍照规格.*不代表成像质量/);
+  const basis=byClass(card,'reference-basis')[0];assert.equal(basis.open,false);assert.match(basis.textContent,/主摄资料缺失/);assert.match(basis.textContent,/ref-1/);
+  assert.match(card.textContent,/TOPSIS 相对贴近度 0.8000/);
+});

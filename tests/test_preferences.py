@@ -22,10 +22,8 @@ class PreferenceTests(unittest.TestCase):
         self.weights = build_initial_weights(self.needs)['weights']
 
     def test_example(self):
-        # weight=非常重要(9)，其余按维度默认值：storage 3、screen 1、photo 0、
-        # game 0、battery 2、chipset 2，合计 17。
-        # photo 的未提及是 0——DXOMARK 覆盖只有 11/51 个 SKU，给正权重会塌候选池。
-        self.assertAlmostEqual(self.weights['weight'], 9 / 17)
+        # weight=9，其余原始初值3+1+1+1+2+2=10，合计19。
+        self.assertAlmostEqual(self.weights['weight'],9/19)
         self.assertAlmostEqual(sum(self.weights.values()), 1)
 
     def test_all_normal(self):

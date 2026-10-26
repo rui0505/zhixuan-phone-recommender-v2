@@ -74,8 +74,8 @@ class NeedsApiTests(unittest.TestCase):
         self.assertIn('推断', value['notice'])
         self.assertNotIn('budget.max',
                          [c['field'] for c in value['extraction']['clarifications']])
-        # 拍照「未提及」默认 0：DXOMARK 覆盖只有 11/51 个 SKU，给正权重会塌候选池。
-        self.assertEqual(value['draft']['weights']['dxomark_photo'], 0)
+        # 拍照「未提及」保留初值1，参评是否启用由后端按默认参考策略决定。
+        self.assertEqual(value['draft']['weights']['dxomark_photo'], 1)
         # 屏幕是目标型指标：没有目标尺寸时必须关闭，否则算不出偏差。
         self.assertEqual(value['draft']['weights']['screen_size_inch'], 1)
 

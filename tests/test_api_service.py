@@ -119,7 +119,7 @@ class ServiceTests(unittest.TestCase):
             di=original(*args,**kwargs)
             self.db.with_name('release_manifest.json').write_text('{}',encoding='utf-8')
             return di
-        with patch('api.service.build_input',side_effect=change):
+        with patch('catalog.default_references.build_input',side_effect=change):
             with self.assertRaises(ApiError) as e:self.service.recommend(self.request)
         self.assertEqual(e.exception.status,409)
 

@@ -27,6 +27,12 @@ def check_release(root: Path) -> dict:
                      for v in scores.values()): errors.append('chipset_tiers_out_of_range')
         except (OSError,ValueError):
             errors.append('chipset_tiers_missing_or_invalid')
+        try:
+            from catalog.spec_reference import reference_table
+            from catalog.repository import CatalogRepository
+            reference_table(CatalogRepository(str(path)))
+        except (OSError,ValueError):
+            errors.append('chipset_primary_reference_missing_or_invalid')
         with closing(sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True)) as c:
             if c.execute('PRAGMA integrity_check').fetchone()[0]!='ok': errors.append('integrity_failed')
             if c.execute('PRAGMA foreign_key_check').fetchall(): errors.append('foreign_key_violation')

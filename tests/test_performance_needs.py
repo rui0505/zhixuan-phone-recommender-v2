@@ -38,12 +38,12 @@ class PerformanceNeedsTests(unittest.TestCase):
                                    quota_path=Path(root)/'quota.sqlite')
             return service.extract(text, [])
 
-    def test_unmentioned_performance_defaults_zero_while_base_defaults_one(self):
+    def test_unmentioned_preferences_retain_nonzero_initial_values(self):
         result = self.draft('预算3000元以内')
         self.assertEqual({p['criterion'] for p in result['extraction']['preferences']}, set(ALL))
         self.assertEqual(result['draft']['weights'], {
             'weight_g': 2, 'storage_gb': 3, 'battery_capacity_mah':2, 'chipset_tier':2,
-            'screen_size_inch': 1, 'dxomark_photo': 0, 'honor_of_kings_avg_fps': 0,
+            'screen_size_inch': 1, 'dxomark_photo': 1, 'honor_of_kings_avg_fps': 1,
             'battery_mixed_usage_duration_min': 0})
         self.assertEqual(PreferenceItem('battery', '未提及').mapped_level, 0)
         self.assertEqual(PreferenceItem('storage', '未提及').mapped_level, 1)
@@ -130,7 +130,7 @@ class PerformanceNeedsTests(unittest.TestCase):
         result = self.draft('喜欢拍照，出门玩要拍很多照片，存储越大越好')
         game = next(p for p in result['extraction']['preferences'] if p['criterion']=='game')
         self.assertEqual(game['level'], '未提及')
-        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 0)
+        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 1)
         self.assertEqual([p['need'] for p in result['extraction']['unsupported_needs']], [])
 
     def test_rejecting_another_game_preserves_hok_priority(self):

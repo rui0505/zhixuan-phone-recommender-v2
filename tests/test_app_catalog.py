@@ -22,6 +22,7 @@ class CatalogAppTests(IsolatedEnvTest):
         shutil.copy2(BASE/'data/release_manifest.json',self.root/'release_manifest.json')
         # 芯片档位表是排名矩阵的运行时依赖，必须跟着库一起走。
         shutil.copy2(BASE/'data/chipset-tiers.json',self.root/'chipset-tiers.json')
+        shutil.copy2(BASE/'data/chipset-primary-reference.json',self.root/'chipset-primary-reference.json')
         self.env=patch.dict(os.environ,{'PHONE_CATALOG_PATH':str(self.root/'catalog.sqlite')})
         self.env.start();self.at=AppTest.from_file(APP,default_timeout=60).run()
     def tearDown(self):self.env.stop();self.temp.cleanup();super().tearDown()
@@ -37,12 +38,37 @@ class CatalogAppTests(IsolatedEnvTest):
         self.assertEqual(self.at.session_state['catalog_bundle']['dataset_version'],
                          json.loads((self.root/'release_manifest.json').read_text(encoding='utf-8'))['dataset_version'])
         self.assertEqual(self.at.dataframe[0].value.columns[1],'score')
+
+    def test_spec_reference_mode_shows_seven_percent_scores_and_invalidates_on_switch(self):
+        self.at.selectbox(key='manual_evaluation_mode').set_value('七维百分制规格参考').run()
+        self.at.selectbox(key='manual_game_scope').set_value('其他游戏暂无实测').run()
+        self.confirm()
+        self.assertEqual(self.at.session_state['catalog_result'].status,'ready')
+        self.assertIn('ref_game',self.at.session_state['catalog_input']['weights'])
+        self.assertTrue(any(len(frame.value.columns)==8 for frame in self.at.dataframe))
+        self.at.selectbox(key='manual_evaluation_mode').set_value('实测资料与原始规格').run()
+        self.assertNotIn('catalog_result',self.at.session_state)
     def test_confirmation_is_required_and_all_zero_has_no_score(self):
         next(b for b in self.at.button if b.label=='确认需求并生成推荐').click().run()
         self.assertNotIn('catalog_result',self.at.session_state)
         for key in ('weight','storage','screen','photo','battery','chipset','game'):
             self.at.slider(key='manual_w_'+key).set_value(0)
         self.confirm();self.assertNotIn('catalog_result',self.at.session_state)
+        self.assertTrue(self.at.error)
+
+    def test_manually_edited_low_photo_weight_is_not_treated_as_unmentioned(self):
+        self.at.slider(key='manual_w_photo').set_value(4).run()
+        self.at.slider(key='manual_w_photo').set_value(1).run()
+        self.confirm()
+        di=self.at.session_state['catalog_input']
+        self.assertGreater(di['weights']['dxomark_photo'],0)
+        self.assertNotIn('dxomark_photo',di['selection_rules']['default_reference_policy']['defaulted_metrics'])
+
+    def test_manual_unsupported_game_scope_does_not_score_other_game_as_hok(self):
+        self.at.slider(key='manual_w_game').set_value(3).run()
+        self.at.selectbox(key='manual_game_scope').set_value('其他游戏暂无实测').run()
+        self.confirm()
+        self.assertNotIn('catalog_result',self.at.session_state)
         self.assertTrue(self.at.error)
     def test_catalog_distinguishes_satellite_variants(self):
         self.assertEqual(len(self.at.session_state['catalog_rows']),484)

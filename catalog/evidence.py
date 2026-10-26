@@ -65,6 +65,9 @@ def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
             '1% Low 当前无有效实测值；不推算、不填 0，不提供完整游戏总分。',
             '记录价格可能过时，二手约价不是新机现价。数据总体验收含待完成人工 / WPS 项。']}
     method=result.decision_context.get('method','topsis')
+    if di.get('selection_rules',{}).get('evaluation_mode')=='spec_reference':
+        bundle['limitations'][2]='游戏参考分由处理器80%与电池容量20%推导，不是游戏帧率、功耗、实测续航或完整游戏体验。'
+        bundle['limitations'][3]='七维百分制采用固定锚点的初始设计，未由真实用户实验校准；缺失输入保留空值，有效0分不等于缺失。'
     bundle['method']=method
     bundle['score_label']='融合排序分' if method=='hybrid_rrf' else 'TOPSIS 贴近度'
     if method=='hybrid_rrf':

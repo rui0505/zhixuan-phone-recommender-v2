@@ -3,13 +3,15 @@ from copy import deepcopy
 from dataclasses import dataclass
 
 from catalog.adapter import build_input
+from catalog.default_references import build_reference_input
+from catalog.spec_reference import build_spec_reference_input, card_scores, reference_version
 from catalog.evidence import build_evidence, render_template, digest
 from catalog.read_views import sku_details, sku_sources, safe_url
 from catalog.release import ReleaseStore
 from catalog.repository import CatalogRepository
 from ranking_modes import rank, ALGORITHM_VERSIONS, SCORE_LABELS, HYBRID_PARAMETERS
 from ui.export_results import export_results
-from .contracts import ApiError, RecommendationRequest, Pagination, METRICS, DEFAULT_WEIGHTS, validate_game_scope
+from .contracts import ApiError, RecommendationRequest, Pagination, METRICS, DEFAULT_WEIGHTS, validate_game_scope, validate_defaulted_metrics, validate_evaluation_mode
 from .categories import CATEGORY_LABELS, CATEGORY_RULE_VERSION, model_categories
 from .presentation import recommendation_reason
 from .performance import performance_capabilities, BATTERY_METRIC
@@ -100,7 +102,8 @@ class CatalogService:
                                'parameters':deepcopy(HYBRID_PARAMETERS) if method=='hybrid_rrf' else {}}
                               for method,version in ALGORITHM_VERSIONS.items()],
                 'performance_capabilities':deepcopy(self._performance_cache[1]),
-                'brands':brands,'metrics':list(METRICS),'defaults':{'weights':dict(DEFAULT_WEIGHTS),'target_screen':6.5,'mode':'new'},
+                'reference_rule_version':reference_version(repo),
+                'brands':brands,'metrics':list(METRICS),'defaults':{'weights':dict(DEFAULT_WEIGHTS),'defaulted_metrics':list(METRICS),'target_screen':6.5,'mode':'new','evaluation_mode':'spec_reference'},
                 'categories':self._category_counts(self._category_index(release)),
                 'acceptance':deepcopy(release.manifest.get('acceptance',{})),
                 'features':{'llm':bool(self.explanations and self.explanations.available),'vikor':False,'images':bool(image_count),'image_models':image_count,'weights':'试验默认值，非学习所得',
@@ -170,11 +173,20 @@ class CatalogService:
         needs=deepcopy(request.needs); weights=deepcopy(request.weights)
         if request.method == 'hybrid_rrf' and any(weights.get(k,0)>0 for k in ('price_cny','refresh_rate_hz')):
             raise ApiError(422,'invalid_request','混合排序的价格和品牌仅作为硬性筛选条件')
-        validate_game_scope(request.game_scope, weights)
+        defaults=validate_defaulted_metrics(request.defaulted_metrics,weights)
+        evaluation_mode=validate_evaluation_mode(request.evaluation_mode)
+        if request.expected_reference_rule_version is not None and request.expected_reference_rule_version!=reference_version(release.repo):
+            raise ApiError(409,'reference_rule_changed','参考评分规则已变化，请刷新后重新确认')
+        validate_game_scope(request.game_scope, {} if evaluation_mode=='spec_reference' else {k:v for k,v in weights.items() if k not in defaults})
         if weights.pop(BATTERY_METRIC,0)>0:
             raise ApiError(422,'unsupported_metric','当前发布不支持续航实测排序')
         try:
-            di=build_input(release.repo,needs,weights,request.target_screen,request.mode)
+            di=(build_spec_reference_input(release.repo,needs,weights,request.target_screen,request.mode)
+                if evaluation_mode=='spec_reference' else
+                build_reference_input(release.repo,needs,weights,request.target_screen,request.mode,defaults,request.game_scope))
+            if evaluation_mode=='spec_reference':di['selection_rules']['requested_game_scope']=request.game_scope
+            if evaluation_mode=='spec_reference' and request.expected_reference_rule_version is not None and request.expected_reference_rule_version!=di['selection_rules']['reference_scoring']['version']:
+                raise ApiError(409,'reference_rule_changed','参考评分规则已变化，请刷新后重新确认')
             if request.game_scope != 'honor_of_kings':
                 di['selection_rules']['game_scope'] = request.game_scope
             result=rank(di,target_screen=request.target_screen,method=request.method)
@@ -201,6 +213,8 @@ class CatalogService:
         explanations={r['sku_id']:render_template(build_evidence(di,result,outcome.needs,sku_ids=[r['sku_id']])) for r in ranked}
         reasons={r['sku_id']:recommendation_reason(outcome.bundle,r['sku_id']) for r in ranked}
         payload={'status':result.status,'reason':result.reason,'ranked':[self.card(r,outcome.release_key) for r in ranked],
+                 'evaluation_mode':di['selection_rules'].get('evaluation_mode','measured'),
+                 'reference_rule_version':di['selection_rules'].get('reference_scoring',{}).get('version') or reference_version(self.store.get().repo),
                  'ranked_total':len(result.ranked),'page':pagination.page,'page_size':pagination.page_size,
                  'unscored':unscored(result.unscored_candidates),'backups':unscored(result.backups),
                  'coverage':deepcopy(di['coverage_summary']),'selection_rules':deepcopy(di['selection_rules']),
@@ -213,6 +227,8 @@ class CatalogService:
                  'ranking_sha256':result.ranking_sha256,'release':deepcopy(outcome.release_key),
                  'evidence':public_evidence(outcome.bundle) if outcome.bundle else None,
                  'sources':[], 'explanations':explanations,'recommendation_reasons':reasons}
+        if payload['evaluation_mode']=='spec_reference':
+            for card in payload['ranked']:card['reference_scores']=card_scores(di,card['sku_id'])
         if payload['evidence']:
             payload['sources']=list({s['source_id']:s for fact in payload['evidence']['facts'].values() for s in fact['sources']}.values())
         self._unchanged(outcome.release_key); return payload

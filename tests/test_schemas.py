@@ -202,7 +202,7 @@ class TestPreferenceMapping(unittest.TestCase):
         self.assertEqual(weights["screen"], 1.0)
         self.assertEqual(weights["battery"], 2.0)
         self.assertEqual(weights["chipset"], 2.0)
-        self.assertEqual(weights["game"], 0.0)       # 不提就是不打游戏
+        self.assertEqual(weights["game"], 1.0)       # 系统初始参考
         # 关键差异：绝对值不再强制和为 1，用户的「非常重要」才压得住默认值
         self.assertGreater(sum(weights.values()), 1.0)
 
@@ -210,7 +210,7 @@ class TestPreferenceMapping(unittest.TestCase):
         """未提及不是统一的 1——每个维度有自己的常识默认值。"""
         weights = initial_weights(Needs(preferences=[]))
         self.assertEqual(weights["storage"], 3.0)
-        self.assertEqual(weights["game"], 0.0)
+        self.assertEqual(weights["game"], 1.0)
         self.assertNotEqual(weights["storage"], weights["screen"])
 
     def test_all_indifferent_is_rejected(self):

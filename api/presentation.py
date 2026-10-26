@@ -15,6 +15,8 @@ _LABELS = {'price_cny': '价格', 'weight_g': '重量', 'storage_gb': '存储',
            'honor_of_kings_avg_fps': '王者荣耀测试', 'chipset_tier': '处理器档位'}
 _PHOTO_RULES = {'dxomark_v4': '第4版', 'dxomark_v5': '第5版', 'dxomark_v6': '第6版'}
 _MEASURED = {'dxomark_photo', 'honor_of_kings_avg_fps'}
+from catalog.spec_reference import METRICS as _REFERENCE_METRICS
+_LABELS.update({key:name for key,name,_ in _REFERENCE_METRICS.values()})
 
 
 def _number(value):
@@ -61,7 +63,7 @@ def _has_source(fact):
 def _usable(fact):
     key = fact.get('metric_key')
     value = fact.get('value')
-    if key not in _LABELS or not _number(value) or value <= 0 or fact.get('status') == 'missing':
+    if key not in _LABELS or not _number(value) or value < 0 or (value == 0 and not key.startswith('ref_')) or fact.get('status') == 'missing':
         return False
     if key not in _MEASURED:
         return True
@@ -101,6 +103,12 @@ def _price_match(fact, model, needs):
 
 def _match(fact, model, needs, target):
     key, value = fact['metric_key'], _fmt(fact['value'])
+    if key.startswith('ref_'):
+        inputs=fact.get('raw_inputs',{})
+        raw_key,unit={'ref_storage':('storage_gb','GB'),'ref_weight':('weight_g','克'),
+            'ref_battery':('battery_capacity_mah','mAh')}.get(key,(None,''))
+        detail=f'；记录规格 {_fmt(inputs[raw_key])} {unit}' if raw_key and _number(inputs.get(raw_key)) else ''
+        return f'{_LABELS[key]}为 {value}/100（规格估算{detail}）。'
     if key == 'price_cny':
         return _price_match(fact, model, needs)
     if key == 'weight_g':
@@ -171,6 +179,8 @@ def _cost(fact, target):
 
 def _tradeoff(fact, other, target):
     key, value, peer = fact['metric_key'], _fmt(fact['value']), _fmt(other['value'])
+    if key.startswith('ref_'):
+        return f'同次候选的{_LABELS[key]}最高为 {peer}/100，本机为 {value}/100；均为规格代理，实际体验需要核实。'
     if key == 'screen_size_inch':
         return (f'同次候选中有屏幕距离目标仅 {_fmt(abs(other["value"] - target))} 英寸的机型；'
                 f'本机相差 {_fmt(abs(fact["value"] - target))} 英寸，尺寸更偏离你的目标。')
@@ -249,6 +259,8 @@ def recommendation_reason(bundle, sku_id) -> dict:
             limit(scope + '照片子分只覆盖对应版本的测试规则，不能直接说明所有场景下的成片效果。', ident)
         elif key == 'battery_capacity_mah':
             limit('标称电池容量不能直接说明一次充电能用多久。', ident)
+        elif key.startswith('ref_'):
+            limit('分项为固定规则的规格参考：容量不等于续航，镜头规格不等于成片质量，游戏参考不代表实测帧率。', ident)
         elif fact.get('status') == 'spec_reference' and key in ('weight_g', 'screen_size_inch'):
             limit(f'{_LABELS[key]}来自规格记录，实际握持感还需要试拿。', ident)
         if key not in _MEASURED and not _has_source(fact):

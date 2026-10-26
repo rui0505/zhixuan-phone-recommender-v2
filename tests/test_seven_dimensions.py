@@ -58,7 +58,7 @@ class SevenDimensionTests(unittest.TestCase):
             meta=client.get('/api/v1/meta').json()
             body={**meta['defaults'],'needs':{'budget':{'min':None,'max':None},'min_storage':None,
                 'brands':{'include':[],'exclude':[]}},'weights':{'chipset_tier':9},
-                'method':'hybrid_rrf','confirmed':True,'expected_release':meta['release']}
+                'method':'hybrid_rrf','confirmed':True,'expected_release':meta['release'],'defaulted_metrics':[]}
             result=client.post('/api/v1/recommend',json=body)
             self.assertEqual(result.status_code,200,result.text)
             self.assertEqual(result.json()['status'],'ready')

@@ -37,17 +37,17 @@ async function harness({offline=false}={}){
       if(value){const key=attr.replace(/-([a-z])/g,(_,c)=>c.toUpperCase());node.dataset[key]=value;(groups[attr]??=[]).push(node);}
     }
   }
-  for(const [id,values] of Object.entries({mode:['new','used','all'],method:['topsis','hybrid_rrf'],'game-scope':['honor_of_kings','unconfirmed','unsupported']})){
+  for(const [id,values] of Object.entries({mode:['new','used','all'],method:['topsis','hybrid_rrf'],'evaluation-mode':['spec_reference','measured'],'game-scope':['honor_of_kings','unconfirmed','unsupported']})){
     const node=ids.get(id);if(!node)continue;node.options=values.map(value=>Object.assign(new Node('option'),{value}));
     const selectBody=html.match(new RegExp(`<select id="${id}"[^>]*>(.*?)</select>`,'s'))?.[1];node.value=selectBody?.match(/value="([^"]+)"/)?.[1]??values[0];
   }
   const outputs=new Map();globalThis.document={getElementById:id=>ids.get(id),createElement:tag=>new Node(tag),createTextNode:text=>Object.assign(new Node(),{textContent:text}),body:new Node(),querySelector:selector=>{if(!outputs.has(selector))outputs.set(selector,new Node('output'));return outputs.get(selector);},querySelectorAll:selector=>groups[selector.match(/data-([\w-]+)/)?.[1]]??[]};
   const calls=[];let needsPayload;
-  const meta={release,algorithms,metrics:Object.keys(weights),defaults:{weights,mode:'new',target_screen:6.5},brands:['华为','苹果'],features:{needs_extraction:true,llm:false,offline_fixture:offline},counts:{phone_models:10,skus:20},acceptance:{},performance_capabilities:{}};
+  const meta={release,algorithms,reference_rule_version:'spec-reference-v1',metrics:Object.keys(weights),defaults:{weights,mode:'new',target_screen:6.5,evaluation_mode:'spec_reference'},brands:['华为','苹果'],features:{needs_extraction:true,llm:false,offline_fixture:offline},counts:{phone_models:10,skus:20},acceptance:{},performance_capabilities:{}};
   globalThis.fetch=async(path,options)=>{
     calls.push({path,body:options.body?JSON.parse(options.body):undefined});
     let payload=meta;
-    if(path.startsWith('/api/v1/recommend')){const body=JSON.parse(options.body);payload={release,status:'ready',method:body.method,algorithm_version:body.expected_algorithm_version,score_label:body.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度',ranked:[],ranked_total:3,page:1,page_size:12,effective_weights:body.weights,unscored:[],backups:[],performance_capabilities:{}};}
+    if(path.startsWith('/api/v1/recommend')){const body=JSON.parse(options.body);payload={release,status:'ready',method:body.method,evaluation_mode:body.evaluation_mode,reference_rule_version:body.expected_reference_rule_version,algorithm_version:body.expected_algorithm_version,score_label:body.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度',ranked:[],ranked_total:3,page:1,page_size:12,effective_weights:body.weights,unscored:[],backups:[],performance_capabilities:{}};}
     if(path==='/api/v1/needs')payload=needsPayload;
     return {ok:true,json:async()=>payload};
   };
@@ -58,6 +58,9 @@ async function harness({offline=false}={}){
 test('real form submits default then explicit hybrid with bound version and original release fields',async()=>{
   const h=await harness();await h.generate();let body=h.calls.find(c=>c.path.startsWith('/api/v1/recommend')).body;
   assert.equal(body.method,'topsis');assert.equal(body.expected_algorithm_version,'topsis-1.0.0');assert.deepEqual(body.expected_release,release);
+  assert.equal(body.evaluation_mode,'spec_reference');assert.equal(body.expected_reference_rule_version,'spec-reference-v1');
+  assert.equal(body.weights.dxomark_photo,1);assert.equal(body.weights.honor_of_kings_avg_fps,1);
+  assert.ok(body.defaulted_metrics.includes('dxomark_photo'));assert.ok(body.defaulted_metrics.includes('honor_of_kings_avg_fps'));
   await h.input('method','hybrid_rrf');assert.equal(h.ids.get('downloads').hidden,true);await h.generate();body=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).at(-1).body;
   assert.equal(body.method,'hybrid_rrf');assert.equal(body.expected_algorithm_version,'hybrid-rrf-1.0.0-experimental');assert.equal(body.weights.battery_mixed_usage_duration_min,undefined);
   h.ids.get('needs-text').value='新的需求';await h.ids.get('needs-text').emit('input');assert.equal(h.ids.get('downloads').hidden,true);assert.equal(h.ids.get('confirmed').checked,false);
@@ -76,12 +79,31 @@ test('real extraction and explicit not-count action retain unsupported intent an
   assert.equal(body.weights.honor_of_kings_avg_fps,0);assert.equal(body.weights.battery_mixed_usage_duration_min,undefined);assert.equal(body.game_scope,'unsupported');assert.equal(body.needs.budget.max,3000);assert.equal(body.needs.min_storage,256);assert.deepEqual(body.needs.brands.include,['华为']);
 });
 
-test('manual game importance requires an explicit measured-game scope choice',async()=>{
+test('specification mode permits game estimates and measured mode blocks unsupported explicit scope',async()=>{
   const h=await harness();await h.input('honor_of_kings_avg_fps',2);await h.generate();
   let body=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).at(-1).body;
   assert.equal(body.game_scope,'unconfirmed');
+  assert.equal(body.evaluation_mode,'spec_reference');assert.equal(h.ids.get('performance-blocker').textContent,'');
+  assert.equal(body.defaulted_metrics.includes('honor_of_kings_avg_fps'),false);
+  await h.input('evaluation-mode','measured');assert.equal(h.ids.get('downloads').hidden,true);assert.equal(h.ids.get('confirmed').checked,false);
+  const before=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).length;await h.generate();
+  assert.equal(h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).length,before);
+  assert.match(h.ids.get('performance-blocker').textContent,/游戏范围/);
   await h.input('game-scope','honor_of_kings');await h.generate();body=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).at(-1).body;
-  assert.equal(body.game_scope,'honor_of_kings');assert.equal(body.weights.honor_of_kings_avg_fps,3);
+  assert.equal(body.game_scope,'honor_of_kings');assert.equal(body.weights.honor_of_kings_avg_fps,3);assert.equal(body.evaluation_mode,'measured');
+});
+
+test('measured mode retains default defer choice and survives an extraction draft',async()=>{
+  const h=await harness();await h.input('evaluation-mode','measured');await h.generate();
+  let body=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).at(-1).body;
+  assert.equal(body.evaluation_mode,'measured');assert.equal(body.weights.honor_of_kings_avg_fps,1);
+  assert.ok(body.defaulted_metrics.includes('honor_of_kings_avg_fps'));
+  h.ids.get('needs-text').value='预算三千，256GB';
+  h.setNeeds({status:'ok',notice:'离线测试',extraction:{budget:{reference:null},preferences:[],clarifications:[],unsupported_needs:[]},draft:{confirmed:false,evaluation_mode:'spec_reference',needs:{budget:{min:null,max:3000},min_storage:256,brands:{include:[],exclude:[]}},weights,game_scope:'honor_of_kings',target_screen:6.5}});
+  await h.ids.get('natural-needs').emit('submit');await settle();await h.generate();
+  body=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).at(-1).body;
+  assert.equal(h.ids.get('evaluation-mode').value,'measured');assert.equal(body.evaluation_mode,'measured');
+  assert.equal(body.needs.budget.max,3000);assert.equal(body.expected_reference_rule_version,'spec-reference-v1');
 });
 
 test('offline extraction preview discloses fixture instead of claiming paid provider output',async()=>{

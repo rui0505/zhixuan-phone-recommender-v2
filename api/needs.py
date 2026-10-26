@@ -116,13 +116,14 @@ class NeedsService:
             except (ValueError, TypeError, KeyError, ApiError):
                 return {'status':'degraded', 'extraction':result, 'draft':None,
                         'notice':'条件、品牌或偏好未能可靠匹配，请在下方手动确认；没有自动放宽条件'}
-            notice='已生成待确认草稿，七项偏好按维度等级表赋权。电池容量不等于续航；拍照与游戏未提及时不计入。价格和品牌仅作硬性筛选，请检查后确认。'
+            notice='已生成待确认草稿，七项偏好按维度等级表赋权，拍照与游戏未提及时保留初值 1。规格模式按固定规则估算；实测模式若可比资料不完整或游戏范围未确认，会保留初始偏好并说明本次未计入。电池容量不等于续航，价格和品牌仅作硬性筛选，请检查后确认。'
             if inferred is not None:
                 notice=(f'你说的是「{result["budget"]["reference"]:g} 元左右」，'
                         f'已按 ¥{inferred[0]:,}–¥{inferred[1]:,} 推断预算范围（推断值，可修改）。'
                         + notice)
             return {'status':result['status'], 'extraction':result,
                     'draft':{'needs':needs, 'weights':weights, 'target_screen':result['target_screen'] if result['target_screen'] is not None else 6.5,
+                             'defaulted_metrics':sorted(CONTROL_KEYS[p['criterion']] for p in result['preferences'] if p['level']=='未提及'),
                              'confirmed':False, 'budget_inferred':inferred is not None,
                              'desired_weights':dict(weights), 'game_scope':result['game_use']['game_scope']},
                     'notice':notice}

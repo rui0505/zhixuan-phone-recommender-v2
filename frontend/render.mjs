@@ -1,4 +1,5 @@
-export const labels={price_cny:'记录价格',battery_capacity_mah:'电池容量',chipset_tier:'处理器档位',weight_g:'重量',storage_gb:'存储',refresh_rate_hz:'刷新率',screen_size_inch:'屏幕尺寸',dxomark_photo:'DXOMARK 照片子分',honor_of_kings_avg_fps:'王者荣耀平均帧率',battery_mixed_usage_duration_min:'混合使用实测续航'};
+const referenceDimensions=[['ref_storage','存储','storage_gb'],['ref_weight','重量','weight_g'],['ref_battery','电池容量','battery_capacity_mah'],['ref_chipset','处理器','chipset_tier'],['ref_screen','屏幕尺寸匹配','screen_size_inch'],['ref_photo','拍照规格','dxomark_photo'],['ref_game','游戏（规格估算）','honor_of_kings_avg_fps']];
+export const labels={price_cny:'记录价格',battery_capacity_mah:'电池容量',chipset_tier:'处理器档位',weight_g:'重量',storage_gb:'存储',refresh_rate_hz:'刷新率',screen_size_inch:'屏幕尺寸',dxomark_photo:'DXOMARK 照片子分',honor_of_kings_avg_fps:'王者荣耀平均帧率',battery_mixed_usage_duration_min:'混合使用实测续航',...Object.fromEntries(referenceDimensions.map(([key,name])=>[key,name]))};
 export const conditionLabel=value=>({new:'新机',used:'二手',unknown:'成色未知'}[value]??'成色未记载');
 export const valueText=(value,unit='')=>value===null||value===undefined||value===''?'未记载':`${value}${unit}`;
 export function element(tag,text,className){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;}
@@ -23,16 +24,36 @@ export function renderCard(record,context={}){
   if(categories.length){const tags=element('div',undefined,'category-tags');tags.setAttribute('aria-label','有评测资料的场景，不代表性能认证');for(const c of categories)tags.append(element('span',`${c.label} · 有资料`,'category-tag'));body.append(tags);}
   const pending=(record.category_assessments??[]).find(c=>c.id===context.category&&c.status==='pending_review');
   if(pending)body.append(element('p',`${pending.label} · 待评估：${pending.reason}`,'category-pending'));
+  if(Array.isArray(record.reference_scores))body.append(renderReferenceScores(record.reference_scores,context.referenceRuleVersion));
   if(context.reason)body.append(renderReason(context.reason));
   if(context.explanation||record.score!=null){
     const detail=element('details',undefined,'technical-evidence');detail.append(element('summary','查看数据与计算依据'));
     detail.append(element('p',`配置编号：${record.sku_id}`,'small'));
-    if(record.score!=null)detail.append(element('div',`${context.scoreLabel??(context.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度')} ${Number(record.score).toFixed(4)}`,'score'));
+    if(record.score!=null){detail.append(element('div',`${context.scoreLabel??(context.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度')} ${Number(record.score).toFixed(4)}`,'score'));detail.append(element('p','综合排序分只表示当前候选集的相对位置，不是百分制性能分。','small'));}
     if(context.explanation)detail.append(element('p',context.explanation,'explanation'));
     if(context.reason?.fact_ids?.length)detail.append(element('p',`上述理由引用：${context.reason.fact_ids.join('、')}`,'small'));
     if(context.onExplain){const ai=button('DeepSeek 辅助核查',()=>context.onExplain(record.sku_id,detail));ai.disabled=!context.llmEnabled;detail.append(ai,element('p',context.llmEnabled?'仅向服务方发送本配置推荐证据；不改变分数与排名。':'自然语言理由由程序依据数据生成，不需要大模型调用。','small'));}body.append(detail);
   }
   const actions=element('div',undefined,'card-actions');actions.append(button('详情与来源',()=>context.onDetails?.(record.sku_id)),button(context.selected?'已加入对比':'加入对比',()=>context.onCompare?.(record.sku_id)));body.append(actions);card.append(panel,body);return card;
+}
+function renderReferenceScores(scores,version){
+  const section=element('section',undefined,'reference-scores');section.setAttribute('aria-label','七项规格参考分，满分100分');
+  section.append(element('h4','七项规格参考分'),element('p','0—100 分 · 固定规则估算，非实测体验分','small'));
+  const basis=element('details',undefined,'reference-basis');basis.append(element('summary','查看七项换算依据'));
+  if(version)basis.append(element('p',`参考规则：${version}`,'small'));
+  for(const [key,name] of referenceDimensions){
+    const item=scores.find(value=>value.metric_key===key),raw=item?.score;
+    const score=typeof raw==='number'&&Number.isFinite(raw)&&raw>=0&&raw<=100?raw:null;
+    const line=element('div',undefined,'reference-score');line.dataset.metricKey=key;
+    const heading=element('div',undefined,'reference-score-heading');heading.append(element('span',name),element('span',score===null?'资料不足':`${Number(score.toFixed(1))} / 100`,score===null?'reference-score-value small':'reference-score-value'));line.append(heading);
+    if(score!==null){const bar=element('progress');bar.max=100;bar.value=score;bar.setAttribute('aria-label',`${name}规格参考分`);bar.textContent=`${score} / 100`;line.append(bar);}
+    else line.classList.add('reference-score-missing');
+    section.append(line);
+    const inputs=Object.entries(item?.inputs??{}).map(([input,value])=>`${input}=${value===null?'资料不足':typeof value==='object'?JSON.stringify(value):value}`).join('；');
+    basis.append(element('p',`${name}：${item?.basis||'资料不足，尚无可用的换算依据。'}${inputs?` 输入：${inputs}`:''}`,'small'));
+  }
+  section.append(element('p','游戏为规格估算：80% 处理器参考分 + 20% 电池容量参考分，容量不代表实际续航。屏幕分为尺寸匹配，不代表屏幕显示质量；拍照规格不代表成像质量。','reference-limitations small'),basis);
+  return section;
 }
 function renderReason(reason){
   const section=element('section',undefined,'recommendation-reason');section.setAttribute('aria-label','为什么适合你');
@@ -56,9 +77,15 @@ export function renderDecision(state){
   note.append(element('h3',result.status==='ready'?`${result.ranked_total} 个可比配置 · 当前候选集内相对排序`:'当前条件暂不生成成绩'));
   note.append(element('p',result.reason,result.status==='ready'?'small':'warning'));
   note.append(element('p',`${result.score_label??'TOPSIS 相对贴近度'}不是绝对性能或购买概率；不同条件下的分数不能直接比较。`,'small'));
+  if(result.evaluation_mode==='spec_reference')note.append(element('p','本次使用七项规格参考分：各项按固定规则换算为 0—100 分，再依据你的权重排序。游戏与拍照均为规格代理，不代表实测表现。','small'));
+  else if(result.evaluation_mode==='measured')note.append(element('p','本次使用可比实测资料；拍照与游戏的协议、测试条件和缺失资料按实测规则核验。','small'));
   if(result.method==='hybrid_rrf')note.append(element('p','实验融合：theta=1、alpha=0.5、k=10，使用固定参数；未证明比默认排序更准确，也不是学习所得。','warning'));
+  for(const item of result.selection_rules?.default_reference_policy?.deferred??[])note.append(element('p',`${labels[item.metric_key]}：保留系统初始权重 ${item.initial_weight}。${item.reason}。若设为一般或以上，将严格检查该项资料。`,'warning'));
   const more=element('details');more.append(element('summary','查看权重、版本与未评分说明'));
   more.append(element('p',`数据 ${result.dataset_version} / 规则 ${result.feature_rule_version} / ${result.algorithm_version}`,'small'));
+  if(result.reference_rule_version)more.append(element('p',`规格参考规则 ${result.reference_rule_version}`,'small'));
+  const formulas=result.selection_rules?.reference_scoring?.formulas;
+  if(formulas)more.append(element('p',`固定换算规则：${typeof formulas==='string'?formulas:JSON.stringify(formulas)}`,'small'));
   more.append(element('p',`有效权重：${Object.entries(result.effective_weights).map(([k,v])=>`${labels[k]??k} ${v}`).join(' · ')}`,'small'));
   more.append(element('p',`未评分 ${result.unscored.length} · 备选 ${result.backups.length} · 决策 ${result.decision_sha256}`,'small'));
   for(const row of [...result.unscored,...result.backups]){
@@ -66,8 +93,20 @@ export function renderDecision(state){
     more.append(element('p',`${row.display_name} · ${row.sku_id} · ${missing||'独立机型不足，未评分'}`,'small'));
   }note.append(more);return note;
 }
-export function renderPerformance(capabilities,weights,intent,current=false){
+export function renderPerformance(capabilities,weights,intent,current=false,evaluationMode='measured'){
   const content=element('div',undefined,'performance-coverage');
+  if(evaluationMode==='spec_reference'){
+    content.append(element('p','七项均为固定规则的规格参考；资料不足不补零。处理器档位包含第三方榜单估算，电池容量不代表实际续航，屏幕仅比较尺寸匹配，拍照规格不代表成像质量。','small'));
+    const criteria={storage_gb:'storage',weight_g:'weight',battery_capacity_mah:'battery',chipset_tier:'chipset',screen_size_inch:'screen',dxomark_photo:'photo',honor_of_kings_avg_fps:'game'};
+    for(const [,name,key] of referenceDimensions){
+      const block=element('div',undefined,'performance-record');block.append(element('p',`${name} · 你的权重 ${weights[key]??0}${Number(weights[key])>0?'':'（不参与排序）'}`));
+      const preference=intent?.extraction?.preferences?.find(p=>p.criterion===criteria[key]);
+      if(preference)block.append(element('p',`${preference.verdict==='inferred'?'使用场景推断，待你确认':preference.evidence?'原话提取，待你确认':'未明确提及'}：${preference.level}${preference.evidence?`；原话「${preference.evidence}」`:''}`,'small'));
+      if(key==='honor_of_kings_avg_fps')block.append(element('p',`80% 处理器参考分 + 20% 电池容量参考分，仅为规格估算。${intent?.extraction?.game_use?`原始游戏意图：${intent.extraction.game_use.names?.join('、')||intent.extraction.game_use.evidence||'游戏名称未明确'}。`:''}`,'small'));
+      content.append(block);
+    }
+    return content;
+  }
   content.append(element('p',current?'以下为本次已计算条件下的独立指标覆盖；不代表三项共同可比。':'当前条件待验证。以下计数仅为默认新机、未加筛选的参考覆盖；生成推荐后核验当前范围。','small'));
   const dimensions={dxomark_photo:'photo',honor_of_kings_avg_fps:'game',battery_mixed_usage_duration_min:'battery'};
   for(const [key,criterion] of Object.entries(dimensions)){

@@ -29,6 +29,7 @@ def make_release(root: Path, *, prepare=None) -> Path:
     destination = root / 'data' / 'catalog.sqlite'
     (root / 'data').mkdir(parents=True, exist_ok=True)
     shutil.copy2(BASE / 'data' / 'chipset-tiers.json', root / 'data' / 'chipset-tiers.json')
+    shutil.copy2(BASE / 'data' / 'chipset-primary-reference.json', root / 'data' / 'chipset-primary-reference.json')
     export_snapshot(source, destination, approved_asset_ids=set(), release_status={
         'machine_acceptance': 'PASS', 'overall_acceptance': 'PENDING', 'wps_review': 'NOT_CHECKED'})
     return destination
