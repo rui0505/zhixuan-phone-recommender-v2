@@ -168,6 +168,8 @@ class CatalogService:
         if request.expected_algorithm_version is not None and request.expected_algorithm_version!=ALGORITHM_VERSIONS[request.method]:
             raise ApiError(409,'algorithm_changed','算法版本已变化，请刷新并重新确认')
         needs=deepcopy(request.needs); weights=deepcopy(request.weights)
+        if request.method == 'hybrid_rrf' and any(weights.get(k,0)>0 for k in ('price_cny','refresh_rate_hz')):
+            raise ApiError(422,'invalid_request','混合排序的价格和品牌仅作为硬性筛选条件')
         validate_game_scope(request.game_scope, weights)
         if weights.pop(BATTERY_METRIC,0)>0:
             raise ApiError(422,'unsupported_metric','当前发布不支持续航实测排序')

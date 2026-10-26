@@ -4,12 +4,19 @@
 """
 from copy import deepcopy
 import math
-from schemas import LEVEL_MAP, UNMENTIONED_LEVEL
+from schemas import LEVEL_MAP, UNMENTIONED_LEVEL, WEIGHT_TABLE
 
-KEYS = ('price', 'weight', 'storage', 'refresh', 'screen')
+# 与 `schemas.CRITERIA` 保持一致：7 个体验维度，价格由预算区间单独表达。
+KEYS = ('weight', 'storage', 'screen', 'photo', 'game', 'battery', 'chipset')
 LABELS = {
-    'price': '价格更低', 'weight': '机身更轻', 'storage': '存储更大',
-    'refresh': '刷新率更高', 'screen': '屏幕接近目标尺寸',
+    'weight': '机身更轻', 'storage': '存储更大', 'screen': '屏幕接近目标尺寸',
+    'photo': '拍照更好', 'game': '王者荣耀帧率更高', 'battery': '电池容量更大',
+    'chipset': '处理器档位更高',
+}
+# 蓝色等级 → 中文等级，用于查 `schemas.WEIGHT_TABLE`。
+BLUE_TO_LEVEL = {
+    'unknown': '未提及', 'unimportant': '不在意', 'normal': '一般',
+    'important': '重要', 'very_important': '非常重要',
 }
 LEVEL_SCORES = {
     'unknown': UNMENTIONED_LEVEL, 'unimportant': LEVEL_MAP['不在意'],
@@ -96,7 +103,10 @@ def build_initial_weights(needs):
     目标屏幕为空时关闭屏幕评分。调用方应明确让用户确认此行为。
     """
     needs = validate_needs(needs)
-    raw = {key: LEVEL_SCORES[needs['preferences'][key]] for key in KEYS}
+    # 与主链路同源：查 WEIGHT_TABLE 取绝对值，再由 normalize_weights 归一化成
+    # 占比供问卷面板展示。旧实现用统一的等级序号，无法表达维度间的默认值差异。
+    raw = {key: float(WEIGHT_TABLE[key][BLUE_TO_LEVEL[needs['preferences'][key]]])
+           for key in KEYS}
     effective = dict(raw)
     inactive = []
     if needs['target_screen_inches'] is None:
@@ -163,16 +173,17 @@ def apply_answer(weights, question, answer, answered_ids):
     }
 
 
+# 价格不再是偏好维度，取舍题改成体验维度之间的比较。
 QUESTION_BANK = (
-    {'id': 'light_price', 'a_key': 'weight', 'b_key': 'price',
+    {'id': 'light_storage', 'a_key': 'weight', 'b_key': 'storage',
      'text': '假设其他条件相同，你更愿意选择哪种改善？',
-     'a_label': '机身轻20克', 'b_label': '便宜200元'},
-    {'id': 'storage_price', 'a_key': 'storage', 'b_key': 'price',
+     'a_label': '机身轻20克', 'b_label': '存储从256GB增加到512GB'},
+    {'id': 'photo_storage', 'a_key': 'photo', 'b_key': 'storage',
      'text': '假设其他条件相同，你更愿意选择哪种改善？',
-     'a_label': '存储从256GB增加到512GB', 'b_label': '便宜300元'},
-    {'id': 'refresh_price', 'a_key': 'refresh', 'b_key': 'price',
+     'a_label': '拍照评分高一档', 'b_label': '存储从256GB增加到512GB'},
+    {'id': 'battery_weight', 'a_key': 'battery', 'b_key': 'weight',
      'text': '假设其他条件相同，你更愿意选择哪种改善？',
-     'a_label': '刷新率从60Hz提高到120Hz', 'b_label': '便宜200元'},
+     'a_label': '电池容量多1000mAh', 'b_label': '机身轻20克'},
 )
 
 

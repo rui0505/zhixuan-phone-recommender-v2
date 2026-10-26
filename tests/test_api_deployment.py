@@ -38,7 +38,9 @@ class DeploymentTests(unittest.TestCase):
     def test_delivery_real_http_smoke_exists_and_runs(self):
         result=subprocess.run([sys.executable,'scripts/api_smoke.py','--self-host'],cwd=ROOT,capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr)
-        report=json.loads(result.stdout); self.assertEqual(report['ranked_total'],51);self.assertEqual(report['formats'],['csv','xlsx','json'])
+        report=json.loads(result.stdout); # 2026-10-26：默认权重新增 电池2/处理器档位2，缺这两项数据的机型失去资格，
+        # 候选从 51 条降到 40 条。拍照默认保持 0（DXOMARK 覆盖仅 11/51）。
+        self.assertEqual(report['ranked_total'],40);self.assertEqual(report['formats'],['csv','xlsx','json'])
     def test_release_unchanged(self):
         for name,digest in [('catalog.sqlite','128207745f5450c285cb8d6c61ff2c692f19387f2df0823690cd5b323c453bc8'),('release_manifest.json','d7d899e07c540deab0ff01ae19555765cd159809dd7c7bce4b3499b87b45ee22')]:
             self.assertEqual(hashlib.sha256((ROOT/'data'/name).read_bytes()).hexdigest(),digest)

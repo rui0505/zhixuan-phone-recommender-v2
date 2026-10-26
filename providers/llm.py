@@ -65,16 +65,22 @@ prompt_version: extract-needs-v1.2
 - 每一句都是**用户本人**说的，不要当成问答记录。
 - 早期提到的、后面没有推翻的条件仍然有效。
 
-## 偏好维度（8 个，每个都必须给判断；不表示数据库已支持排序）
-price=价格更低　weight=机身更轻　storage=存储更大　refresh=刷新率更高　screen=屏幕接近偏好
-game=游戏表现　photo=拍照表现　battery=续航表现
-游戏、拍照、续航没提到必须填未提及；基础偏好默认1、新性能偏好默认0，由代码映射。
-你只抽取用户愿望，不能判断数据库覆盖、商品表现、排名或生成数值权重。
-显式「拍照最重要」=非常重要/extracted；「续航重要」=重要/extracted。
-「爱打和平精英」支持游戏用途：game=重要/inferred，证据保留「爱打和平精英」，需用户确认强度与范围。
-所有推断必须 verdict=inferred，不得伪装显式最高等级；未提及用unknown，明确表达用extracted。
-当前游戏指标只指同条件王者荣耀平均帧率；不得把和平精英、其他游戏或泛游戏用途改写为王者荣耀。
-照片仅指同版DXOMARK照片子分，不代表视频/自拍；电池容量和充电功率不得代替实测续航。
+## 可评分维度（7 个，每个都必须给判断，一个都不能少）
+weight=机身更轻　storage=存储更大　screen=屏幕接近偏好　photo=拍照更好
+game=王者荣耀实测帧率更高　battery=电池容量更大　chipset=处理器档位更高
+
+⚠️ **价格不在这七个维度里。** 价格只通过 budget_min / budget_max / budget_reference
+表达，不要输出 price 这个维度，也不要给价格打偏好等级。
+
+各维度的边界（越界就是错）：
+- game **只代表王者荣耀**的实测帧率。用户提到别的游戏（原神、和平精英、崩坏…）
+  或笼统说「打游戏」时，可以记录 game 的愿望等级及原话，但必须标 unsupported_needs 的「真实游戏性能」并等待确认游戏范围。
+  我们没有那些游戏的实测数据，不能拿王者帧率顶替。
+- battery **只代表电池标称容量**，不代表续航时长。用户说「电池大」→ battery 打分；
+  说「续航久」「一天一充」「待机长」→ battery 保持未提及，并标 unsupported_needs 的「续航」。
+- chipset 是第三方综合性能榜单的换算档位，不是本站实测；只反映芯片档位，
+  不反映某台机器的散热与调度。
+- photo 来自 DXOMARK 照片子分，反映实验室拍照评分，不反映你个人的色彩偏好。
 
 ## 取值（只能从这五个里选，一个都不能少）
 未提及 / 不在意 / 一般 / 重要 / 非常重要
@@ -110,9 +116,11 @@ game=游戏表现　photo=拍照表现　battery=续航表现
 - excluded_brands：被明确排除的品牌。「不要华为」→ ["华为"]。
   ⚠️ 排除项**不要**放进 brands。
 - unsupported_needs：数据覆盖不到的需求。只能取这几个值：
-  影像 / 续航 / 真实游戏性能 / 分辨率 / 机身尺寸手感 / 信号质量 / 处理器性能。
-  出现相关词（拍照、续航、打游戏、性价比…）就必须标。**漏标比多标严重得多**，
-  漏标会生成虚假结论。拿不准就标上。
+  续航 / 真实游戏性能 / 分辨率 / 机身尺寸手感 / 信号质量。
+  ⚠️「影像」和「处理器性能」**已经不在这个列表里**——它们分别由 photo 和 chipset
+  维度覆盖，再标成"未覆盖"会自相矛盾。拍照好就填 photo 的等级，不要标影像。
+  出现相关词（续航、打游戏、原神、分辨率、单手、信号…）就必须标。
+  **漏标比多标严重得多**，漏标会生成虚假结论。拿不准就标上。
 - asks：无法可靠提取、但会显著改变候选集的字段名。只能取：
   budget_max / min_storage / target_screen / excluded_brands
 
@@ -127,9 +135,9 @@ judgements 里每项的 evidence 对应各自的偏好维度；顶层 evidence �
 
 ## 输出
 只输出一个 JSON 对象。不要解释、不要 markdown 代码块、不要前后缀文字。
-judgements 里 8 个维度必须齐全，顺序不限。每项只含criterion、choice、evidence、verdict。
+judgements 里 7 个维度必须齐全，顺序不限。每项只含criterion、choice、evidence、verdict。
 
-{"judgements":[{"criterion":"price","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"weight","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"storage","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"refresh","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"screen","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"game","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"photo","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"battery","choice":"未提及","evidence":"","verdict":"unknown"}],"hard_constraints":{"budget_min":null,"budget_max":null,"budget_reference":null,"min_storage":null,"brands":[],"target_screen":null},"evidence":{"budget":"","min_storage":"","target_screen":"","brands":""},"excluded_brands":[],"asks":[],"unsupported_needs":[]}\
+{"judgements":[{"criterion":"weight","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"storage","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"screen","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"photo","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"game","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"battery","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"chipset","choice":"未提及","evidence":"","verdict":"unknown"}],"hard_constraints":{"budget_min":null,"budget_max":null,"budget_reference":null,"min_storage":null,"brands":[],"target_screen":null},"evidence":{"budget":"","min_storage":"","target_screen":"","brands":""},"excluded_brands":[],"asks":[],"unsupported_needs":[]}\
 """
 
 USER_TEMPLATE = "用户需求原文：\n{text}\n\n按上述 JSON 结构输出。"

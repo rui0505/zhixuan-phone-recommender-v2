@@ -16,6 +16,17 @@ def check_release(root: Path) -> dict:
         if sha(path)!=manifest['snapshot_sha256']: errors.append('snapshot_hash_mismatch')
         if manifest['status']!='PASS' or manifest['acceptance']['machine_acceptance']!='PASS': errors.append('machine_not_passed')
         if manifest.get('llm_enabled') is not False: errors.append('paid_model_default_enabled')
+        # 芯片档位表是排名矩阵的运行时依赖：缺表时请求会在运行期报错，
+        # 所以必须在发布闸门就拦住，而不是等线上 500。
+        tiers=root/'data/chipset-tiers.json'
+        try:
+            tiers_doc=json.loads(tiers.read_text(encoding='utf-8'))
+            scores=tiers_doc.get('scores')
+            if not isinstance(scores,dict) or not scores: errors.append('chipset_tiers_empty')
+            elif any(not isinstance(v,(int,float)) or isinstance(v,bool) or not 0<v<=100
+                     for v in scores.values()): errors.append('chipset_tiers_out_of_range')
+        except (OSError,ValueError):
+            errors.append('chipset_tiers_missing_or_invalid')
         with closing(sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True)) as c:
             if c.execute('PRAGMA integrity_check').fetchone()[0]!='ok': errors.append('integrity_failed')
             if c.execute('PRAGMA foreign_key_check').fetchall(): errors.append('foreign_key_violation')

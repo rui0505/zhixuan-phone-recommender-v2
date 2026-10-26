@@ -33,11 +33,13 @@ from schemas import CHOICES, EXTRACTION_CRITERIA as CRITERIA, VERDICT_EXTRACTED,
 
 VALID_BODY = {
     "judgements": [
-        {"criterion": "price", "choice": "重要", "evidence": "越便宜越好", "verdict": "extracted"},
         {"criterion": "weight", "choice": "一般", "evidence": "别太重", "verdict": "extracted"},
         {"criterion": "storage", "choice": "未提及", "evidence": "", "verdict": "unknown"},
-        {"criterion": "refresh", "choice": "未提及", "evidence": "", "verdict": "unknown"},
         {"criterion": "screen", "choice": "未提及", "evidence": "", "verdict": "unknown"},
+        {"criterion": "photo", "choice": "重要", "evidence": "拍照好", "verdict": "extracted"},
+        {"criterion": "game", "choice": "未提及", "evidence": "", "verdict": "unknown"},
+        {"criterion": "battery", "choice": "未提及", "evidence": "", "verdict": "unknown"},
+        {"criterion": "chipset", "choice": "未提及", "evidence": "", "verdict": "unknown"},
     ],
     "hard_constraints": {
         "budget_min": None,
@@ -159,9 +161,9 @@ class ClassifyTests(unittest.TestCase):
 
     def test_valid_reply_is_normalised(self):
         with self._patch_reply(reply(VALID_BODY)):
-            result = classifier().classify("预算三千左右，越便宜越好，别太重，256G 起步，续航要够")
+            result = classifier().classify("预算三千左右，拍照好，别太重，256G 起步，续航要够")
         by = {item.criterion: item for item in result.judgements}
-        self.assertEqual(by["price"].choice, "重要")
+        self.assertEqual(by["photo"].choice, "重要")
         self.assertEqual(by["weight"].choice, "一般")
         self.assertEqual(by["storage"].choice, "未提及")
         self.assertEqual(result.provider, "llm-api")
@@ -173,7 +175,7 @@ class ClassifyTests(unittest.TestCase):
         partial = dict(VALID_BODY)
         partial["judgements"] = [VALID_BODY["judgements"][0]]
         with self._patch_reply(reply(partial)):
-            result = classifier().classify("越便宜越好")
+            result = classifier().classify("拍照好")
         self.assertEqual(len(result.judgements), len(CRITERIA))
         self.assertEqual(
             {i.criterion for i in result.judgements}, set(CRITERIA)
@@ -182,33 +184,33 @@ class ClassifyTests(unittest.TestCase):
     def test_illegal_choice_downgraded_to_unmentioned(self):
         """非法取值绝不猜，退回未提及 + unknown。"""
         bad = json.loads(json.dumps(VALID_BODY))
-        bad["judgements"][0]["choice"] = "极其重要"  # 不在 CHOICES 里
+        bad["judgements"][3]["choice"] = "极其重要"  # photo，不在 CHOICES 里
         with self._patch_reply(reply(bad)):
-            result = classifier().classify("越便宜越好")
-        price = result.judgement_for("price")
-        self.assertEqual(price.choice, "未提及")
-        self.assertEqual(price.verdict, "unknown")
+            result = classifier().classify("拍照好")
+        photo = result.judgement_for("photo")
+        self.assertEqual(photo.choice, "未提及")
+        self.assertEqual(photo.verdict, "unknown")
 
     def test_fabricated_evidence_downgraded_to_inferred(self):
         """声称 extracted 但证据不在原文 → 降级为 inferred，交由用户确认。"""
         bad = json.loads(json.dumps(VALID_BODY))
-        bad["judgements"][0]["evidence"] = "这段原文里根本没有"
+        bad["judgements"][3]["evidence"] = "这段原文里根本没有"
         with self._patch_reply(reply(bad)):
-            result = classifier().classify("越便宜越好")
-        price = result.judgement_for("price")
-        self.assertEqual(price.verdict, VERDICT_INFERRED)
-        # choice 保留：证据可疑不等于判断错误
-        self.assertEqual(price.choice, "重要")
+            result = classifier().classify("拍照好")
+        photo = result.judgement_for("photo")
+        self.assertEqual(photo.verdict, "unknown")
+        # 无原文支持的性能偏好不能自动计入。
+        self.assertEqual(photo.choice, "未提及")
 
     def test_genuine_evidence_stays_extracted(self):
         with self._patch_reply(reply(VALID_BODY)):
-            result = classifier().classify("越便宜越好，别太重")
-        self.assertEqual(result.judgement_for("price").verdict, VERDICT_EXTRACTED)
+            result = classifier().classify("拍照好，别太重")
+        self.assertEqual(result.judgement_for("photo").verdict, VERDICT_EXTRACTED)
 
     def test_fenced_reply_is_parsed(self):
         with self._patch_reply(reply(VALID_BODY, fenced=True)):
-            result = classifier().classify("越便宜越好")
-        self.assertEqual(result.judgement_for("price").choice, "重要")
+            result = classifier().classify("拍照好")
+        self.assertEqual(result.judgement_for("photo").choice, "重要")
 
     def test_non_json_reply_raises(self):
         with self._patch_reply(
@@ -229,8 +231,8 @@ class ClassifyTests(unittest.TestCase):
             {"type": "text", "text": json.dumps(VALID_BODY, ensure_ascii=False)}
         ]
         with self._patch_reply(payload):
-            result = classifier().classify("越便宜越好")
-        self.assertEqual(result.judgement_for("price").choice, "重要")
+            result = classifier().classify("拍照好")
+        self.assertEqual(result.judgement_for("photo").choice, "重要")
 
     def test_json_mode_400_falls_back_without_response_format(self):
         """端点不支持 response_format 时，去掉该字段重试而不是直接失败。"""
@@ -244,10 +246,10 @@ class ClassifyTests(unittest.TestCase):
             return FakeResponse(reply(VALID_BODY))
 
         with mock.patch("providers.llm.urllib.request.urlopen", side_effect=fake_urlopen):
-            result = classifier().classify("越便宜越好")
+            result = classifier().classify("拍照好")
 
         self.assertEqual(seen, [True, False])
-        self.assertEqual(result.judgement_for("price").choice, "重要")
+        self.assertEqual(result.judgement_for("photo").choice, "重要")
 
     def test_network_failure_raises(self):
         import urllib.error
@@ -328,7 +330,7 @@ class ThinkingModeTests(unittest.TestCase):
             return FakeResponse(reply(VALID_BODY))
 
         with mock.patch("providers.llm.urllib.request.urlopen", side_effect=fake_urlopen):
-            classifier().classify("越便宜越好")
+            classifier().classify("拍照好")
 
         self.assertEqual(captured["thinking"], {"type": "disabled"})
         # 抽取链路依赖 temperature=0 可复现；关掉 thinking 后它才真正生效
@@ -358,10 +360,10 @@ class OptionalFieldDegradationTests(unittest.TestCase):
             return FakeResponse(reply(VALID_BODY))
 
         with mock.patch("providers.llm.urllib.request.urlopen", side_effect=fake_urlopen):
-            result = classifier().classify("越便宜越好")
+            result = classifier().classify("拍照好")
 
         self.assertEqual(seen, [(True, True), (False, True), (False, False)])
-        self.assertEqual(result.judgement_for("price").choice, "重要")
+        self.assertEqual(result.judgement_for("photo").choice, "重要")
 
     def test_drop_order_is_declared(self):
         """顺序有意义：先丢影响输出形态的，最后才丢影响成本的。"""
@@ -374,7 +376,7 @@ class OptionalFieldDegradationTests(unittest.TestCase):
                 side_effect=lambda *a, **k: urllib_error_400(),
             ):
                 try:
-                    classifier().classify("越便宜越好")
+                    classifier().classify("拍照好")
                 except JevUnavailable as error:
                     self.assertNotIn("sk-super-secret", str(error))
                 else:
@@ -392,7 +394,7 @@ class OptionalFieldDegradationTests(unittest.TestCase):
             return FakeResponse(reply(VALID_BODY))
 
         with mock.patch("providers.llm.urllib.request.urlopen", side_effect=fake_urlopen):
-            classifier(json_mode=False).classify("越便宜越好")
+            classifier(json_mode=False).classify("拍照好")
 
         self.assertEqual(seen, [False, False])
 
@@ -408,11 +410,11 @@ class ContractTests(unittest.TestCase):
             "providers.llm.urllib.request.urlopen",
             return_value=FakeResponse(reply(VALID_BODY)),
         ):
-            needs = parse_needs("越便宜越好，256G 起步", classifier=classifier())
+            needs = parse_needs("拍照好，256G 起步", classifier=classifier())
         self.assertEqual(needs.hard.min_storage, 256)
-        self.assertEqual(needs.preference_for("price").choice, "重要")
+        self.assertEqual(needs.preference_for("photo").choice, "重要")
         # 默认未确认，必须过用户确认页
-        self.assertFalse(needs.preference_for("price").confirmed)
+        self.assertFalse(needs.preference_for("photo").confirmed)
 
     def test_every_choice_is_within_choices(self):
         with mock.patch.dict("os.environ", {"LLM_API_KEY": "k"}):
@@ -420,7 +422,7 @@ class ContractTests(unittest.TestCase):
                 "providers.llm.urllib.request.urlopen",
                 return_value=FakeResponse(reply(VALID_BODY)),
             ):
-                result = classifier().classify("越便宜越好")
+                result = classifier().classify("拍照好")
         for item in result.judgements:
             self.assertIn(item.choice, CHOICES)
 

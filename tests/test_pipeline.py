@@ -146,7 +146,10 @@ class ModelsPayloadTests(PipelineTest):
              'target_screen': None, 'input_text': ''}
         )
         from engine import rank
-        return rank(candidate_frame(self.df, bridged), bridged.weights, bridged.target)
+        from pipeline import LEGACY_SCORE_KEYS
+        # 旧夹具只有 重量/存储/屏幕 可评分，其余维度在新库里才有。
+        weights = {k: v for k, v in bridged.weights.items() if k in LEGACY_SCORE_KEYS}
+        return rank(candidate_frame(self.df, bridged), weights, bridged.target)
 
     def test_dedupes_to_one_config_per_model(self):
         payload = models_payload(self._ranked(), TOP_N, 6000)
@@ -227,23 +230,27 @@ class HandleStageTests(PipelineTest):
 
 
 class ClarifyTests(PipelineTest):
-    def test_vague_budget_asks_instead_of_capping(self):
-        # 契约红线：含糊预算不得由程序推断上限。
+    def test_vague_budget_is_inferred_instead_of_asked(self):
+        # 2026-10-25 修订：有锚点时不再追问上限，改为推断区间 + 回显。
+        # 其他字段（如存储门槛）仍可能触发追问，所以这里只断言预算这一项。
         turn = self.turn('预算三千左右，想要轻一点的')
-        self.assertEqual(turn.stage, 'clarify')
-        self.assertTrue(turn.questions)
-        self.assertIn('budget.max', [item['field'] for item in turn.questions])
-        self.assertEqual(turn.models, [])
+        self.assertNotIn('budget.max', [item['field'] for item in turn.questions])
+        low, high = turn.bridged.budget
+        self.assertLess(low, 3000)
+        self.assertGreater(high, 3000)
 
-    def test_question_text_mentions_the_reference_number(self):
+    def test_inferred_range_is_reported_in_notes(self):
+        """推断可以，但不得静默——区间必须出现在给用户看的说明里。"""
         turn = self.turn('预算三千左右')
-        question = next(item['question'] for item in turn.questions
-                        if item['field'] == 'budget.max')
-        self.assertIn('3000', question)
-        self.assertIn('上限', question)
+        notes = ' '.join(turn.bridged.notes)
+        low, high = turn.bridged.budget
+        self.assertIn('推断', notes)
+        self.assertIn(f'{low:,}', notes)
+        self.assertIn(f'{high:,}', notes)
 
     def test_asked_fields_are_reported_back(self):
-        turn = self.turn('预算三千左右')
+        # 完全没提预算：没有任何可推断的锚点，必须问。
+        turn = self.turn('想要轻一点的，主要看价格')
         self.assertIn('budget.max', turn.asked)
         self.assertEqual(turn.ask_rounds, 1)
 
@@ -287,7 +294,8 @@ class AdviceTests(PipelineTest):
             self.assertIn(model['name'], turn.advice)
 
     def test_unsupported_needs_are_surfaced(self):
-        turn = self.turn('预算2000到3000，拍照要好，游戏要流畅')
+        # 「拍照」已是 photo 维度；用仍然没有实测数据的「续航」「信号」举例。
+        turn = self.turn('预算2000到3000，续航要久，信号要好')
         self.assertTrue(turn.unsupported)
 
 

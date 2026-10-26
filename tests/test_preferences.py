@@ -8,6 +8,7 @@ import unittest
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from catalog.adapter import FRAME_FIELDS
 from engine import load_data, rank
 from preferences import (KEYS, QUESTION_BANK, apply_answer, build_initial_weights,
                          filter_candidates, next_question, normalize_weights,
@@ -21,18 +22,27 @@ class PreferenceTests(unittest.TestCase):
         self.weights = build_initial_weights(self.needs)['weights']
 
     def test_example(self):
-        self.assertAlmostEqual(self.weights['weight'], 3 / 7)
+        # weight=非常重要(9)，其余按维度默认值：storage 3、screen 1、photo 0、
+        # game 0、battery 2、chipset 2，合计 17。
+        # photo 的未提及是 0——DXOMARK 覆盖只有 11/51 个 SKU，给正权重会塌候选池。
+        self.assertAlmostEqual(self.weights['weight'], 9 / 17)
         self.assertAlmostEqual(sum(self.weights.values()), 1)
 
     def test_all_normal(self):
+        """全部「一般」不再是均匀分布——每个维度有自己的表值。"""
         self.needs['preferences'] = dict.fromkeys(KEYS, 'normal')
-        self.assertTrue(all(abs(v - .2) < 1e-12
-                            for v in build_initial_weights(self.needs)['weights'].values()))
+        record = build_initial_weights(self.needs)
+        raw = record['raw_scores']
+        total = sum(raw.values())
+        for key in KEYS:
+            self.assertAlmostEqual(record['weights'][key], raw[key] / total)
+        # 存储的「一般」比游戏高，所以不应等权
+        self.assertGreater(record['weights']['storage'], record['weights']['game'])
 
     def test_unknown_source(self):
         record = build_initial_weights(self.needs)
-        self.assertEqual(record['sources']['price'], 'system_default')
-        self.assertEqual(record['raw_scores']['price'], 1)
+        self.assertEqual(record['sources']['storage'], 'system_default')
+        self.assertEqual(record['raw_scores']['storage'], 3)
 
     def test_budget_not_price_preference(self):
         initial = dict(self.weights)
@@ -46,7 +56,7 @@ class PreferenceTests(unittest.TestCase):
 
     def test_invalid_numeric(self):
         for value in (-1, float('nan'), float('inf'), True, '1'):
-            weights = dict(self.weights, price=value)
+            weights = dict(self.weights, weight=value)
             with self.subTest(value=value), self.assertRaises(ValueError):
                 normalize_weights(weights)
 
@@ -56,7 +66,7 @@ class PreferenceTests(unittest.TestCase):
             validate_needs(self.needs)
 
     def test_missing_field(self):
-        del self.needs['preferences']['price']
+        del self.needs['preferences']['weight']
         with self.assertRaises(ValueError):
             validate_needs(self.needs)
 
@@ -77,33 +87,36 @@ class PreferenceTests(unittest.TestCase):
         weights = build_initial_weights(self.needs)['weights']
         from tests.legacy_fixture import load_fixture
         frame = load_fixture().head(12)
-        self.assertEqual(rank(frame, weights, 6.1).id.tolist(), rank(frame, weights, 6.8).id.tolist())
+        # 旧夹具只有 价格/重量/存储/屏幕 可评分，其余维度先过滤掉。
+        legacy = {k: v for k, v in weights.items() if k in FRAME_FIELDS}
+        self.assertEqual(rank(frame, legacy, 6.1).id.tolist(),
+                         rank(frame, legacy, 6.8).id.tolist())
 
     def test_no_mutation(self):
         before = copy.deepcopy(self.needs)
         build_initial_weights(self.needs)
         self.assertEqual(self.needs, before)
         weights = dict(self.weights)
-        update_weights(weights, 'weight', 'price')
+        update_weights(weights, 'weight', 'storage')
         self.assertEqual(weights, self.weights)
 
     def test_update_light(self):
-        w = update_weights(self.weights, 'weight', 'price')
-        self.assertAlmostEqual(w['weight'], .5)
-        self.assertAlmostEqual(w['price'], .1)
-        self.assertGreater(w['weight'] / w['price'], self.weights['weight'] / self.weights['price'])
-        self.assertAlmostEqual(w['storage'] / w['refresh'], 1)
+        w = update_weights(self.weights, 'weight', 'storage')
+        self.assertGreater(w['weight'], self.weights['weight'])
+        self.assertLess(w['storage'], self.weights['storage'])
+        self.assertAlmostEqual(sum(w.values()), 1)
 
-    def test_update_price(self):
-        w = update_weights(self.weights, 'price', 'weight')
-        self.assertGreater(w['price'] / w['weight'], self.weights['price'] / self.weights['weight'])
+    def test_update_storage(self):
+        w = update_weights(self.weights, 'storage', 'weight')
+        self.assertGreater(w['storage'], self.weights['storage'])
+        self.assertLess(w['weight'], self.weights['weight'])
         self.assertAlmostEqual(sum(w.values()), 1)
 
     def test_no_zero_resurrection(self):
-        w = dict(self.weights, storage=0)
-        self.assertEqual(update_weights(w, 'weight', 'price')['storage'], 0)
+        w = dict(self.weights, photo=0)
+        self.assertEqual(update_weights(w, 'weight', 'storage')['photo'], 0)
         with self.assertRaises(ValueError):
-            update_weights(w, 'storage', 'price')
+            update_weights(w, 'photo', 'storage')
 
     def test_skip_and_indifferent(self):
         for answer in ('skip', 'indifferent'):
@@ -120,9 +133,10 @@ class PreferenceTests(unittest.TestCase):
     def test_question_rules(self):
         q = next_question(self.weights, [], self.needs['preferences'])
         self.assertEqual(q['a_key'], 'weight')
-        self.assertIsNone(next_question(self.weights, ['light_price', 'storage_price'],
+        self.assertIsNone(next_question(self.weights, ['light_storage', 'photo_storage'],
                                         self.needs['preferences']))
-        self.assertIsNone(next_question(dict(price=0, weight=1, storage=0, refresh=0, screen=0),
+        self.assertIsNone(next_question(dict(weight=0, storage=0, screen=0, photo=0,
+                                             game=0, battery=0, chipset=1),
                                         [], self.needs['preferences']))
 
     def test_hard_filter(self):

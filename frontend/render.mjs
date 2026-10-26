@@ -1,4 +1,4 @@
-export const labels={price_cny:'记录价格',weight_g:'重量',storage_gb:'存储',refresh_rate_hz:'刷新率',screen_size_inch:'屏幕尺寸',dxomark_photo:'DXOMARK 照片子分',honor_of_kings_avg_fps:'王者荣耀平均帧率',battery_mixed_usage_duration_min:'混合使用实测续航'};
+export const labels={price_cny:'记录价格',battery_capacity_mah:'电池容量',chipset_tier:'处理器档位',weight_g:'重量',storage_gb:'存储',refresh_rate_hz:'刷新率',screen_size_inch:'屏幕尺寸',dxomark_photo:'DXOMARK 照片子分',honor_of_kings_avg_fps:'王者荣耀平均帧率',battery_mixed_usage_duration_min:'混合使用实测续航'};
 export const conditionLabel=value=>({new:'新机',used:'二手',unknown:'成色未知'}[value]??'成色未记载');
 export const valueText=(value,unit='')=>value===null||value===undefined||value===''?'未记载':`${value}${unit}`;
 export function element(tag,text,className){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;}

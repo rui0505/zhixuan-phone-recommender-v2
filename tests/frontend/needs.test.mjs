@@ -8,7 +8,7 @@ test('draft preserves condition mode, never auto-confirms or promotes budget ref
   const current={mode:'used',target_screen:6.5,weights:{price_cny:5}};
   const payload={status:'ok',extraction:{budget:{reference:2000}},draft:{
     confirmed:false,needs:{budget:{min:null,max:null},min_storage:256,brands:{include:[],exclude:[]}},
-    target_screen:null,weights:{price_cny:1,weight_g:2,storage_gb:1,refresh_rate_hz:1,
+    target_screen:null,weights:{battery_capacity_mah:2,chipset_tier:2,weight_g:2,storage_gb:3,
       screen_size_inch:0,dxomark_photo:0,honor_of_kings_avg_fps:0}}};
   const value=draftFields(payload,current);
   assert.equal(value.mode,'used');assert.equal(value.needs.budget.max,null);

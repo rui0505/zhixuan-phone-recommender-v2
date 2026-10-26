@@ -25,7 +25,8 @@ body={**meta['defaults'],'needs':{'budget':{'min':None,'max':None},'min_storage'
 outcome=service.recommend(parse_recommendation(body,meta['brands']))
 assert outcome.result.status=='ready'
 assert outcome.result.algorithm_version=='hybrid-rrf-1.0.0-experimental'
-assert len(outcome.result.ranked)==51
+assert len(outcome.result.ranked)==40
+assert 'price_cny' not in outcome.result.active_criteria
 print('extracted hybrid runtime PASS')
 """
             env={key:value for key,value in os.environ.items() if key!='PYTHONPATH'}

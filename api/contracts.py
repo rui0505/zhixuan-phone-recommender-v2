@@ -8,9 +8,12 @@ from catalog.adapter import resolve_brands
 from ranking_modes import ALGORITHM_VERSIONS
 from .performance import BATTERY_METRIC
 
-METRICS = ('price_cny','weight_g','storage_gb','refresh_rate_hz','screen_size_inch',
-           'dxomark_photo','honor_of_kings_avg_fps')
-DEFAULT_WEIGHTS = dict(zip(METRICS, (5,2,2,1,0,0,0)))
+METRICS = ('weight_g','storage_gb','screen_size_inch','battery_capacity_mah',
+           'dxomark_photo','honor_of_kings_avg_fps','chipset_tier')
+# Legacy TOPSIS callers may still send the former metrics. Hybrid accepts
+# only seven preference dimensions; price and brand remain candidate filters.
+LEGACY_METRICS = ('price_cny', 'refresh_rate_hz')
+DEFAULT_WEIGHTS = dict(zip(METRICS, (2,3,1,2,0,0,2)))
 RELEASE_FIELDS = {'dataset_version','feature_rule_version','snapshot_sha256','manifest_sha256'}
 REQUEST_FIELDS = {'needs','weights','target_screen','mode','confirmed','expected_release'}
 OPTIONAL_REQUEST_FIELDS = {'method', 'expected_algorithm_version', 'game_scope'}
@@ -119,12 +122,16 @@ def parse_recommendation(body: dict, known_brands: list[str]) -> RecommendationR
         invalid('算法版本格式无效')
     if obj['confirmed'] is not True:
         invalid('请先检查条件、权重和数据限制并确认')
-    weights = _object(obj['weights'],set(METRICS) | {BATTERY_METRIC})
+    weights = _object(obj['weights'],set(METRICS) | set(LEGACY_METRICS) | {BATTERY_METRIC})
     if BATTERY_METRIC in weights and _real(weights[BATTERY_METRIC], maximum=10)>0:
         raise ApiError(422, 'unsupported_metric', '当前没有合格续航实测，不能按续航排序；请确认是否暂不计入该项')
     if not weights:
         invalid('至少一项偏好权重必须大于 0')
-    canonical = {k:_real(weights[k],maximum=10) for k in METRICS if k in weights}
+    canonical = {k:_real(weights[k],maximum=10) for k in (*METRICS, *LEGACY_METRICS) if k in weights}
+    if method == 'hybrid_rrf':
+        if any(canonical.get(k,0)>0 for k in LEGACY_METRICS):
+            invalid('混合排序仅支持七项偏好；价格和品牌请在硬性条件中设置')
+        canonical = {k:v for k,v in canonical.items() if k in METRICS}
     game_scope = obj.get('game_scope', 'honor_of_kings')
     validate_game_scope(game_scope, canonical)
     if not any(canonical.values()):

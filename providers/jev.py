@@ -88,13 +88,17 @@ CN_DIGITS: dict[str, int] = {
 VAGUE_MARKERS: tuple[str, ...] = ("左右", "多", "上下", "来", "把", "大约", "差不多")
 
 # 数据无法覆盖的需求 → 关键词。漏标会导致虚假结论，宁可保守多标。
+# 数据覆盖不到的需求。2026-10-26 修订：
+# - 移除「影像」「处理器性能」——它们已分别由 photo / chipset 维度覆盖，
+#   再标成"未覆盖"会自相矛盾。
+# - 游戏规则收窄到**非王者荣耀**：库里只有王者荣耀的实测帧率，用户说「打游戏」
+#   或提到别的游戏时不能拿王者帧率冒充，必须如实标为未覆盖。
 UNSUPPORTED_RULES: tuple[tuple[tuple[str, ...], str], ...] = (
-    (("拍照", "影像", "相机好"), "影像"),
-    (("续航", "电池耐用", "待机"), "续航"),
-    (("打游戏", "游戏性能", "不卡", "王者荣耀", "和平精英", "原神", "崩坏：星穹铁道", "绝区零"), "真实游戏性能"),
+    (("续航", "电池耐用", "待机", "一天一充", "能用一天", "用一整天"), "续航"),
+    (("打游戏", "游戏性能", "不卡", "开黑排位",
+      "原神", "和平精英", "崩坏", "蛋仔", "永劫", "金铲铲"), "真实游戏性能"),
     (("分辨率", "清晰度"), "分辨率"),
     (("单手", "手感", "拿得住"), "机身尺寸手感"),
-    (("性价比",), "处理器性能"),
     (("信号",), "信号质量"),
 )
 
@@ -107,7 +111,7 @@ ASK_EXCLUDED_BRANDS = "excluded_brands"
 GAME_NAMES = ('王者荣耀', '和平精英', '原神', '崩坏：星穹铁道', '绝区零', '三角洲行动')
 PERFORMANCE_EVIDENCE_PATTERNS = {
     'photo': r'拍照|影像|相机|摄影',
-    'battery': r'续航|电池耐用|待机|使用时长',
+    'battery': r'电池(?=容量|(?:要|越)?大|不重要|无所谓|不在意|不太在意)|大电池|毫安|[mM][aA][hH]',
     'game': r'游戏|爱打|爱玩|喜欢玩|只玩|平均帧率|' + '|'.join(GAME_NAMES),
 }
 
@@ -362,17 +366,40 @@ class MockClassifier:
             verdict=VERDICT_UNKNOWN,
         )
 
-    def _judge_price(self, text: str) -> CriterionJudgement:
-        return self._pick("price", text, (
-            (("价格无所谓", "价格不太在意", "价格不太在乎", "价格不重要"), "不在意"),
-            (("价格最重要", "预算最重要", "最看重价格"), "非常重要"),
-            (("越便宜越好", "主要看价格", "价格优先"), "重要"),
-            (("性价比",), "重要"),
+    # 价格不在这里——它由预算区间（budget_min/max/reference）单独表达，
+    # 不再作为偏好维度参与权重。
+
+    def _judge_photo(self, text: str) -> CriterionJudgement:
+        # 顺序要紧：「不在意」先判，否则「拍照无所谓」会被下面的宽匹配「拍照」抢走。
+        return self._pick("photo", text, (
+            (("拍照无所谓", "拍照不重要", "拍照不太在意", "拍照不太在乎", "不拍照"), "不在意"),
+            (("拍照最重要", "影像最重要", "相机最重要"), "非常重要"),
+            (("拍照好", "拍照要好", "影像好", "相机好", "拍照强", "拍照优先", "拍照"), "重要"),
+        ))
+
+    def _judge_game(self, text: str) -> CriterionJudgement:
+        # 只认**王者荣耀**。说「打游戏」或别的游戏时这里保持未提及，
+        # 由 `_unsupported` 标成「真实游戏性能」——库里没有那些游戏的实测数据，
+        # 拿王者帧率顶替就是造假。
+        return self._pick("game", text, (
+            (("主要打王者", "王者最重要", "只为打王者"), "非常重要"),
+            (("打王者", "玩王者", "王者荣耀", "王者"), "重要"),
+            (("不打游戏", "不玩游戏", "游戏无所谓", "游戏不太在意"), "不在意"),
+        ))
+
+    def _judge_battery(self, text: str) -> CriterionJudgement:
+        return self._judge_performance('battery', text)
+
+    def _judge_chipset(self, text: str) -> CriterionJudgement:
+        return self._pick("chipset", text, (
+            (("处理器最重要", "芯片最重要", "性能最重要"), "非常重要"),
+            (("处理器好", "处理器要强", "芯片好", "芯片强", "性能好", "性能强"), "重要"),
+            (("处理器无所谓", "处理器不重要", "性能无所谓", "处理器不太在意"), "不在意"),
         ))
 
     def _judge_weight(self, text: str) -> CriterionJudgement:
         return self._pick("weight", text, (
-            (("最轻", "必须轻", "一定要轻"), "非常重要"),
+            (("最轻", "必须轻", "一定要轻", "重量最重要", "轻最重要"), "非常重要"),
             (("越轻越好", "重量要轻", "轻一些好", "轻一点好"), "重要"),
             (("别太重", "轻一点", "稍微轻", "不要太重"), "一般"),
         ))
@@ -382,8 +409,8 @@ class MockClassifier:
         # 注意「越大越好」必须带存储语境，否则会误吞 CN-10 那种指屏幕尺寸的
         # 「越大越好」——同一措辞在不同语境下指向不同维度。
         return self._pick("storage", text, (
-            (("存储最重要", "容量最重要"), "非常重要"),
-            (("存储越大越好", "容量越大越好", "存储越大", "容量越大"), "重要"),
+            (("存储最重要", "存储容量最重要"), "非常重要"),
+            (("存储越大越好", "存储容量越大越好", "存储越大", "存储容量越大"), "重要"),
         ))
 
     def _judge_refresh(self, text: str) -> CriterionJudgement:
@@ -440,7 +467,7 @@ class MockClassifier:
             choice, verdict = '不在意', VERDICT_EXTRACTED
         elif re.search(r'最重要|最看重|必须|一定要|优先级最高', evidence):
             choice, verdict = '非常重要', VERDICT_EXTRACTED
-        elif re.search(r'重要|优先|越.+越好|要好|要强', evidence):
+        elif re.search(r'重要|优先|越.+越好|要好|要强|(?:拍照|影像|相机|电池容量)[好强大]$', evidence):
             choice, verdict = '重要', VERDICT_EXTRACTED
         elif re.search(r'一般|够用|好一点|好点', evidence):
             choice, verdict = '一般', VERDICT_EXTRACTED
@@ -454,10 +481,6 @@ class MockClassifier:
     def _judge_photo(self, text: str) -> CriterionJudgement:
         return self._judge_performance('photo', text)
 
-    def _judge_battery(self, text: str) -> CriterionJudgement:
-        return self._judge_performance('battery', text)
-
-    # --- 硬约束 ---------------------------------------------------------
 
     def _hard_constraints(self, text: str) -> tuple[dict[str, Any], list[str]]:
         asks: list[str] = []
@@ -695,7 +718,7 @@ def normalise_response(
             # Performance intent needs actual source, even if the provider labels it inferred.
             choice, verdict = '未提及', VERDICT_UNKNOWN
         if (criterion in PERFORMANCE_CRITERIA and choice not in ('未提及', '不在意')
-                and evidence and not re.search(r'重要|最看重|必须|一定要|优先|越.+越好|要好|要强|一般|够用|好一点|好点', evidence)):
+                and evidence and not re.search(r'重要|最看重|必须|一定要|优先|越.+越好|要好|要强|一般|够用|好一点|好点|(?:拍照|影像|相机|电池容量)[好强大]$', evidence)):
             verdict = VERDICT_INFERRED
             if choice == '非常重要':
                 choice = '重要'

@@ -6,7 +6,7 @@ const preferences=await import('../../frontend/preferences.mjs').catch(()=>({}))
 const invoke=(name,...args)=>{assert.equal(typeof preferences[name],'function',`${name} behavior missing`);return preferences[name](...args);};
 const release={dataset_version:'d',feature_rule_version:'f',snapshot_sha256:'s',manifest_sha256:'m'};
 const algorithms=[{method:'topsis',algorithm_version:'topsis-1.0.0'},{method:'hybrid_rrf',algorithm_version:'hybrid-rrf-1.0.0-experimental'}];
-const base={needs:{budget:{min:100,max:3000},min_storage:256,brands:{include:['华为'],exclude:[]}},mode:'new',target_screen:6.5,weights:{price_cny:1,weight_g:1,storage_gb:1,refresh_rate_hz:1,screen_size_inch:0,dxomark_photo:0,honor_of_kings_avg_fps:0,battery_mixed_usage_duration_min:0}};
+const base={needs:{budget:{min:100,max:3000},min_storage:256,brands:{include:['华为'],exclude:[]}},mode:'new',target_screen:6.5,weights:{battery_capacity_mah:2,chipset_tier:2,weight_g:2,storage_gb:3,screen_size_inch:1,dxomark_photo:0,honor_of_kings_avg_fps:0,battery_mixed_usage_duration_min:0}};
 
 test('strict request serialization binds default or explicit method to available version',()=>{
   const input={...base,desired_weights:{battery_mixed_usage_duration_min:3},confirmed:false,source_fragments:['原话']};

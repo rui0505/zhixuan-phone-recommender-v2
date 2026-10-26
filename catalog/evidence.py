@@ -6,6 +6,7 @@ from .binding import decision_fingerprint, verify_result
 
 LABELS={'price_cny':'记录价格','weight_g':'重量','storage_gb':'存储','refresh_rate_hz':'屏幕刷新率',
         'screen_size_inch':'屏幕尺寸','battery_capacity_mah':'电池标称容量',
+        'chipset_tier':'处理器档位',
         'dxomark_photo':'DXOMARK 照片子分','honor_of_kings_avg_fps':'王者荣耀平均帧率'}
 
 

@@ -19,7 +19,8 @@
     "                    不以电池容量、像素或刷新率替代。",
     "  must_ask        期望理解层主动回问的字段（因为无法可靠提取）。",
     "  boundary        本题考察的边界规则，来自工作文档第 4 章。",
-    "  note            人工判断理由。"
+    "  note            人工判断理由。",
+    "2026-10-26：维度改为 7 个体验维度。价格与刷新率移出（价格由预算区间表达），拍照/王者/电池容量/处理器档位成为可评分维度。"
   ],
   "_strength_convention": [
     "偏好强度口径（人工标准答案必须遵守，避免同句式给出不同强度）：",
@@ -50,11 +51,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "重要",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [
@@ -75,11 +78,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "一般",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -100,11 +105,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -125,11 +132,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "重要",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -148,15 +157,15 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "重要",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
-      "unsupported_needs": [
-        "影像"
-      ],
+      "unsupported_needs": [],
       "must_ask": [
         "budget_max"
       ],
@@ -175,11 +184,13 @@
         "target_screen": 6.1
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "重要"
+        "screen": "重要",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [
         "续航"
@@ -203,11 +214,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "非常重要",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [
         "真实游戏性能"
@@ -228,11 +241,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -251,11 +266,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "不在意",
         "weight": "重要",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -274,11 +291,13 @@
         "target_screen": 6.7
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "重要"
+        "screen": "重要",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -297,11 +316,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [
@@ -322,11 +343,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [
         "分辨率"
@@ -349,11 +372,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "不在意",
         "weight": "非常重要",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -372,11 +397,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "重要",
-        "refresh": "一般",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [
@@ -397,11 +424,13 @@
         "target_screen": 6.2
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "非常重要"
+        "screen": "非常重要",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [
         "机身尺寸手感"
@@ -422,11 +451,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "非常重要",
         "weight": "一般",
         "storage": "一般",
-        "refresh": "一般",
-        "screen": "一般"
+        "screen": "一般",
+        "photo": "一般",
+        "game": "一般",
+        "battery": "一般",
+        "chipset": "一般"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -448,15 +479,15 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "重要",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
-      "unsupported_needs": [
-        "处理器性能"
-      ],
+      "unsupported_needs": [],
       "must_ask": [],
       "boundary": "库里不存在的品牌不得被静默忽略",
       "note": "数据表已有品牌前缀里没有 iQOO 和 realme，二者都会落到“其他”。品牌字段仍应按用户原话记录 iQOO/realme，并在确认页提示当前数据可能无匹配候选，而不是静默换成空品牌列表。“性价比高”映射为价格偏好（记重要）；性价比还隐含处理器性能，记为未覆盖。"
@@ -473,11 +504,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "重要",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [
@@ -498,11 +531,13 @@
         "target_screen": null
       },
       "expectations": {
-        "price": "未提及",
         "weight": "未提及",
         "storage": "未提及",
-        "refresh": "未提及",
-        "screen": "未提及"
+        "screen": "未提及",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [
@@ -525,11 +560,13 @@
         "target_screen": 6.4
       },
       "expectations": {
-        "price": "未提及",
         "weight": "重要",
         "storage": "未提及",
-        "refresh": "不在意",
-        "screen": "重要"
+        "screen": "重要",
+        "photo": "未提及",
+        "game": "未提及",
+        "battery": "未提及",
+        "chipset": "未提及"
       },
       "unsupported_needs": [],
       "must_ask": [],
@@ -555,5 +592,14 @@
     "- 「四五千」取中值 4500 记入 reference，不当作 4000–5000 的硬区间。",
     "- 数字必须留下来。旧版把「3000 左右」的 3000 直接丢掉，信息整个丢失。",
     "- 同句中的存储门槛（「256 起步」）与屏幕尺寸（「6.2 英寸」）不得误判为预算。"
+  ],
+  "_criteria": [
+    "weight",
+    "storage",
+    "screen",
+    "photo",
+    "game",
+    "battery",
+    "chipset"
   ]
 }

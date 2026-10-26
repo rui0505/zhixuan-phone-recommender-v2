@@ -10,8 +10,8 @@ from providers.jev import MockClassifier, normalise_response, parse_needs
 from schemas import PreferenceItem
 
 
-BASE = ('price', 'weight', 'storage', 'refresh', 'screen')
-ALL = BASE + ('game', 'photo', 'battery')
+BASE = ('weight', 'storage', 'screen', 'photo', 'game', 'battery', 'chipset')
+ALL = BASE
 
 
 class FixedClassifier:
@@ -42,11 +42,11 @@ class PerformanceNeedsTests(unittest.TestCase):
         result = self.draft('预算3000元以内')
         self.assertEqual({p['criterion'] for p in result['extraction']['preferences']}, set(ALL))
         self.assertEqual(result['draft']['weights'], {
-            'price_cny': 1, 'weight_g': 1, 'storage_gb': 1, 'refresh_rate_hz': 1,
-            'screen_size_inch': 0, 'dxomark_photo': 0, 'honor_of_kings_avg_fps': 0,
+            'weight_g': 2, 'storage_gb': 3, 'battery_capacity_mah':2, 'chipset_tier':2,
+            'screen_size_inch': 1, 'dxomark_photo': 0, 'honor_of_kings_avg_fps': 0,
             'battery_mixed_usage_duration_min': 0})
         self.assertEqual(PreferenceItem('battery', '未提及').mapped_level, 0)
-        self.assertEqual(PreferenceItem('price', '未提及').mapped_level, 1)
+        self.assertEqual(PreferenceItem('storage', '未提及').mapped_level, 1)
 
     def test_explicit_photo_superlative_maps_to_three_with_source(self):
         result = self.draft('拍照最重要，预算3000元以内')
@@ -56,15 +56,15 @@ class PerformanceNeedsTests(unittest.TestCase):
         self.assertEqual(photo['evidence'], '拍照最重要')
         self.assertEqual(photo['verdict'], 'extracted')
         self.assertFalse(photo['confirmed'])
-        self.assertEqual(result['draft']['weights']['dxomark_photo'], 3)
+        self.assertEqual(result['draft']['weights']['dxomark_photo'], 9)
         self.assertFalse(result['draft']['confirmed'])
 
     def test_battery_importance_remains_positive_and_unavailable(self):
         result = self.draft('续航重要，预算3000元以内')
         key = 'battery_mixed_usage_duration_min'
-        self.assertEqual(result['draft']['weights'].get(key), 2)
-        self.assertEqual(result['performance_preferences'][key]['status'], 'unsupported_metric')
-        self.assertEqual(result['performance_preferences'][key]['desired_weight'], 2)
+        self.assertEqual(result['draft']['weights'].get(key), 0)
+        self.assertEqual(result['draft']['weights']['battery_capacity_mah'],2)
+        self.assertEqual(next(p['level'] for p in result['extraction']['preferences'] if p['criterion']=='battery'),'未提及')
         self.assertIn('续航', [p['need'] for p in result['extraction']['unsupported_needs']])
 
     def test_other_game_use_is_inferred_and_never_covertly_scored_as_hok(self):
@@ -78,23 +78,22 @@ class PerformanceNeedsTests(unittest.TestCase):
         self.assertEqual(extraction['game_use']['names'], ['和平精英'])
         self.assertIn(extraction['game_use']['evidence'], extraction['input_text'])
         self.assertTrue(extraction['game_use']['needs_scope_confirmation'])
-        self.assertEqual(result['draft']['desired_weights']['honor_of_kings_avg_fps'], 2)
-        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 2)
+        self.assertEqual(result['draft']['desired_weights']['honor_of_kings_avg_fps'], 6)
+        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 6)
         self.assertEqual(result['draft']['game_scope'], 'unsupported')
-        self.assertEqual(result['performance_preferences']['honor_of_kings_avg_fps']['status'],
-                         'scope_confirmation_required')
+        self.assertTrue(extraction['game_use']['needs_scope_confirmation'])
         self.assertIn('真实游戏性能', [p['need'] for p in extraction['unsupported_needs']])
 
     def test_general_game_requires_scope_but_named_hok_preserves_weight(self):
         general = self.draft('游戏性能最重要')
-        self.assertEqual(general['draft'].get('desired_weights', {}).get('honor_of_kings_avg_fps'), 3)
-        self.assertEqual(general['draft']['weights']['honor_of_kings_avg_fps'], 3)
+        self.assertEqual(general['draft'].get('desired_weights', {}).get('honor_of_kings_avg_fps'), 9)
+        self.assertEqual(general['draft']['weights']['honor_of_kings_avg_fps'], 9)
         self.assertEqual(general['draft']['game_scope'], 'unconfirmed')
         hok = self.draft('王者荣耀平均帧率最重要')
         self.assertFalse(hok['extraction']['game_use']['needs_scope_confirmation'])
         self.assertIsNotNone(hok['draft'])
         self.assertEqual(hok['extraction']['brands']['include'], [])
-        self.assertEqual(hok['draft']['weights']['honor_of_kings_avg_fps'], 3)
+        self.assertEqual(hok['draft']['weights']['honor_of_kings_avg_fps'], 9)
 
     def test_later_negative_overrides_earlier_performance_preference(self):
         result = self.draft('1. 拍照最重要，续航重要\n2. 拍照不在意，续航不重要')
@@ -105,7 +104,7 @@ class PerformanceNeedsTests(unittest.TestCase):
 
     def test_unrelated_later_turn_preserves_earlier_performance_preference(self):
         result = self.draft('1. 拍照最重要\n2. 预算3000元以内')
-        self.assertEqual(result['draft']['weights']['dxomark_photo'], 3)
+        self.assertEqual(result['draft']['weights']['dxomark_photo'], 9)
 
     def test_invented_or_empty_performance_evidence_never_activates_weight(self):
         for evidence in ('续航重要', '', '预算3000元以内'):
@@ -132,11 +131,11 @@ class PerformanceNeedsTests(unittest.TestCase):
         game = next(p for p in result['extraction']['preferences'] if p['criterion']=='game')
         self.assertEqual(game['level'], '未提及')
         self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 0)
-        self.assertEqual([p['need'] for p in result['extraction']['unsupported_needs']], ['影像'])
+        self.assertEqual([p['need'] for p in result['extraction']['unsupported_needs']], [])
 
     def test_rejecting_another_game_preserves_hok_priority(self):
         result = self.draft('王者荣耀平均帧率最重要，不玩和平精英')
-        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 3)
+        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 9)
         self.assertEqual(result['draft']['game_scope'], 'honor_of_kings')
         self.assertEqual(result['extraction']['game_use']['names'], ['王者荣耀'])
         self.assertEqual(next(p['evidence'] for p in result['extraction']['preferences']
@@ -144,22 +143,22 @@ class PerformanceNeedsTests(unittest.TestCase):
 
     def test_rejecting_hok_preserves_other_positive_game_use(self):
         result = self.draft('爱打和平精英，完全不玩王者荣耀')
-        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 2)
+        self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 6)
         self.assertEqual(result['draft']['game_scope'], 'unsupported')
         self.assertEqual(result['extraction']['game_use']['names'], ['和平精英'])
         self.assertTrue(result['extraction']['game_use']['needs_scope_confirmation'])
 
     def test_mixed_dimension_negation_only_changes_its_named_dimension(self):
         for text, photo, battery in (
-                ('拍照不重要但续航最重要', 0, 3),
-                ('续航不重要但拍照最重要', 3, 0),
-                ('拍照不重要续航最重要', 0, 3),
-                ('续航最重要拍照不重要', 0, 3),
-                ('拍照和续航最重要', 3, 3)):
+                ('拍照不重要但电池容量最重要', 0, 9),
+                ('电池容量不重要但拍照最重要', 9, 0),
+                ('拍照不重要电池容量最重要', 0, 9),
+                ('电池容量最重要拍照不重要', 0, 9),
+                ('拍照和电池容量最重要', 9, 9)):
             with self.subTest(text=text):
                 result = self.draft(text)
                 self.assertEqual(result['draft']['weights']['dxomark_photo'], photo)
-                self.assertEqual(result['draft']['weights']['battery_mixed_usage_duration_min'], battery)
+                self.assertEqual(result['draft']['weights']['battery_capacity_mah'], battery)
 
     def test_postposed_hok_rejection_cannot_authorize_generic_game_scope(self):
         payload = legacy_payload()
@@ -168,7 +167,7 @@ class PerformanceNeedsTests(unittest.TestCase):
         for rejection in ('王者荣耀不玩', '王者荣耀我不玩', '王者荣耀完全不玩'):
             with self.subTest(rejection=rejection):
                 result = self.draft('游戏性能最重要，' + rejection, FixedClassifier(payload))
-                self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 3)
+                self.assertEqual(result['draft']['weights']['honor_of_kings_avg_fps'], 9)
                 self.assertEqual(result['extraction']['game_use']['names'], [])
                 self.assertEqual(result['draft']['game_scope'], 'unconfirmed')
                 self.assertTrue(result['extraction']['game_use']['needs_scope_confirmation'])
@@ -181,7 +180,7 @@ class PerformanceNeedsTests(unittest.TestCase):
     def test_five_dimension_provider_remains_compatible_without_false_missing_alert(self):
         result = self.extract('预算2000元左右', FixedClassifier(legacy_payload()))
         self.assertEqual(result['status'], 'ok')
-        self.assertEqual(len(result['preferences']), 8)
+        self.assertEqual(len(result['preferences']), 7)
         self.assertEqual(validate_result(result), [])
         self.assertFalse(any(c['field'].startswith('preferences.') for c in result['clarifications']))
         self.assertEqual(result['budget']['min'], None)
@@ -196,14 +195,14 @@ class PerformanceNeedsTests(unittest.TestCase):
         extraction = self.extract('拍照最重要，续航重要')
         legacy = to_blue_needs(extraction)
         self.assertEqual(set(legacy['preferences']), set(BASE))
-        self.assertEqual(len(legacy['extraction_record']['preferences']), 8)
+        self.assertEqual(len(legacy['extraction_record']['preferences']), 7)
         self.assertEqual(next(p['level'] for p in legacy['extraction_record']['preferences']
                               if p['criterion']=='photo'), '非常重要')
 
     def test_failed_extraction_still_has_eight_safe_preferences(self):
         result = self.extract('')
         self.assertEqual(result['status'], 'failed')
-        self.assertEqual(len(result['preferences']), 8)
+        self.assertEqual(len(result['preferences']), 7)
         self.assertEqual(validate_result(result), [])
 
     def test_scope_guard_prevents_positive_other_game_in_recommend_and_export(self):
@@ -283,8 +282,7 @@ class PerformanceNeedsTests(unittest.TestCase):
             with TestClient(create_app(make_release(folder/'release'), needs_service=needs)) as client:
                 release = client.get('/api/v1/meta').json()['release']
                 for text, code in (('爱打和平精英', 'unsupported_game'),
-                                   ('游戏性能最重要', 'game_scope_unconfirmed'),
-                                   ('续航重要', 'unsupported_metric')):
+                                   ('游戏性能最重要', 'game_scope_unconfirmed')):
                     value = client.post('/api/v1/needs', json={'text': text}).json()
                     draft = value['draft']
                     body = {k: draft[k] for k in ('needs', 'weights', 'target_screen', 'game_scope')}
