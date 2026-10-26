@@ -259,13 +259,14 @@ class RecommendTests(WebServerTest):
                         'weight', 'screen', 'refresh', 'storage', 'score', 'reason'):
                 self.assertIn(key, model)
 
-    def test_vague_budget_asks_instead_of_capping(self):
+    def test_vague_budget_does_not_ask_for_upper_bound(self):
+        """有锚点时不再追问上限，改为推断区间（2026-10-25 修订）。"""
         body = self.ask('预算三千左右，想要轻一点的', write=False)
-        self.assertEqual(body['stage'], 'clarify')
-        self.assertEqual(body['models'], [])
         fields = [item['field'] for item in body['questions']]
-        self.assertIn('budget.max', fields)
-        self.assertTrue(body['ask_text'])
+        self.assertNotIn('budget.max', fields)
+        low, high = body['bridged']['budget']
+        self.assertLess(low, 3000)
+        self.assertGreater(high, 3000)
 
     def test_ask_text_uses_web_wording_not_streamlit_wording(self):
         body = self.ask('预算三千左右', write=False)
@@ -274,7 +275,9 @@ class RecommendTests(WebServerTest):
 
     def test_clarify_returns_the_state_the_client_must_echo_back(self):
         body = self.ask('预算三千左右', write=False)
-        self.assertIn('budget.max', body['asked'])
+        # 预算已改为推断，不再进待确认；仍有其他字段（存储门槛）需要回传
+        self.assertNotIn('budget.max', body['asked'])
+        self.assertTrue(body['asked'])
         self.assertEqual(body['ask_rounds'], 1)
 
     def test_second_turn_with_the_answer_produces_models(self):

@@ -99,13 +99,23 @@ class CatalogAppTests(IsolatedEnvTest):
             self.confirm()
             self.assertEqual([r['kind'] for r in server.requests],['extract'])
             self.assertTrue(all(r['brand'] not in ('苹果','Apple') for r in self.at.session_state['catalog_input']['candidates'].to_dict('records')))
-    def test_vague_chat_budget_is_not_a_hidden_cap(self):
+    def test_vague_chat_budget_is_inferred_and_shown(self):
+        """含糊预算改为推断区间并明示（2026-10-25 修订）。
+
+        旧口径是"不得成为隐式上限"；新口径是"可以推断，但必须显式告知"。
+        红线不变：不得**静默**封顶。
+        """
         from fake_openai import FakeOpenAIServer
         with FakeOpenAIServer(enable_auto_provider=True):
             self.at.run();self.at.chat_input[0].set_value('想买2000元左右的手机').run()
             self.assertFalse(self.at.exception)
-            self.assertFalse(self.at.checkbox(key='manual_use_max').value)
-            self.assertFalse(self.at.checkbox(key='manual_use_min').value)
+            self.assertTrue(self.at.checkbox(key='manual_use_min').value)
+            self.assertTrue(self.at.checkbox(key='manual_use_max').value)
+            low=self.at.session_state['manual_min'];high=self.at.session_state['manual_max']
+            self.assertLess(low,2000);self.assertGreater(high,2000)
+            # 推断值必须出现在界面上，否则就是静默封顶
+            captions=' '.join(str(item.value) for item in self.at.caption)
+            self.assertIn('推断',captions)
             self.assertNotIn('catalog_result',self.at.session_state)
     def test_provider_failure_keeps_manual_path_available(self):
         from fake_openai import FakeOpenAIServer
