@@ -4,6 +4,8 @@ import {element,button,labels,renderCard,renderDecision,renderComparison,renderD
 import {draftFields} from './needs.mjs';
 import {requestFields,withoutCriterion,reviseNeedsText,preferenceMetrics,importanceLevels,importanceWeight,importancePosition} from './preferences.mjs';
 import {uniqueModels,diverseModels,renderHero,renderRail,renderFeatured,renderComparisonBoard,renderData} from './alpine.mjs';
+import {renderReviews,renderReviewError} from './reviews.mjs';
+let detailItem=null,reviewMode=false;
 
 const $=id=>document.getElementById(id),state=createState(),controllers=new Map();
 let view='recommend',metaSequence=0,needsPendingBudget=false,catalogCategory='all';
@@ -75,7 +77,7 @@ async function refreshMeta(initial=false){
     if(!initial)notify(changedRelease?'数据或算法版本已变化，请重新确认并生成推荐。':'数据和算法状态已刷新，版本未变化。');
   }catch(error){if(ordinal!==metaSequence)return;abortRequests();state.release=null;setPreferences(state,fields());clearResults();$('release-status').textContent='数据服务暂不可用';notify(error.message,true);}
 }
-async function request(channel,path,options,onSuccess){
+async function request(channel,path,options,onSuccess,onError){
   controllers.get(channel)?.abort();const controller=new AbortController();controllers.set(channel,controller);
   const token=beginRequest(state,channel);$(channel==='catalog'?'catalog-results':channel==='recommend'?'results':channel==='detail'?'detail-content':'compare-content').setAttribute('aria-busy','true');preferencesSummary();
   try{
@@ -87,7 +89,7 @@ async function request(channel,path,options,onSuccess){
     if(error.name==='AbortError')return;
     if(!acceptResponse(state,channel,token,{error}))return;
     if(['release_changed','decision_changed','release_unavailable','algorithm_changed','reference_rule_changed'].includes(error.code)){setPreferences(state,fields());clearResults();await refreshMeta();}
-    notify(error.message,true);
+    notify(error.message,true);onError?.(error);
   }finally{
     if(controllers.get(channel)===controller){controllers.delete(channel);for(const id of ['results','catalog-results','detail-content','compare-content'])$(id).setAttribute('aria-busy','false');preferencesSummary();}
   }
@@ -226,8 +228,18 @@ function loadCatalog(page=1){
   });
 }
 function loadDetail(id){
+  detailItem=null;reviewMode=false;$('detail-title').textContent='配置详情与来源';$('view-buyer-reviews').textContent='查看淘宝买家评价';$('view-buyer-reviews').disabled=true;$('view-buyer-reviews').setAttribute('aria-pressed','false');
   $('detail-content').replaceChildren(element('p','正在读取配置与来源…'));if(!$('detail-dialog').open)$('detail-dialog').showModal();
-  request('detail',`/api/v1/skus/${encodeURIComponent(id)}`,{},payload=>$('detail-content').replaceChildren(renderDetail(payload)));
+  request('detail',`/api/v1/skus/${encodeURIComponent(id)}`,{},payload=>{detailItem=payload;$('detail-content').replaceChildren(renderDetail(payload));$('view-buyer-reviews').disabled=false;});
+}
+function loadBuyerReviews(page=1,grade='all'){
+  if(!detailItem)return;reviewMode=true;$('detail-title').textContent='淘宝买家评价';$('view-buyer-reviews').textContent='返回配置详情';$('view-buyer-reviews').setAttribute('aria-pressed','true');
+  $('detail-dialog').scrollTop=0;$('detail-content').replaceChildren(element('p','正在读取淘宝买家评价…','review-loading'));
+  const id=detailItem.sku.sku_id;
+  request('detail',`/api/v1/skus/${encodeURIComponent(id)}/reviews?page=${page}&page_size=20&grade=${grade}`,{},payload=>{
+    $('detail-content').replaceChildren(renderReviews(payload,{onFilter:value=>loadBuyerReviews(1,value),onPage:value=>loadBuyerReviews(value,grade)}));
+    $('detail-title').focus();
+  },error=>$('detail-content').replaceChildren(renderReviewError(error.message,()=>loadBuyerReviews(page,grade))));
 }
 function loadComparison(){
   const context={onDetails:loadDetail,onAdd:()=>setView('catalog'),onRemove:id=>{removeComparison(state,id);controllers.get('compare')?.abort();compareCount();renderCurrentCards();loadComparison();}};
@@ -269,7 +281,14 @@ $('clear-catalog-filters').addEventListener('click',()=>{for(const id of ['min-p
 $('refresh-meta').addEventListener('click',()=>refreshMeta());$('catalog-search').addEventListener('submit',event=>{event.preventDefault();loadCatalog();});$('apply-catalog').addEventListener('click',()=>loadCatalog());
 for(const node of document.querySelectorAll('[data-category]'))node.addEventListener('click',()=>{catalogCategory=node.dataset.category;loadCatalog(1);});
 $('category-status').addEventListener('change',()=>loadCatalog(1));
-$('close-detail').addEventListener('click',()=>{$('detail-dialog').close();controllers.get('detail')?.abort();state.sequence.detail++;});
+$('view-buyer-reviews').addEventListener('click',()=>{
+  if(!reviewMode){loadBuyerReviews();return;}
+  controllers.get('detail')?.abort();controllers.delete('detail');state.sequence.detail++;state.loading.detail=false;reviewMode=false;
+  $('detail-title').textContent='配置详情与来源';$('view-buyer-reviews').textContent='查看淘宝买家评价';$('view-buyer-reviews').setAttribute('aria-pressed','false');
+  $('detail-content').setAttribute('aria-busy','false');$('detail-content').replaceChildren(renderDetail(detailItem));$('detail-dialog').scrollTop=0;$('detail-title').focus();
+});
+$('close-detail').addEventListener('click',()=>$('detail-dialog').close());
+$('detail-dialog').addEventListener('close',()=>{controllers.get('detail')?.abort();state.sequence.detail++;detailItem=null;reviewMode=false;});
 $('clear-comparison').addEventListener('click',()=>{for(const id of [...state.comparisonIds])removeComparison(state,id);controllers.get('compare')?.abort();compareCount();renderCurrentCards();loadComparison();});
 for(const node of document.querySelectorAll('[data-download]'))node.addEventListener('click',()=>download(node.dataset.download));
 $('decision-summary').replaceChildren(renderDecision(state));refreshMeta(true);

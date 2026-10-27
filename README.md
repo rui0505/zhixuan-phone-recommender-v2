@@ -1,37 +1,44 @@
 # 知选 v2：证据可追溯的手机推荐
 
-人工确认需求 → 同口径候选矩阵 → TOPSIS 相对排序 → 程序证据解释。
-新增 HTML + 独立 API 入口 `api.app:app`，保留 Streamlit `app.py`。新版协作、启动、图片与可选 DeepSeek 边界见 [HTML/API 交付](docs/html-api-local.md)。功能分支 `codex/html-api-ui` 已推送并创建 PR，未合并；[ECS 演示](http://47.243.189.12/)及验收/维护方式见 [公网交付](docs/ecs-demo-handoff.md)。
+人工确认需求 → 硬条件筛选 → 七维评分与相对排序 → 有依据的推荐理由。
+
+当前公网站点：[知选](https://zhixuanji.cn/)。HTML + 独立 API 入口为 `api.app:app`，保留 Streamlit `app.py`。本次完整更新位于 `codex/hybrid-seven-dimensions-20261027`；GitHub 分支、PR、main 与生产发布分别记录，见 [同步范围](docs/github-sync-20261027.md)。
+
+四页新界面、七维偏好、百分制规格参考及买家评价已在 2026-10-27 发布到现有 ECS。详见 [界面发布记录](docs/alpine-public-release-20261027.md)、[评分规则与来源](docs/spec-reference-scoring-20261027.md)、[买家评价及云端发布](docs/buyer-reviews-20261027.md)。新版协作、图片与可选 DeepSeek 边界见 [HTML/API 交付](docs/html-api-local.md)。
 
 ## 功能与边界
 
 - 147 机型、150 版本、484 SKU；卫星版本和存储配置独立关联。
-- 预算、品牌包含/排除、最低存储、成色和手动权重；排序、对比、来源、CSV/XLSX/JSON 导出。
+- 预算、品牌包含/排除、最低存储和成色是硬条件；存储、重量、电池容量、处理器档位、屏幕尺寸、拍照、游戏是七个偏好维度。五档重要性按维度映射，未提及有正初值，明确不在意可为 0。
+- 默认 TOPSIS，相对排序可选实验性 RRF 混合模式；支持对比、来源与 CSV/XLSX/JSON 导出。
 - 数据/规则/算法版本与快照哈希绑定；换库后旧确认和解释失效。
 - 默认无 API key、不调用付费模型。可选抽取后仍须手动确认，程序产生解释。
 - TOPSIS 是可比候选内相对匹配分，不是绝对性能或购买概率。默认权重是试验设置，不是学习出的偏好。
-- 拍照只用同协议 DXOMARK 照片子分，不混 v4/v5/v6、不把归一化总分重复计权。
-- 游戏须同次测试且关键条件齐全，缺数据只列备选；不以处理器/刷新率代替实测。1% Low 无有效覆盖，不推算完整总分。
+- 默认规格参考模式提供固定规则的七维百分制估算，游戏用处理器和电池容量代理；不承诺为实测体验或经真实用户校准的性能。
+- 可选实测模式中，拍照只用同协议 DXOMARK 照片子分，不混 v4/v5/v6；游戏须同次测试且关键条件齐全。1% Low 无有效覆盖，不推算完整实测总分。
+- 详情页可查看 5,108 条淘宝买家评价（118 个机型），保留采集昵称，支持等级筛选、分页和追评；机型级样本可能来自不同配置与成色。
 - 历史价格有 new/used/unknown；先选快照再筛预算，不承诺实时库存/报价。
 - 机器 PASS；整体 PENDING、WPS NOT_CHECKED、人工抽查待完成。另行授权的 147 个机型图片通过独立展示清单关联，不修改数值库；不是 SKU 成色/库存证明。VIKOR 未实现。
 
-## 安装与启动（Windows / WorkBuddy）
+## HTML/API 安装与启动（Windows / WorkBuddy）
 
 仓库地址：https://github.com/rui0505/zhixuan-phone-recommender-v2 。私有仓库先接受管理员邀请；用自己的 GitHub 账号，不共享 token。
 
 ```powershell
 git clone https://github.com/rui0505/zhixuan-phone-recommender-v2.git
 cd zhixuan-phone-recommender-v2
+git switch codex/hybrid-seven-dimensions-20261027
 py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-api.txt
 .\.venv\Scripts\python.exe scripts/check_release.py --root .
-.\.venv\Scripts\python.exe -m streamlit run app.py
+.\.venv\Scripts\python.exe -m uvicorn api.app:app --host 127.0.0.1 --port 8600
 ```
 
 Linux/macOS 使用 `python3.12 -m venv .venv`，解释器换为 `.venv/bin/python`。
-无需桌面 Excel、图片 ZIP、Node 或 Word；生产网页只读 `data/catalog.sqlite`。
+浏览器访问 `http://127.0.0.1:8600/`。无需桌面 Excel、图片 ZIP、Node 或 Word；生产网页读取只读目录快照、版本化规则、展示图片及评价运行快照。Node 仅用于前端测试。
 Python 3.12；直接依赖锁定在 requirements，传递依赖由 pip 解析。
-Streamlit 1.65 自身依赖 Starlette/Uvicorn/Pillow；应用不启动旧 API 或建库/报告工具。
+
+需要运行保留的 Streamlit 入口时，再安装 `requirements.txt` 并执行 `.\.venv\Scripts\python.exe -m streamlit run app.py`。
 
 ## 测试与协作
 
@@ -44,10 +51,12 @@ $env:PHONE_CATALOG_DB='data/catalog.sqlite'
 .\.venv\Scripts\python.exe -m unittest discover -s data_pipeline/tests -p 'test_*.py' -v
 ```
 
-旧 HTML/API/Excel 适配器只作回归参考，不是公网入口。旧 UI 测试跑 `tests/reference_streamlit.py` 与合成夹具；新版由 `test_app_catalog.py` 单独验收。
+HTML/API 是当前 ECS 的公网入口；旧兼容适配器及旧 UI 测试作为回归参考，旧 UI 测试跑 `tests/reference_streamlit.py` 与合成夹具。API/前端覆盖见 `tests/test_api_*.py` 与 `tests/frontend/`，Streamlit 目录入口由 `test_app_catalog.py` 验收。
 全量原件保真/重建稳定性、人审和 WPS 检查在数据管理员本地单独验收，不能由 CI PASS 代替。
 
-## 独立发布
+## 历史 Streamlit 发布记录（2026-10-06）
+
+以下保留该日期的发布记录；2026-10-27 的 ECS 发布状态以顶部链接的发布文档为准。
 
 Streamlit 新应用选实际新仓库 / `main` / `app.py` / Python 3.12；不填 LLM 密钥。
 仓库私有与网页公开是不同设置。只发布白名单快照，不上传原件；HTML/ECS 入口另行授权的 147 张机型图通过独立展示层发布，不代表实际成色/库存。

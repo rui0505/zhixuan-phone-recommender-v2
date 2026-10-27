@@ -16,6 +16,7 @@ from .service import CatalogService
 from .images import ImageCatalog
 from .explanations import ExplanationService
 from .needs import NeedsService, parse_needs_text
+from .buyer_reviews import BuyerReviews, parse_query as parse_review_query
 from catalog.evidence import build_evidence
 from .contracts import (ApiError, parse_recommendation, parse_catalog_query,
                         parse_pagination, parse_compare, parse_export)
@@ -63,7 +64,7 @@ async def read_body(request):
         raise ApiError(400,'invalid_json','请求不是有效的 UTF-8 JSON，或含重复键') from exc
 
 
-def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None, needs_service=None):
+def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None, needs_service=None, buyer_reviews=None):
     # Only trusted process configuration injects paths; HTTP parsers reject them.
     store=ReleaseStore(db_path or Path(os.environ.get('PHONE_CATALOG_PATH',ROOT/'data/catalog.sqlite')))
     if image_catalog is None:
@@ -73,6 +74,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         image_catalog=ImageCatalog(data_root/'image_manifest.json',data_root/'media',snapshot)
     service=CatalogService(store,image_catalog,ExplanationService())
     needs_service = needs_service if needs_service is not None else NeedsService()
+    buyer_reviews = buyer_reviews if buyer_reviews is not None else BuyerReviews(Path(store.db_path).parent/'buyer_reviews.json')
 
     @asynccontextmanager
     async def lifespan(app):
@@ -85,7 +87,8 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         except (ValueError,OSError) as exc:
             raise ApiError(503,'release_unavailable','数据发布暂不可用，请联系维护者或稍后重试') from exc
         path=request.url.path; queries=list(request.query_params.multi_items())
-        if queries and path not in ('/api/v1/catalog','/api/v1/recommend'):
+        review_route=path.endswith('/reviews') and 'sku_id' in request.path_params
+        if queries and path not in ('/api/v1/catalog','/api/v1/recommend') and not review_route:
             raise ApiError(422,'invalid_request','此接口不接受查询参数')
         if path=='/readyz':return response_json({'status':'ready','release':service.meta()['release']})
         if path=='/api/v1/meta':
@@ -94,6 +97,12 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         if path=='/api/v1/needs':
             return response_json(needs_service.extract(parse_needs_text(body),service.meta()['brands']))
         if path=='/api/v1/catalog':return response_json(service.catalog(parse_catalog_query(queries,service.meta()['brands'])))
+        if review_route:
+            pagination,grade=parse_review_query(queries)
+            details=service.details(request.path_params['sku_id'])
+            result=buyer_reviews.for_model(details['model'],details['release']['snapshot_sha256'],pagination,grade)
+            service._unchanged(details['release'])
+            return response_json({**result,'sku_id':details['sku']['sku_id'],'release':details['release']})
         if 'sku_id' in request.path_params:return response_json(service.details(request.path_params['sku_id']))
         if path=='/api/v1/compare':return response_json(service.compare(parse_compare(body)))
         brands=service.meta()['brands']
@@ -145,7 +154,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         return error_response(ApiError(exc.status_code,code,'资源不存在或请求方法不允许'))
 
     routes=[Route('/healthz',health),Route('/readyz',endpoint),Route('/api/v1/meta',endpoint),
-            Route('/api/v1/catalog',endpoint),Route('/api/v1/skus/{sku_id}',endpoint),
+            Route('/api/v1/catalog',endpoint),Route('/api/v1/skus/{sku_id}/reviews',endpoint),Route('/api/v1/skus/{sku_id}',endpoint),
             Route('/api/v1/compare',endpoint,methods=['POST']),Route('/api/v1/recommend',endpoint,methods=['POST']),
             Route('/api/v1/export/{format}',endpoint,methods=['POST']),Route('/api/v1/explain',endpoint,methods=['POST']),
             Route('/api/v1/needs',endpoint,methods=['POST']),

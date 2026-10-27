@@ -19,6 +19,7 @@ class Node {
   async emit(type,target=this){return this.listeners[type]?.({target,preventDefault(){}});}
   querySelectorAll(){return [];}
   close(){this.open=false;}
+  showModal(){this.open=true;}
   focus(){}
   remove(){}
 }
@@ -52,11 +53,30 @@ async function harness({offline=false}={}){
     if(path==='/api/v1/needs')payload=needsPayload;
     if(path.startsWith('/api/v1/catalog'))payload={release,items:discoveryRows,total:6,page:1,page_size:24};
     if(path.startsWith('/api/v1/skus/')){const row=discoveryRows.find(row=>path.endsWith(row.sku_id))??discoveryRows[0];payload={release,model:{display_name:row.display_name,brand:row.brand},sku:row,specifications:[],prices:[{amount:row.price_cny,condition:row.condition,observed_at:row.observed_at}],benchmark_runs:[],observations:[],sources:[]};}
+    if(path.includes('/reviews?')){const q=new URL(path,'http://localhost').searchParams,grade=q.get('grade'),page=Number(q.get('page'));payload={release,model:{display_name:discoveryRows[0].display_name},available:true,sample_total:21,total:grade==='bad'?1:21,grade,page,page_size:20,grade_counts:{good:20,bad:1},items:[{username:'淘**友',grade_label:grade==='bad'?'差评':'好评',content:'采集的买家原文',purchase_spec:'256GB'}]};}
     return {ok:true,json:async()=>payload};
   };
   await import(`../../frontend/app.mjs?test=${++ordinal}`);await settle();
   return {ids,groups,calls,setNeeds:payload=>{needsPayload=payload;},async input(id,value){ids.get(id).value=String(value);await ids.get('preferences').emit('input',ids.get(id));},async generate(){ids.get('confirmed').checked=true;await ids.get('preferences').emit('input',ids.get('confirmed'));await ids.get('preferences').emit('submit');await settle();}};
 }
+
+test('detail entry loads actual review endpoint, filters, paginates and returns to cached specifications',async()=>{
+  const h=await harness(),walk=node=>[node,...node.children.flatMap(walk)];
+  const entry=walk(h.ids.get('results')).find(node=>node.tagName==='button'&&node.textContent.includes('详情'));
+  assert.ok(entry);await entry.emit('click');await settle();
+  assert.equal(h.ids.get('detail-dialog').open,true);assert.equal(h.ids.get('view-buyer-reviews').disabled,false);
+  await h.ids.get('view-buyer-reviews').emit('click');await settle();
+  assert.match(h.calls.at(-1).path,/\/skus\/S0\/reviews\?page=1&page_size=20&grade=all$/);
+  assert.match(h.ids.get('detail-content').textContent,/淘\*\*友/);
+  await walk(h.ids.get('detail-content')).find(n=>n.tagName==='button'&&n.textContent==='下一页').emit('click');await settle();
+  assert.match(h.calls.at(-1).path,/page=2&page_size=20&grade=all$/);
+  await walk(h.ids.get('detail-content')).find(n=>n.tagName==='button'&&n.textContent==='差评 1').emit('click');await settle();
+  assert.match(h.calls.at(-1).path,/page=1&page_size=20&grade=bad$/);
+  const count=h.calls.length;await h.ids.get('view-buyer-reviews').emit('click');
+  assert.equal(h.calls.length,count);assert.equal(h.ids.get('detail-title').textContent,'配置详情与来源');
+  assert.match(h.ids.get('detail-content').textContent,/真实目录机型0/);
+  await h.ids.get('detail-dialog').emit('close');
+});
 
 test('real form submits default then explicit hybrid with bound version and original release fields',async()=>{
   const h=await harness();await h.generate();let body=h.calls.find(c=>c.path.startsWith('/api/v1/recommend')).body;
