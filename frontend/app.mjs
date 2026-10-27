@@ -1,7 +1,7 @@
 import {createState,setPreferences,applyMeta,beginRequest,acceptResponse,addComparison,removeComparison} from './state.mjs';
 import {fetchJson,fetchDownload} from './api.mjs';
 import {element,button,labels,renderCard,renderDecision,renderComparison,renderDetail,renderPerformance} from './render.mjs';
-import {draftFields,pendingReview} from './needs.mjs';
+import {draftFields} from './needs.mjs';
 import {requestFields,withoutCriterion,reviseNeedsText,preferenceMetrics,importanceLevels,importanceWeight,importancePosition} from './preferences.mjs';
 import {uniqueModels,diverseModels,renderHero,renderRail,renderFeatured,renderComparisonBoard,renderData} from './alpine.mjs';
 import {renderReviews,renderReviewError} from './reviews.mjs';
@@ -9,7 +9,6 @@ let detailItem=null,reviewMode=false;
 
 const $=id=>document.getElementById(id),state=createState(),controllers=new Map();
 let view='recommend',metaSequence=0,needsPendingBudget=false,catalogCategory='all';
-let needsReview={report:null,acknowledged:new Set(),boxes:[],status:null};
 let discovery=[],discoverySequence=0,featuredIndex=0,featuredSequence=0;
 const featuredDetails=new Map();
 const metrics=preferenceMetrics;
@@ -37,10 +36,7 @@ function preferencesSummary(){
   if(!reference&&f.weights.honor_of_kings_avg_fps>0&&!f.defaulted_metrics.includes('honor_of_kings_avg_fps')&&f.game_scope!=='honor_of_kings')blockers.push('游戏范围尚未覆盖或确认。可明确改用王者荣耀作参考，或选择“游戏暂不计入”；原始意图仍保留。');
   $('performance-blocker').textContent=blockers.join(' ');
   const pendingBudget=needsPendingBudget&&budget.max===null&&!$('budget-unlimited').checked;
-  const pendingExceptions=pendingReview(needsReview.report,needsReview.acknowledged).length;
-  $('confirmed').disabled=pendingExceptions>0;
-  if(needsReview.status)needsReview.status.textContent=pendingExceptions?`还有 ${pendingExceptions} 项解析异常待核对；核对后再勾选整体确认。`:'异常已逐项核对，请检查下方条件与偏好后勾选整体确认。';
-  $('generate').disabled=!state.release||!$('confirmed').checked||state.loading.recommend||state.loading.needs||pendingBudget||pendingExceptions>0||blockers.length>0;
+  $('generate').disabled=!state.release||!$('confirmed').checked||state.loading.recommend||pendingBudget||blockers.length>0;
   $('extract-needs').disabled=!state.meta?.features.needs_extraction||state.loading.needs||!$('needs-text').value.trim();
 }
 function clearResults(){
@@ -49,7 +45,7 @@ function clearResults(){
   $('catalog-results').replaceChildren();$('catalog-pagination').replaceChildren();$('catalog-status').textContent='筛选已变更，请点击“应用上方筛选”。';
   $('catalog-featured').replaceChildren();if($('detail-dialog').open)$('detail-dialog').close();preferencesSummary();renderDiscovery();renderSupportingPhones();
 }
-function changed(){abortRequests();needsReview.acknowledged.clear();for(const box of needsReview.boxes)box.checked=false;setPreferences(state,fields());clearResults();notify('条件已变更，旧推荐已清除，请重新检查并确认。');}
+function changed(){abortRequests();setPreferences(state,fields());clearResults();notify('条件已变更，旧推荐已清除，请重新检查并确认。');}
 function compareCount(){$('compare-count').textContent=state.comparisonIds.length;}
 function setView(next){
   notify('');$('top')?.scrollIntoView?.({block:'start'});
@@ -105,22 +101,6 @@ function addToCompare(id){
 function showNeeds(payload){
   const panel=$('needs-result');panel.replaceChildren(element('p',payload.notice));
   const extracted=payload.extraction;if(!extracted)return;
-  if(extracted.verification){
-    const report=extracted.verification;
-    if(report.issues.length){
-      const group=element('fieldset',undefined,'needs-review');group.append(element('legend','解析结果需要核对'),element('p','请先检查下方表单，逐项核对这些异常。修改条件会撤销已勾选的核对。'));
-      const names={'budget':'预算','budget.min':'预算下限','budget.max':'预算上限','budget.reference':'预算参考','min_storage':'最低存储','target_screen':'屏幕尺寸','brands.include':'包含品牌','brands.exclude':'排除品牌','preferences.weight':'轻便偏好','preferences.storage':'存储偏好','preferences.screen':'屏幕尺寸偏好','preferences.photo':'拍照偏好','preferences.game':'游戏偏好','preferences.battery':'电池容量偏好','preferences.chipset':'处理器偏好'};
-      const valueText=value=>value===null?'未提取或待填写':Array.isArray(value)?value.join('、')||'不限品牌':typeof value==='object'?`${value.min??'不限'}—${value.max??'不限'} 元`:String(value);
-      for(const issue of report.issues){
-        const row=element('div',undefined,'needs-review-item');
-        row.append(element('p',`${names[issue.field]??'需求条件'}：${issue.message}`,'warning'),element('p',issue.model_value===issue.rule_value?`解析建议：${valueText(issue.model_value)}，需你核对。`:`原解析：${valueText(issue.model_value)}；待确认建议：${valueText(issue.rule_value)}。`),element('p',issue.evidence?`相关原话：「${issue.evidence}」`:'未找到可核对的对应原话。','small'));
-        const label=element('label',undefined,'needs-review-choice'),box=element('input');box.type='checkbox';box.id=`needs-review-${issue.id}`;
-        box.addEventListener('change',()=>{box.checked?needsReview.acknowledged.add(issue.id):needsReview.acknowledged.delete(issue.id);abortRequests();setPreferences(state,fields());clearResults();});
-        label.append(box,element('span',`我已核对${names[issue.field]??'这项条件'}，接受下方表单当前填写的值`));row.append(label);group.append(row);needsReview.boxes.push(box);
-      }
-      needsReview.status=element('p',undefined,'warning');needsReview.status.setAttribute('role','status');group.append(needsReview.status);panel.append(group);
-    }else panel.append(element('p','针对性核验未发现已覆盖类型的冲突；请继续检查预算、品牌和七项偏好。','small'));
-  }
   if(payload.draft?.budget_inferred)panel.append(element('p',`预算为程序推断：${payload.draft.needs.budget.min}—${payload.draft.needs.budget.max} 元（参考锚点 ${extracted.budget.reference} 元）。可在硬性条件中修改，确认后才用于筛选。`));
   else if(extracted.budget.reference!==null)panel.append(element('p',`预算参考锚点：${extracted.budget.reference} 元；实际筛选范围以你确认的硬性条件为准。`));
   const list=element('ul');const titles={weight:'重量',storage:'存储',screen:'屏幕尺寸',game:'游戏',photo:'拍照',battery:'电池容量',chipset:'处理器档位'};
@@ -131,17 +111,11 @@ function showNeeds(payload){
 }
 async function understandNeeds(event){
   event.preventDefault();const text=$('needs-text').value.trim();if(!text||!state.meta?.features.needs_extraction)return;
-  // Re-understanding invalidates the old decision even if the HTTP request fails.
-  abortRequests();needsReview={report:null,acknowledged:new Set(),boxes:[],status:null};
-  state.needsIntent=null;setPreferences(state,fields());clearResults();$('needs-result').replaceChildren();
   controllers.get('needs')?.abort();const controller=new AbortController();controllers.set('needs',controller);
   const token=beginRequest(state,'needs');preferencesSummary();$('needs-status').textContent=state.meta?.features.offline_fixture?'离线测试夹具正在解析需求…':'DeepSeek 正在理解需求，请稍候…';
   try{
     const payload=await fetchJson('/api/v1/needs',{method:'POST',body:{text},signal:controller.signal});
     if(!acceptResponse(state,'needs',token,payload))return;
-    needsReview={report:payload.extraction?.verification??null,acknowledged:new Set(),boxes:[],status:null};
-    // Even a failed replacement invalidates the previous ranking and confirmation.
-    abortRequests();setPreferences(state,fields());clearResults();
     const draft=draftFields(payload,fields());
     if(draft){
       abortRequests();for(const [id,value] of [['min-price',draft.needs.budget.min],['max-price',draft.needs.budget.max],['min-storage',draft.needs.min_storage],['target-screen',draft.target_screen]])$(id).value=value??'';
@@ -293,7 +267,7 @@ $('preferences').addEventListener('input',event=>{
 });
 $('preferences').addEventListener('submit',event=>{event.preventDefault();if(!$('confirmed').checked||!state.release||$('generate').disabled)return;state.confirmedRequest={...structuredClone(fields()),confirmed:true,expected_release:structuredClone(state.release)};for(const item of $('needs-result').querySelectorAll('[data-clarification]'))item.textContent=`已检查确认：${item.textContent.replace(/^待确认：/,'')}`;if($('needs-result').childElementCount)$('needs-status').textContent='表单已确认，推荐将按下方结果显示。';$('preferences-panel').open=true;$('more-preferences').open=false;$('advanced-settings').open=false;$('needs-notices').open=false;setView('recommend');generate();});
 $('natural-needs').addEventListener('submit',understandNeeds);
-$('needs-text').addEventListener('input',()=>{abortRequests();needsReview={report:null,acknowledged:new Set(),boxes:[],status:null};reviseNeedsText(state,fields());clearResults();$('needs-result').replaceChildren();$('needs-status').textContent='需求文字已改变，请重新理解并确认；也可检查表单后手动确认。';});
+$('needs-text').addEventListener('input',()=>{abortRequests();reviseNeedsText(state,fields());clearResults();$('needs-result').replaceChildren();$('needs-status').textContent='需求文字已改变，请重新理解并确认；也可检查表单后手动确认。';});
 for(const node of document.querySelectorAll('[data-not-count]'))node.addEventListener('click',()=>{
   const reset=withoutCriterion(fields(),node.dataset.notCount);$(node.dataset.notCount).value=0;changed();
   notify('本次已暂不计入该项；原始需求和硬条件已保留，请重新检查并确认。');

@@ -9,7 +9,3 @@ export function draftFields(payload,current){
     throw new Error('偏好草稿无效，请使用手动填写');
   return {...structuredClone(d),weights,mode:current.mode,method:current.method??'topsis',evaluation_mode:current.evaluation_mode??'spec_reference',expected_reference_rule_version:current.expected_reference_rule_version};
 }
-
-export function pendingReview(verification,acknowledged=new Set()){
-  return (verification?.issues??[]).filter(issue=>!acknowledged.has(issue.id));
-}

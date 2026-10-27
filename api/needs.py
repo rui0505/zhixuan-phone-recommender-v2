@@ -7,8 +7,7 @@ import sqlite3
 import threading
 
 from bridge import infer_budget_range
-from needs_extraction import extract_needs, validate_result
-from needs_verification import verify_extraction
+from needs_extraction import extract_needs, validate_result, budget_bound_has_source
 from providers.jev import JevUnavailable, normalise_response
 from providers.llm import SYSTEM_PROMPT, USER_TEMPLATE, post_chat, content_of, extract_json_object
 from schemas import WEIGHT_TABLE
@@ -86,7 +85,15 @@ class NeedsService:
                 return {'status':'failed', 'extraction':result, 'draft':None,
                         'notice':'本次未取得可靠偏好，请手动填写；没有生成排名'}
             try:
-                result = verify_extraction(text, result)
+                for bound in ('min','max'):
+                    value=result['budget'][bound]
+                    if value is not None and not budget_bound_has_source(text,value,bound):
+                        result['budget'][bound]=None
+                        result['status']='degraded'
+                        if not any(c['field']==f'budget.{bound}' for c in result['clarifications']):
+                            result['clarifications'].append({'field':f'budget.{bound}',
+                                'question':'预算上限是多少？也可以明确选择不限。' if bound=='max' else '是否需要设置预算下限？请在表单中确认。',
+                                'reason':'模型给出了原文没有依据的预算边界，已清除'})
                 if validate_result(result):
                     raise ValueError('invalid extraction')
                 # 含糊预算（「5000左右」）：用户没有明确边界，但给了锚点。
@@ -114,8 +121,6 @@ class NeedsService:
                 notice=(f'你说的是「{result["budget"]["reference"]:g} 元左右」，'
                         f'已按 ¥{inferred[0]:,}–¥{inferred[1]:,} 推断预算范围（推断值，可修改）。'
                         + notice)
-            if result['verification']['issues']:
-                notice = f"发现 {len(result['verification']['issues'])} 项需要核对的解析结果，请逐项检查异常后再确认推荐。" + notice
             return {'status':result['status'], 'extraction':result,
                     'draft':{'needs':needs, 'weights':weights, 'target_screen':result['target_screen'] if result['target_screen'] is not None else 6.5,
                              'defaulted_metrics':sorted(CONTROL_KEYS[p['criterion']] for p in result['preferences'] if p['level']=='未提及'),

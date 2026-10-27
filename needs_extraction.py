@@ -388,7 +388,7 @@ def _vague_boundary_conflict(budget: Mapping[str, Any], text: str) -> str:
         value = budget.get(key)
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             continue
-        if float(value) in stated and not budget_bound_has_source(text, float(value), key):
+        if float(value) in stated:
             return vague
     return ""
 
