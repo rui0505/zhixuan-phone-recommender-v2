@@ -8,6 +8,7 @@ import unittest
 from catalog.adapter import build_input
 from catalog.evidence import build_evidence, digest
 from catalog.release import ReleaseStore
+from catalog.spec_reference import build_spec_reference_input
 from engine import rank_decision_input
 from tests.api_fixture import make_release
 from tests.catalog_fixture import game_run, insert
@@ -20,7 +21,7 @@ class PresentationTests(unittest.TestCase):
         self.sequence = 0
 
     def bundle(self, *, weights=None, budget=None, target_screen=6.5, prepare=None,
-               mode='new', sku_ids=None):
+               mode='new', sku_ids=None, evaluation_mode='measured'):
         self.sequence += 1
 
         def records(con):
@@ -39,7 +40,8 @@ class PresentationTests(unittest.TestCase):
         selected_weights = weights or {'price_cny': 5, 'weight_g': 2, 'storage_gb': 2,
                                        'refresh_rate_hz': 1, 'screen_size_inch': 0,
                                        'dxomark_photo': 0, 'honor_of_kings_avg_fps': 0}
-        di = build_input(release.repo, needs, selected_weights, target_screen, mode)
+        builder = build_spec_reference_input if evaluation_mode == 'spec_reference' else build_input
+        di = builder(release.repo, needs, selected_weights, target_screen, mode)
         result = rank_decision_input(di, target_screen=target_screen)
         self.assertEqual(result.status, 'ready')
         return build_evidence(di, result, needs, sku_ids=sku_ids)
@@ -259,6 +261,93 @@ class PresentationTests(unittest.TestCase):
                               'decision_context', '购买概率', '满意度'):
                 self.assertNotIn(forbidden, text)
             self.assertNotIn('{', text)
+
+    def reference_bundle(self, *, weights=None, budget=None, prepare=None):
+        def records(con):
+            con.execute("UPDATE skus SET storage_gb=512, storage_raw='512GB' WHERE sku_id='S1'")
+            con.execute("UPDATE specifications SET value_num=219, raw_value='219' WHERE spec_id='weight_g1'")
+            con.execute("UPDATE specifications SET value_num=5750, raw_value='5750' WHERE spec_id='battery_capacity_mah1'")
+            if prepare:
+                prepare(con)
+        return self.bundle(weights=weights or {'storage_gb': 5, 'weight_g': 4,
+                           'battery_capacity_mah': 3, 'honor_of_kings_avg_fps': 2},
+                           budget=budget, prepare=records, evaluation_mode='spec_reference')
+
+    def test_reference_summary_explains_real_capacity_and_heavy_body_in_customer_language(self):
+        value = self.reason(self.reference_bundle())
+        text = value['summary']
+        self.assertIn('512', text)
+        self.assertIn('存储', text)
+        self.assertIn('219', text)
+        self.assertRegex(text, '偏重|较重|分量')
+        self.assertRegex(text, '不过|但|需要接受')
+        self.assertGreaterEqual(len(text), 65)
+        self.assertLessEqual(len(text), 150)
+        for forbidden in ('/100', '参考为', '规格估算', 'TOPSIS', '轻便', '512 GB 内存',
+                          '外观好看', '颜值', '所有应用', '完全没问题', '游戏流畅', '续航持久'):
+            self.assertNotIn(forbidden, text)
+        self.assertNotIn('/100', ' '.join(value['matches']))
+
+    def test_unranked_price_can_explain_budget_with_a_traceable_record_context(self):
+        bundle = self.reference_bundle(budget={'min': None, 'max': 2100})
+        model = next(m for m in bundle['models'] if m['sku_id'] == 'S1')
+        self.assertEqual(model.get('price_cny'), 1000)
+        self.assertEqual(model.get('storage_gb'), 512)
+        self.assertEqual(model.get('ram_gb'), 12)
+        self.assertNotIn('price_cny', bundle['decision_context']['weights'])
+        value = self.reason(bundle)
+        self.assertIn('1000', value['summary'])
+        self.assertIn('预算', value['summary'])
+        self.assertRegex(value['summary'], '不顶满|留有余量|留出')
+        used = [bundle['facts'][ident] for ident in value['fact_ids']]
+        self.assertTrue(any(f.get('model_context', {}).get('price_cny') == 1000 for f in used))
+        self.assertIn('2026-01-01', ' '.join(value['limitations']))
+        model['price_cny'] = 1
+        with self.assertRaisesRegex(ValueError, '证据内容已变化'):
+            self.reason(bundle)
+
+    def test_unbounded_or_unknown_record_price_never_becomes_a_bargain_claim(self):
+        bundle = self.reference_bundle()
+        for forbidden in ('便宜', '划算', '不顶满', '预算内'):
+            self.assertNotIn(forbidden, self.reason(bundle)['summary'])
+        bundle = self.reference_bundle(budget={'min': None, 'max': 2100})
+        for model in bundle['models']:
+            model['price_cny'] = None
+        for fact in bundle['facts'].values():
+            if fact.get('model_context'):
+                fact['model_context']['price_cny'] = None
+        text = self.reason(self.resign(bundle))['summary']
+        self.assertNotIn('不顶满', text)
+        self.assertNotIn('便宜', text)
+
+    def test_zero_reference_score_and_missing_game_do_not_turn_into_positive_claims(self):
+        def records(con):
+            con.execute("UPDATE skus SET storage_gb=64, storage_raw='64GB' WHERE sku_id='S1'")
+            con.execute("DELETE FROM specifications WHERE spec_id='battery_capacity_mah1'")
+            con.execute("UPDATE specifications SET source_id=NULL")
+        bundle = self.reference_bundle(weights={'storage_gb': 5, 'weight_g': 1,
+                                               'honor_of_kings_avg_fps': 0}, prepare=records)
+        value = self.reason(bundle)
+        self.assertIn('64', value['summary'])
+        self.assertRegex(value['summary'], '有限|较紧|不算宽裕|留意空间')
+        for forbidden in ('空间宽裕', '玩游戏', '游戏流畅', '兼顾游戏', '完全没问题', '轻便'):
+            self.assertNotIn(forbidden, value['summary'])
+        self.assertTrue(any('来源' in row for row in value['limitations']))
+
+    def test_only_strong_game_reference_gets_a_conditional_shortlist_sentence(self):
+        bundle = self.reference_bundle(weights={'honor_of_kings_avg_fps': 5, 'storage_gb': 1})
+        game = next(f for f in bundle['facts'].values()
+                    if f['sku_id'] == 'S1' and f['metric_key'] == 'ref_game')
+        game['value'] = 85
+        strong = self.reason(self.resign(bundle))
+        self.assertIn('游戏', strong['summary'])
+        self.assertIn('实测', strong['summary'])
+        self.assertRegex(strong['summary'], '备选|可以考虑')
+        game['value'] = 55
+        weak = self.reason(self.resign(bundle))
+        self.assertNotIn('放进备选', weak['summary'])
+        self.assertNotIn('游戏也不错', weak['summary'])
+        self.assertNotIn('兼顾游戏', weak['summary'])
 
 
 if __name__ == '__main__':

@@ -20,6 +20,9 @@ class CatalogAppTests(IsolatedEnvTest):
         super().setUp();self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
         shutil.copy2(BASE/'data/catalog.sqlite',self.root/'catalog.sqlite')
         shutil.copy2(BASE/'data/release_manifest.json',self.root/'release_manifest.json')
+        # 芯片档位表是排名矩阵的运行时依赖，必须跟着库一起走。
+        shutil.copy2(BASE/'data/chipset-tiers.json',self.root/'chipset-tiers.json')
+        shutil.copy2(BASE/'data/chipset-primary-reference.json',self.root/'chipset-primary-reference.json')
         self.env=patch.dict(os.environ,{'PHONE_CATALOG_PATH':str(self.root/'catalog.sqlite')})
         self.env.start();self.at=AppTest.from_file(APP,default_timeout=60).run()
     def tearDown(self):self.env.stop();self.temp.cleanup();super().tearDown()
@@ -35,12 +38,37 @@ class CatalogAppTests(IsolatedEnvTest):
         self.assertEqual(self.at.session_state['catalog_bundle']['dataset_version'],
                          json.loads((self.root/'release_manifest.json').read_text(encoding='utf-8'))['dataset_version'])
         self.assertEqual(self.at.dataframe[0].value.columns[1],'score')
+
+    def test_spec_reference_mode_shows_seven_percent_scores_and_invalidates_on_switch(self):
+        self.at.selectbox(key='manual_evaluation_mode').set_value('七维百分制规格参考').run()
+        self.at.selectbox(key='manual_game_scope').set_value('其他游戏暂无实测').run()
+        self.confirm()
+        self.assertEqual(self.at.session_state['catalog_result'].status,'ready')
+        self.assertIn('ref_game',self.at.session_state['catalog_input']['weights'])
+        self.assertTrue(any(len(frame.value.columns)==8 for frame in self.at.dataframe))
+        self.at.selectbox(key='manual_evaluation_mode').set_value('实测资料与原始规格').run()
+        self.assertNotIn('catalog_result',self.at.session_state)
     def test_confirmation_is_required_and_all_zero_has_no_score(self):
         next(b for b in self.at.button if b.label=='确认需求并生成推荐').click().run()
         self.assertNotIn('catalog_result',self.at.session_state)
-        for key in ('price','weight','storage','refresh','screen','photo','game'):
+        for key in ('weight','storage','screen','photo','battery','chipset','game'):
             self.at.slider(key='manual_w_'+key).set_value(0)
         self.confirm();self.assertNotIn('catalog_result',self.at.session_state)
+        self.assertTrue(self.at.error)
+
+    def test_manually_edited_low_photo_weight_is_not_treated_as_unmentioned(self):
+        self.at.slider(key='manual_w_photo').set_value(4).run()
+        self.at.slider(key='manual_w_photo').set_value(1).run()
+        self.confirm()
+        di=self.at.session_state['catalog_input']
+        self.assertGreater(di['weights']['dxomark_photo'],0)
+        self.assertNotIn('dxomark_photo',di['selection_rules']['default_reference_policy']['defaulted_metrics'])
+
+    def test_manual_unsupported_game_scope_does_not_score_other_game_as_hok(self):
+        self.at.slider(key='manual_w_game').set_value(3).run()
+        self.at.selectbox(key='manual_game_scope').set_value('其他游戏暂无实测').run()
+        self.confirm()
+        self.assertNotIn('catalog_result',self.at.session_state)
         self.assertTrue(self.at.error)
     def test_catalog_distinguishes_satellite_variants(self):
         self.assertEqual(len(self.at.session_state['catalog_rows']),484)
@@ -48,7 +76,7 @@ class CatalogAppTests(IsolatedEnvTest):
         self.assertEqual(len({r['variant_id'] for r in rows}),2)
         self.assertTrue(any(r['satellite_support'] for r in rows))
     def test_incomplete_game_shows_backups_not_score(self):
-        for key in ('price','weight','storage','refresh','screen','photo'):self.at.slider(key='manual_w_'+key).set_value(0)
+        for key in ('weight','storage','screen','photo','battery','chipset','game'):self.at.slider(key='manual_w_'+key).set_value(0)
         self.at.slider(key='manual_w_game').set_value(10);self.confirm()
         result=self.at.session_state['catalog_result']
         self.assertEqual(result.status,'insufficient_comparable_data');self.assertTrue(result.ranked.empty)
@@ -74,7 +102,7 @@ class CatalogAppTests(IsolatedEnvTest):
         text=' '.join(x.value for x in self.at.error)
         self.assertIn('校验',text);self.assertNotIn(str(self.root),text)
     def test_controls_changed_invalidate_previous_ranking(self):
-        self.confirm();self.at.slider(key='manual_w_price').set_value(9).run()
+        self.confirm();self.at.slider(key='manual_w_storage').set_value(9).run()
         self.assertNotIn('catalog_result',self.at.session_state)
     def test_details_and_comparison_save_ids_not_row_numbers(self):
         rows=self.at.session_state['catalog_rows'];ids=[rows[0]['sku_id'],rows[1]['sku_id']]
@@ -97,13 +125,23 @@ class CatalogAppTests(IsolatedEnvTest):
             self.confirm()
             self.assertEqual([r['kind'] for r in server.requests],['extract'])
             self.assertTrue(all(r['brand'] not in ('苹果','Apple') for r in self.at.session_state['catalog_input']['candidates'].to_dict('records')))
-    def test_vague_chat_budget_is_not_a_hidden_cap(self):
+    def test_vague_chat_budget_is_inferred_and_shown(self):
+        """含糊预算改为推断区间并明示（2026-10-25 修订）。
+
+        旧口径是"不得成为隐式上限"；新口径是"可以推断，但必须显式告知"。
+        红线不变：不得**静默**封顶。
+        """
         from fake_openai import FakeOpenAIServer
         with FakeOpenAIServer(enable_auto_provider=True):
             self.at.run();self.at.chat_input[0].set_value('想买2000元左右的手机').run()
             self.assertFalse(self.at.exception)
-            self.assertFalse(self.at.checkbox(key='manual_use_max').value)
-            self.assertFalse(self.at.checkbox(key='manual_use_min').value)
+            self.assertTrue(self.at.checkbox(key='manual_use_min').value)
+            self.assertTrue(self.at.checkbox(key='manual_use_max').value)
+            low=self.at.session_state['manual_min'];high=self.at.session_state['manual_max']
+            self.assertLess(low,2000);self.assertGreater(high,2000)
+            # 推断值必须出现在界面上，否则就是静默封顶
+            captions=' '.join(str(item.value) for item in self.at.caption)
+            self.assertIn('推断',captions)
             self.assertNotIn('catalog_result',self.at.session_state)
     def test_provider_failure_keeps_manual_path_available(self):
         from fake_openai import FakeOpenAIServer
@@ -122,9 +160,9 @@ class CatalogAppTests(IsolatedEnvTest):
         mp.write_text(json.dumps(manifest),encoding='utf-8')
         self.at.run();self.assertFalse(self.at.exception);self.assertTrue(self.at.error)
     def test_clear_returns_manual_controls_to_declared_defaults(self):
-        self.at.slider(key='manual_w_price').set_value(9).run()
+        self.at.slider(key='manual_w_storage').set_value(9).run()
         next(b for b in self.at.button if b.label=='清空需求与结果').click().run()
-        self.assertEqual(self.at.slider(key='manual_w_price').value,5)
+        self.assertEqual(self.at.slider(key='manual_w_storage').value,3)
         self.assertNotIn('catalog_result',self.at.session_state)
     def test_dataframe_labels_are_explicit_column_objects(self):
         self.confirm()
@@ -133,8 +171,10 @@ class CatalogAppTests(IsolatedEnvTest):
 
     def test_single_matching_apple_is_displayed_without_score(self):
         self.at.multiselect(key='manual_brands').set_value(['Apple'])
-        for key in ('weight','storage','refresh','screen','photo','game'):
+        # 保留存储权重，以验证单机型不评分，而非全零权重被拒。
+        for key in ('weight','storage','screen','photo','battery','chipset','game'):
             self.at.slider(key='manual_w_'+key).set_value(0)
+        self.at.slider(key='manual_w_storage').set_value(3)
         self.at.checkbox(key='manual_use_min').check()
         self.at.checkbox(key='manual_use_max').check()
         self.at.number_input(key='manual_min').set_value(5999.0)

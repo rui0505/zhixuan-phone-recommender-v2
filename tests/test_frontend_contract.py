@@ -22,14 +22,14 @@ class FrontendTests(unittest.TestCase):
         self.assertTrue(any(tag=='form' and a.get('id')=='preferences' for tag,a in nodes))
         controls={a.get('id'):a for tag,a in nodes if tag in ('input','select')}
         labels={a.get('for') for tag,a in nodes if tag=='label'}
-        for metric in ('price_cny','weight_g','storage_gb','refresh_rate_hz','screen_size_inch','dxomark_photo','honor_of_kings_avg_fps'):
+        for metric in ('weight_g','storage_gb','screen_size_inch','battery_capacity_mah','dxomark_photo','honor_of_kings_avg_fps','chipset_tier'):
             self.assertIn(metric,controls);self.assertEqual(controls[metric]['type'],'range');self.assertIn(metric,labels)
         self.assertEqual(controls['confirmed']['type'],'checkbox')
         for name in ('min-price','max-price','min-storage','include-brands','exclude-brands','target-screen','mode'):
             self.assertIn(name,controls);self.assertIn(name,labels)
     def test_navigation_and_core_containers_are_served(self):
         nodes=self.document.nodes
-        self.assertEqual({a['data-view'] for tag,a in nodes if tag=='button' and 'data-view' in a},{'recommend','catalog','compare'})
+        self.assertEqual({a['data-view'] for tag,a in nodes if tag=='button' and 'data-view' in a},{'recommend','catalog','compare','data'})
         ids={a.get('id') for tag,a in nodes}
         self.assertTrue({'detail-dialog','compare-view','downloads','results','catalog-results'}.issubset(ids))
     def test_dependencies_are_local_and_reachable(self):

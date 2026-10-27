@@ -60,7 +60,7 @@ class ManualModeTests(IsolatedEnvTest):
 
     def test_manual_sliders_still_present(self):
         at = AppTest.from_file(APP, default_timeout=60).run()
-        self.assertEqual(len(at.slider), 7)  # 预算 + 屏幕 + 5 个权重
+        self.assertEqual(len(at.slider), 9)  # 预算 + 屏幕 + 7 个维度权重
         self.assertEqual(len(at.selectbox), 1)
         self.assertGreaterEqual(len(at.multiselect), 1)
 
@@ -116,9 +116,12 @@ class ChatFlowTests(IsolatedEnvTest):
     def expected_ranking(self):
         from preferences import filter_candidates
         from engine import rank
+        from catalog.adapter import FRAME_FIELDS
         session = self.at.session_state['blue_session']
+        # 旧 Excel 夹具只有 价格/重量/存储/屏幕 四列可评分，其余维度显式过滤。
+        weights = {k: v for k, v in session['current_weights'].items() if k in FRAME_FIELDS}
         return rank(filter_candidates(load_data(), session['needs']),
-                    session['current_weights'], session['needs']['target_screen_inches'] or 6.5)
+                    weights, session['needs']['target_screen_inches'] or 6.5)
 
     def test_requires_confirmation_before_ranking(self):
         send(self.at, '预算3000以内，最轻的手机，存储256GB起步')
@@ -139,7 +142,9 @@ class ChatFlowTests(IsolatedEnvTest):
         self.confirm()
         session = self.at.session_state['blue_session']
         self.assertEqual(session['needs']['preferences']['weight'], 'very_important')
-        self.assertAlmostEqual(session['current_weights']['weight'], .5)
+        # 权重改为查表 + 归一化，具体份额随表变化；这里只断言方向：
+        # 明确的重点应大于每个默认维度；七项正初值不要求单项占比过半。
+        self.assertGreater(session['current_weights']['weight'],max(v for k,v in session['current_weights'].items() if k!='weight'))
         self.assertEqual(session['current_weights']['screen'], 0)
         self.assertEqual(self.at.session_state['active_ranking_ids'], self.expected_ranking().id.tolist())
         self.assertEqual(len(self.at.tabs), 3)
@@ -149,8 +154,13 @@ class ChatFlowTests(IsolatedEnvTest):
         self.confirm()
         self.answer('a')
         session = self.at.session_state['blue_session']
-        self.assertAlmostEqual(session['current_weights']['weight'], 15/26)
-        self.assertAlmostEqual(session['current_weights']['price'], 3/26)
+        # 权重改为 WEIGHT_TABLE 查表 + 归一化，具体分值会随表变化；
+        # 这里只断言取舍的方向性和归一化不变式。
+        weights = session['current_weights']
+        self.assertGreater(weights['weight'], weights['storage'])
+        self.assertAlmostEqual(sum(weights.values()), 1)
+        # 价格已不是偏好维度
+        self.assertNotIn('price', weights)
         self.assertEqual(self.at.session_state['active_ranking_ids'], self.expected_ranking().id.tolist())
         self.assertEqual(len(session['history']), 1)
 
@@ -192,8 +202,9 @@ class ChatFlowTests(IsolatedEnvTest):
         self.assertNotIn('华为', ranked.brand.tolist())
 
     def test_unsupported_need_is_visible(self):
-        send(self.at, '预算3000以内，拍照好一点')
-        self.assertIn('影像', ' '.join(x.value for x in self.at.warning))
+        # 「拍照」已是 photo 维度；用仍然没有实测数据的「续航」举例。
+        send(self.at, '预算3000以内，续航要久一点')
+        self.assertIn('续航', ' '.join(x.value for x in self.at.warning))
 
     def test_all_zero_does_not_use_uniform_prior(self):
         send(self.at, '价格不重要，重量不重要，存储不重要，刷新率不重要，屏幕不重要')
@@ -248,7 +259,7 @@ class ChatFlowTests(IsolatedEnvTest):
         self.assertNotIn('extracted_needs', self.at.session_state)
         self.assertNotIn('blue_session', self.at.session_state)
         self.assertEqual(self.at.session_state['preference_mode'], '手动调整')
-        self.assertEqual(len(self.at.slider), 7)
+        self.assertEqual(len(self.at.slider), 9)   # 7 个维度 + 屏幕目标 + 价格区间
 
     def test_invalid_extraction_returns_to_manual_without_crashing(self):
         from unittest.mock import patch

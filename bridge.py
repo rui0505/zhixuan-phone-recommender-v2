@@ -6,8 +6,15 @@
 
 三条硬规则（来自工作文档，本模块是它们唯一的落点）：
 
-1. **含糊预算不设上限**。`budget_max is None` 时不得由程序推断一个上限，
-   必须进 `pending` 交给确认页。只有用户明确说了上限才写死。
+1. **含糊预算由程序按锚点推断区间，并且必须回显**。`budget_max is None` 但用户
+   给了锚点（「5000左右」「三千多」）时，按非对称阶梯推断一个区间，写进 `notes`
+   让用户看见并可修改。**推断区间不是用户原话，不得伪装成明确约束**；
+   既无锚点也无边界时才进 `pending` 追问。用户的明确边界（「不超过5000」）
+   永远优先于推断，不会被覆盖。
+   > 2026-10-25 修订：原规则是「含糊预算一律不推断、必须进 pending 追问」。
+   > 改为推断的依据是实测——追问回答率低，且无锚点时程序会落到系统默认
+   > (1000,6000)，说「8000左右」会被砍掉 10 个机型。红线的原意是
+   > 「不得**静默**封顶」，推断 + 回显满足了这一点，因此保留红线、更换机制。
 2. **排除式品牌不转白名单**。「不要华为」走独立的 `excluded_brands`
    过滤，绝不写进 `brands`（白名单）。这两件事在筛选语义上完全不同。
 3. **未覆盖需求不得用替代指标充数**。原样透传给界面提示，不映射到任何
@@ -23,8 +30,9 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 from schemas import (
     CRITERIA,
@@ -34,6 +42,7 @@ from schemas import (
     Needs,
     PreferenceItem,
     SchemaError,
+    WEIGHT_MAX,
     initial_weights,
 )
 
@@ -47,6 +56,13 @@ SCREEN_RANGE = (5.5, 7.0)
 SCREEN_DEFAULT = 6.5
 WEIGHT_STEP = 5
 WEIGHT_SCALE = 100
+
+# 含糊预算（「5000左右」）的推断阶梯：(下浮, 上浮)。
+# 刻意不对称——手机价格分布右偏，用户对「贵一点」的容忍度高于「降级」。
+# 系数由真实快照标定：新机模式下 1500–12000 每个锚点都能落到 >=3 个独立机型。
+BUDGET_INFERENCE_LADDER = ((0.85, 1.25), (0.75, 1.40), (0.65, 1.55))
+# 区间内至少要有这么多个独立机型，否则按阶梯放宽（解决价格断档）。
+BUDGET_INFERENCE_MIN_MODELS = 3
 
 
 @dataclass
@@ -78,10 +94,46 @@ def _ceil_step(value: float) -> int:
     return int(-(-value // BUDGET_STEP) * BUDGET_STEP)
 
 
+def infer_budget_range(
+    reference: float, price_index: Iterable[tuple[float, str]] | None = None
+) -> tuple[int, int, int]:
+    """把含糊锚点推断成可用预算区间。返回 `(下界, 上界, 放宽档位)`。
+
+    锚点定中心，候选密度定宽度：区间内独立机型不足 `BUDGET_INFERENCE_MIN_MODELS`
+    时按阶梯逐级放宽（新机模式在 3000–4999 有价格断档，固定比例会返回空）。
+
+    `price_index` 是 `(价格, 机型ID)` 序列；不传则只用第一档（纯函数，不碰数据）。
+    """
+    if (isinstance(reference, bool) or not isinstance(reference, (int, float))
+            or not math.isfinite(reference) or reference <= 0):
+        raise ValueError("预算锚点必须是有限正数")
+    floor, ceiling = BUDGET_LIMIT
+    if price_index is None:
+        low_factor, high_factor = BUDGET_INFERENCE_LADDER[0]
+        return (_floor_step(reference * low_factor), _ceil_step(reference * high_factor), 1)
+    pairs = [(float(amount), str(model)) for amount, model in price_index]
+    for level, (low_factor, high_factor) in enumerate(BUDGET_INFERENCE_LADDER, 1):
+        start = max(floor, reference * low_factor)
+        end = min(ceiling, reference * high_factor)
+        models = {model for amount, model in pairs if start <= amount <= end}
+        if len(models) >= BUDGET_INFERENCE_MIN_MODELS:
+            return _floor_step(start), _ceil_step(end), level
+    low_factor, high_factor = BUDGET_INFERENCE_LADDER[-1]
+    return (_floor_step(max(floor, reference * low_factor)),
+            _ceil_step(min(ceiling, reference * high_factor)),
+            len(BUDGET_INFERENCE_LADDER))
+
+
 def _snap_budget(
-    low: float | None, high: float | None
+    low: float | None,
+    high: float | None,
+    reference: float | None = None,
+    price_index: Iterable[tuple[float, str]] | None = None,
 ) -> tuple[tuple[int, int], list[str], list[str]]:
     """把预算翻译成滑块区间。返回 (区间, 待确认项, 说明)。
+
+    优先级：**明确上界 > 明确下界 > 锚点推断 > 系统默认**。
+    用户的明确表达永远压过推断，推断只填补"什么都没说清"的空白。
 
     关键约束：**上界不得低于用户声明的下界**。用户说「预算 8000 以上」时，
     拿系统默认上界 6000 去配对会得到一个空区间，把用户的机型全部排除。
@@ -104,6 +156,12 @@ def _snap_budget(
         pending.append("budget_max")
         notes.append(f"预算下界 ¥{start:,}（原文明确）")
         notes.append("上界未明确，暂不封顶——请确认你能接受到多少")
+    elif reference is not None:
+        # 只有锚点：推断区间，并把它明确写出来让用户看见。
+        start, end, level = infer_budget_range(reference, price_index)
+        notes.append(f"预算按「{reference:g} 左右」推断为 ¥{start:,}–¥{end:,}（推断值，可修改）")
+        if level > 1:
+            notes.append(f"该价位候选较少，区间已放宽到第 {level} 档")
     else:
         start, end = BUDGET_DEFAULT
         pending.append("budget_max")
@@ -148,31 +206,31 @@ def _clamp_screen(value: float | None) -> tuple[float, list[str]]:
 
 
 def _to_slider_weights(needs: Needs) -> tuple[dict[str, float], list[str]]:
-    """偏好等级 → 0–100 滑块值。
+    """偏好等级 → 0–10 滑块值（**绝对值**，不做占比归一化）。
 
-    走 `schemas.initial_weights` 的确定性映射（等级 ÷ 等级总和），再缩放到
-    100 并对齐到滑块步长。全部维度都被标为「不在意」时等级总和为 0，
-    改用均匀先验并提示用户确认。
+    直接查 `schemas.WEIGHT_TABLE`。引擎侧装配矩阵时会自行归一化，所以这里保持
+    绝对值——用户说「非常重要」的那一维才能真的压过其他维度的默认值。
+
+    2026-10-26 修订：旧实现返回 0-100 的**占比**值，而 app.py 用 `value*10` 换算到
+    0-10 滑块，结果每一维都被 clamp 到 10——LLM 抽出的偏好从来没有在界面上生效过。
+    现在两端口径统一为 0-10，且不再做占比换算。
     """
     notes: list[str] = []
     try:
-        fractions = initial_weights(needs)
+        raw = initial_weights(needs)
     except SchemaError:
-        fractions = {key: 1.0 / len(CRITERIA) for key in CRITERIA}
+        raw = {key: 1.0 for key in CRITERIA}
         notes.append(
             "所有维度都被标为「不在意」，无法生成权重，改用均匀先验；请确认是否真的都不在意"
         )
 
-    weights: dict[str, float] = {}
-    for key in CRITERIA:
-        fraction = fractions.get(key, 0.0)
-        snapped = round(fraction * WEIGHT_SCALE / WEIGHT_STEP) * WEIGHT_STEP
-        weights[key] = float(max(0, min(WEIGHT_SCALE, snapped)))
-
-    # 步长对齐后可能全部落到 0（极端偏斜时不会，但兜底）
+    weights: dict[str, float] = {
+        key: float(max(0, min(WEIGHT_MAX, int(round(value))))) for key, value in raw.items()
+    }
+    # 取整后可能全部落到 0（极端偏斜时不会，但兜底）
     if sum(weights.values()) <= 0:
-        weights = {key: float(WEIGHT_SCALE // len(CRITERIA)) for key in CRITERIA}
-        notes.append("权重对齐后全为零，改用均匀权重")
+        weights = {key: 1.0 for key in CRITERIA}
+        notes.append("权重取整后全为零，改用均匀权重")
 
     stated = [
         f"{item.criterion}={item.choice}"
@@ -223,14 +281,24 @@ def _humanize(item: str) -> str:
     return _PENDING_LABEL.get(item, item)
 
 
-def bridge(needs: Needs, known_brands: list[str] | None = None) -> Bridged:
+def bridge(
+    needs: Needs,
+    known_brands: list[str] | None = None,
+    price_index: Iterable[tuple[float, str]] | None = None,
+) -> Bridged:
     """把 `Needs` 翻译成界面控件值与引擎入参。
 
     `known_brands` 传入数据表里实际存在的品牌；不在其中的品牌会被剔除并
     记录说明——否则 Streamlit 的 multiselect 会因为选项不存在而报错。
+
+    `price_index` 传入 `(价格, 机型ID)` 序列，用于把含糊预算（「5000左右」）
+    推断成有足够候选的区间；不传则只按锚点算固定比例，不做密度放宽。
     """
     budget, budget_pending, budget_notes = _snap_budget(
-        needs.hard.budget_min, needs.hard.budget_max
+        needs.hard.budget_min,
+        needs.hard.budget_max,
+        reference=needs.hard.budget_reference,
+        price_index=price_index,
     )
     storage, storage_pending, storage_notes = _snap_storage(needs.hard.min_storage)
     target, screen_notes = _clamp_screen(needs.hard.target_screen)
@@ -391,17 +459,22 @@ def needs_from_contract(result: Mapping[str, Any]) -> tuple[Needs, list[str]]:
 
 
 def bridge_contract(
-    result: Mapping[str, Any], known_brands: list[str] | None = None
+    result: Mapping[str, Any],
+    known_brands: list[str] | None = None,
+    price_index: Iterable[tuple[float, str]] | None = None,
 ) -> tuple[Bridged, list[str]]:
     """契约 dict → 控件值与引擎入参。返回 `(Bridged, 降级说明)`。"""
     needs, degraded = needs_from_contract(result)
-    return bridge(needs, known_brands=known_brands), degraded
+    return bridge(needs, known_brands=known_brands, price_index=price_index), degraded
 
 
 __all__ = [
     "BUDGET_LIMIT",
     "BUDGET_STEP",
     "BUDGET_DEFAULT",
+    "BUDGET_INFERENCE_LADDER",
+    "BUDGET_INFERENCE_MIN_MODELS",
+    "infer_budget_range",
     "STORAGE_OPTIONS",
     "STORAGE_DEFAULT",
     "SCREEN_RANGE",

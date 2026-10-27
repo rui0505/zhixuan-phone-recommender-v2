@@ -24,19 +24,25 @@ from typing import Any, Iterable, Mapping
 
 # --- 排序维度（与 engine.rank 的 keys 保持单一事实来源） -------------------
 
-CRITERIA: tuple[str, ...] = ("price", "weight", "storage", "refresh", "screen")
+CRITERIA: tuple[str, ...] = ("weight", "storage", "screen", "photo", "game", "battery", "chipset")
+EXTRACTION_CRITERIA = CRITERIA
+PERFORMANCE_CRITERIA = ("game", "photo", "battery")
+
 
 CRITERIA_LABELS: dict[str, str] = {
-    "price": "价格更低",
     "weight": "机身更轻",
     "storage": "存储更大",
-    "refresh": "刷新率更高",
     "screen": "屏幕接近偏好",
+    "photo": "拍照更好",
+    "game": "王者荣耀帧率更高",
+    "battery": "电池容量更大",
+    "chipset": "处理器档位更高",
 }
 
 # 成本型为 True：数值越小越好。screen 在 engine 中先转为与目标尺寸的绝对偏差，
 # 再作为成本型参与排序，因此此处也标记为成本型。
-COST_CRITERIA: frozenset[str] = frozenset({"price", "weight", "screen"})
+# 价格不在这里——价格由预算区间单独表达，不参与偏好权重。
+COST_CRITERIA: frozenset[str] = frozenset({"weight", "screen"})
 
 # --- 偏好等级（工作文档第 4 章「确定性权重映射」） ---------------------------
 
@@ -49,8 +55,26 @@ LEVEL_MAP: dict[str, int] = {
 }
 
 # 未提及映射到 1，但必须标记为系统默认，不得伪装成用户确认结果。
+# 注意：这只是「等级序号」的映射，供问卷/抽取层判断倾向强度用。
+# 真正决定权重数值的是下面的 WEIGHT_TABLE——两者不要混用。
 UNMENTIONED_LEVEL = 1
 NEUTRAL_LEVEL = 1
+
+# 维度 × 偏好等级 → 原始偏好权重；引擎在装配矩阵时归一化。
+# 未提及是系统先验而非用户确认；全部维度保留正初值。
+# 实测资料不完整时，只对未提及的拍照/游戏执行透明的参考项延期策略，
+# 不将缺失值当零分，也不自动忽略用户明确提出的正权重需求。
+WEIGHT_TABLE: dict[str, dict[str, int]] = {
+    "storage": {"不在意": 0, "未提及": 3, "一般": 5, "重要": 7, "非常重要": 9},
+    "weight": {"不在意": 0, "未提及": 2, "一般": 4, "重要": 7, "非常重要": 9},
+    "photo": {"不在意": 0, "未提及": 1, "一般": 4, "重要": 7, "非常重要": 9},
+    "battery": {"不在意": 0, "未提及": 2, "一般": 4, "重要": 7, "非常重要": 9},
+    "chipset": {"不在意": 0, "未提及": 2, "一般": 4, "重要": 7, "非常重要": 9},
+    "screen": {"不在意": 0, "未提及": 1, "一般": 4, "重要": 6, "非常重要": 8},
+    "game": {"不在意": 0, "未提及": 1, "一般": 3, "重要": 6, "非常重要": 9},
+}
+# 滑块量程。WEIGHT_TABLE 的取值不得超出它。
+WEIGHT_MAX = 10
 
 # Jev 的 Choice 取值集合。必须包含「未提及」，否则无法区分
 # 「用户明确说不在意」与「用户根本没提」。
@@ -168,9 +192,9 @@ class PreferenceItem:
     confidence: float | None = None  # 供应商 confidence，仅作记录
 
     def __post_init__(self) -> None:
-        if self.criterion not in CRITERIA:
+        if self.criterion not in EXTRACTION_CRITERIA:
             raise SchemaError(
-                f"未知维度 {self.criterion!r}，只支持 {list(CRITERIA)}。"
+                f"未知维度 {self.criterion!r}，只支持 {list(EXTRACTION_CRITERIA)}。"
             )
         if self.choice not in CHOICES:
             raise SchemaError(
@@ -196,10 +220,10 @@ class PreferenceItem:
     def mapped_level(self) -> int:
         """确定性权重映射：不在意的 0 / 一般 1 / 重要 2 / 非常重要 3。
 
-        未提及映射到 1（中性先验），但调用方应同时检查 is_default。
+        基础五维未提及映射到 1，新性能偏好未提及映射到 0；同时保留 is_default。
         """
         if self.choice == "未提及":
-            return UNMENTIONED_LEVEL
+            return 0 if self.criterion in PERFORMANCE_CRITERIA else UNMENTIONED_LEVEL
         return LEVEL_MAP[self.choice]
 
 
@@ -413,22 +437,31 @@ def mapped_levels(needs: Needs) -> dict[str, int]:
 
 
 def initial_weights(needs: Needs, criteria: Iterable[str] = CRITERIA) -> dict[str, float]:
-    """工作文档第 4 章的确定性权重映射。
+    """各维度的初始权重，按 `WEIGHT_TABLE` 查表得到 0-10 的**绝对值**。
 
-    raw_j = mapped_level_j
-    w0_j  = raw_j / sum(raw)
-    sum(raw) == 0 时抛错，由调用方走 ask_user_or_use_confirmed_uniform_prior。
+    与旧实现的区别：不再返回「占比」，也不再要求总和为 1。
+    - 旧：w0_j = level_j / Σlevel，导致只突出一个维度时它也压不住其他维度。
+    - 新：w0_j = WEIGHT_TABLE[维度][等级]，绝对值，由引擎在装配矩阵时归一化。
+
+    全部维度都是「不在意」（总权重为 0）时抛 `SchemaError`，
+    由调用方询问用户或使用已确认的均匀先验。
     """
-    keys = [key for key in criteria]
-    levels = mapped_levels(needs)
-    raw = {key: levels.get(key, UNMENTIONED_LEVEL) for key in keys}
-    total = sum(raw.values())
-    if total <= 0:
+    levels = {item.criterion: item.choice for item in needs.preferences}
+    weights: dict[str, float] = {}
+    for key in criteria:
+        row = WEIGHT_TABLE.get(key)
+        if row is None:
+            raise SchemaError(f"未定义的偏好维度：{key}")
+        choice = levels.get(key, "未提及")
+        if choice not in row:
+            raise SchemaError(f"维度 {key} 的偏好等级非法：{choice}")
+        weights[key] = float(row[choice])
+    if sum(weights.values()) <= 0:
         raise SchemaError(
             "全部维度映射等级为零，无法生成初始权重。"
             "应询问用户或使用已确认的均匀先验。"
         )
-    return {key: value / total for key, value in raw.items()}
+    return weights
 
 
 def as_dict(record: Any) -> dict[str, Any]:
@@ -473,5 +506,7 @@ __all__ = [
     "validate_candidate_frame",
     "mapped_levels",
     "initial_weights",
+    "WEIGHT_TABLE",
+    "WEIGHT_MAX",
     "as_dict",
 ]

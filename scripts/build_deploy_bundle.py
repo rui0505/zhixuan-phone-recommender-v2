@@ -7,9 +7,12 @@ import zipfile
 
 def build(root,output):
     root=Path(root).resolve(); output=Path(output).resolve()
-    names=['engine.py','schemas.py','needs_extraction.py','requirements-api.txt','scripts/api_smoke.py',
+    names=['bridge.py','engine.py','ranking_modes.py','schemas.py','needs_extraction.py','requirements-api.txt','scripts/api_smoke.py',
            'ui/__init__.py','ui/export_results.py','data/catalog.sqlite','data/release_manifest.json','data/image_manifest.json',
-           'frontend/assets/zhixuan-ai-network.jpg','frontend/assets/credits.json']
+           'data/chipset-tiers.json','data/chipset-primary-reference.json','data/buyer_reviews.json',
+           'frontend/assets/zhixuan-ai-network.jpg','frontend/assets/alpine-panorama.png',
+           'frontend/assets/workflow-illustration.png','frontend/assets/icons/LICENSE.txt','frontend/assets/credits.json']
+    names.extend(str(p.relative_to(root)).replace('\\','/') for p in (root/'frontend/assets/icons').glob('*.svg'))
     for folder in ('api','catalog','providers'):
         names.extend(str(p.relative_to(root)).replace('\\','/') for p in (root/folder).glob('*.py'))
     for folder,pattern in (('frontend','*.mjs'),('frontend','*.html'),('frontend','*.css'),('deploy','*.sh'),('deploy','*.service'),('deploy','*.conf')):

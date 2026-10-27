@@ -3,6 +3,7 @@ import math
 from numbers import Real
 from collections import defaultdict
 from .comparability import game_group, select_game_runs, applicable_run, APPROVED_MAPPINGS
+from .chipset_tiers import load_table, table_path, tier_for, normalise_chipset
 from .contracts import DecisionInput
 
 
@@ -31,7 +32,7 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
     numeric_specs = {'weight_g', 'screen_size_inch', 'refresh_rate_hz', 'battery_capacity_mah',
                      'has_nfc', 'has_ir_blaster', 'has_headphone_jack', 'has_wireless_charge',
                      'wired_charge_w', 'wireless_charge_w', 'display_peak_brightness_nit'}
-    virtual_keys = {'price_cny', 'storage_gb'}
+    virtual_keys = {'price_cny', 'storage_gb', 'chipset_tier'}
     for key in metric_keys:
         if key == 'dxomark_normalized_100' or (key in definitions and not definitions[key]['cross_source_comparable']):
             raise ValueError(f'{key} 仅用于原文展示，不得进入排名矩阵；不能靠归一化混合不同协议')
@@ -85,6 +86,25 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
                 return found  # 有高优先级的缺失记录也不能退回错误的通用值。
         return []
 
+    # 芯片档位：引用第三方榜单换算的 0-100 分（口径见 chipset_tiers 模块与
+    # data/chipset-tiers.json），不是本站实测。只有真的被选进矩阵时才读表，
+    # 未使用该维度时不凭空依赖文件。
+    #
+    # 必须按 SKU 优先解析：华为 Mate 80 Pro 的芯片只记在 SKU 层，且同一机型
+    # 不同 SKU 用了不同芯片（麒麟9030 / 麒麟9030 Pro），按机型取会张冠李戴。
+    # 查不到分保持 None——缺分不能当 0 分，否则等于给它一个"性能很差"的假结论。
+    tier_meta = None
+    tier_specs = {}
+    if 'chipset_tier' in metric_keys:
+        tier_scores, tier_meta = load_table(table_path(repo.db_path))
+        for cand in candidates:
+            found = applicable_specs(cand, 'chipset')
+            spec = next((s for s in found if s.get('parse_status') in ('ok','non_numeric')
+                         and tier_for(s.get('raw_value'),tier_scores) is not None),None)
+            cand['chipset_tier'] = tier_for(spec.get('raw_value'),tier_scores) if spec else None
+            if spec:
+                tier_specs[cand['sku_id']] = spec
+
     # Assess hardware scope against ALL configurations, not just the filtered sample.
     all_skus = repo.as_records(repo._q('SELECT sku_id,variant_id,model_id FROM skus'))
     model_chips, variant_chips = defaultdict(set), defaultdict(set)
@@ -123,9 +143,15 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
         layer = 'virtual' if key in virtual_keys else 'spec' if key in numeric_specs and key in spec_keys else 'measured'
         definition = definitions.get(key, {})
         matching_specs = [s for s in specs if s['spec_key'] == key]
-        unit = ('元' if key == 'price_cny' else 'GB') if layer == 'virtual' else definition.get('unit') or (matching_specs[0]['unit'] if matching_specs else '')
+        if layer == 'virtual':
+            virtual_meta = {'price_cny': ('记录价格', '元'), 'storage_gb': ('存储', 'GB'),
+                            'chipset_tier': ('处理器档位', '分')}
+            name_cn, unit = virtual_meta.get(key, (key, ''))
+        else:
+            name_cn = definition.get('name_cn', key)
+            unit = definition.get('unit') or (matching_specs[0]['unit'] if matching_specs else '')
         criterion = {'metric_key': key, 'criterion_layer': layer,
-                     'name_cn': definition.get('name_cn', key), 'unit': unit,
+                     'name_cn': name_cn, 'unit': unit,
                      'direction': 'target' if key == 'screen_size_inch' else definition.get('direction', 'cost' if key in ('weight_g','price_cny') else 'benefit'),
                      'value_type': definition.get('value_type', 'float'),
                      'range_rule': definition.get('range_rule', '见字段字典'),
@@ -139,6 +165,10 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
                           'price_id':cand.get('price_id') if key == 'price_cny' else None,
                           'observed_at':cand.get('observed_at') if key == 'price_cny' else None,
                           'parse_status':'ok', 'subject_type':'sku', 'subject_id':cand['sku_id']}]
+                if key == 'chipset_tier':
+                    spec = tier_specs.get(cand['sku_id'],{})
+                    found = [{**spec,'value_num':cand.get(key),
+                              'comparison_group':'virtual::chipset_tier'}]
             else:
                 found = applicable_specs(cand, key) if layer == 'spec' else by_obs[(cand['model_id'], key)]
             applicable = []
@@ -195,6 +225,12 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
                           'conditions_json', 'price_id', 'observed_at')})
                 ev['status'] = 'measured' if layer == 'measured' else 'selected_price' if key == 'price_cny' else 'spec_reference'
                 ev['protocol_raw'] = record.get('note')
+                if key == 'chipset_tier':
+                    chip = normalise_chipset(record.get('raw_value'))
+                    ev['chipset_reference'] = {'chipset':chip,
+                        'estimated':chip in tier_meta['estimated'],
+                        **{k:tier_meta.get(k) for k in ('version','basis','formula','sources','disclosure')}}
+                    ev['note'] = '第三方档位参考，含估算项，非本站实测'
                 if layer == 'spec':
                     ev['note'] = '规格参考值，非实测表现；model 通用值仅已核对当前数据中的全部配置'
             else:
@@ -253,6 +289,9 @@ def build_decision_input(repo, metric_keys, mode, weights, max_price, min_storag
                                 'price_priority': PRICE_PRIORITY_NEW if mode == 'new' else PRICE_PRIORITY_USED if mode == 'used' else PRICE_PRIORITY_NEW + PRICE_PRIORITY_USED,
                                 'custom_price_priority':list(price_kind_preference) if price_kind_preference is not None else None,
                                 'game_selection':game_selection,
+                                'chipset_table': ({k: (sorted(v) if isinstance(v, set) else v)
+                                                   for k, v in (tier_meta or {}).items()}
+                                                  if tier_meta else None),
                                 'weights_note': '无权重时试验等权；传入部分权重时其余为 0，再归一化。非行业共识',
                                 'group_selection': '硬约束后按独立机型覆盖数选组；并列按分组键排序；不混合不同机构游戏测评',
                                 'required_transform': required_transform,

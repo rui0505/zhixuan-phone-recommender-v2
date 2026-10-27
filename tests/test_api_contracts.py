@@ -62,7 +62,10 @@ class ApiContractTests(unittest.TestCase):
         for target in (2.9,10.1,None,True,'6.5',float('nan')):
             with self.subTest(target=target),self.assertRaises(self.c.ApiError):
                 self.parse(request_payload(self.release,target_screen=target,weights={'screen_size_inch':1}))
-        self.assertIsNone(self.parse(request_payload(self.release,target_screen=None)).target_screen)
+        # 屏幕维度不启用时，目标尺寸可以为空（其余维度保持默认，否则全零会被拒）
+        no_screen={**request_payload(self.release)['weights'],'screen_size_inch':0}
+        self.assertIsNone(self.parse(request_payload(
+            self.release,target_screen=None,weights=no_screen)).target_screen)
 
     def test_budget_storage_and_nested_shape(self):
         for value in (-1,True,'500',float('inf')):

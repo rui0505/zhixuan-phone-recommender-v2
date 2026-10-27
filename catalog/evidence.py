@@ -6,6 +6,7 @@ from .binding import decision_fingerprint, verify_result
 
 LABELS={'price_cny':'记录价格','weight_g':'重量','storage_gb':'存储','refresh_rate_hz':'屏幕刷新率',
         'screen_size_inch':'屏幕尺寸','battery_capacity_mah':'电池标称容量',
+        'chipset_tier':'处理器档位',
         'dxomark_photo':'DXOMARK 照片子分','honor_of_kings_avg_fps':'王者荣耀平均帧率'}
 
 
@@ -37,7 +38,10 @@ def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
             'name':row.get('display_name',row.get('产品名称')),'variant_name':row.get('variant_name'),
             'config':str(row.get('ram_raw') or '缺失')+' / '+str(row.get('storage_raw') or '缺失'),
             'score':row['score'],'price_id':row.get('price_id'),'condition':row.get('condition'),
-            'observed_at':row.get('observed_at'),'is_estimated':row.get('is_estimated')})
+            'observed_at':row.get('observed_at'),'is_estimated':row.get('is_estimated'),
+            # Explanatory context only: these fields never enter the criterion matrix.
+            'price_cny':original.get('price_cny'),'storage_gb':original.get('storage_gb'),
+            'ram_gb':original.get('ram_gb')})
         for j,criterion in enumerate(di['criterion_definitions']):
             key=criterion['metric_key'];ev=di['provenance'][index]['criteria'][j]
             if ev['value']!=di['X'][index][j] or ev['metric_key']!=key:
@@ -47,6 +51,11 @@ def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
                   'value':ev['value'],'sources':ev.get('sources',[]),
                   'dataset_version':result.dataset_version,'feature_rule_version':result.feature_rule_version,
                   'algorithm_version':result.algorithm_version,'weight':di['weights'][key]}
+            if key.startswith('ref_'):
+                # Bind the price snapshot to a citeable fact without adding a price
+                # criterion or replacing the seven derived-reference facts.
+                fact['model_context']={key:models[-1].get(key) for key in
+                    ('price_cny','price_id','condition','observed_at','is_estimated','storage_gb','ram_gb')}
             if criterion['direction']=='target' and fact['value'] is not None:
                 target=result.decision_context['target_screen']
                 fact['transformation']={'rule':'abs(value - target)','target':target,
@@ -63,6 +72,15 @@ def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
             '游戏测试仅限对应游戏、协议、条件及适用范围，不能泛化为所有游戏。',
             '1% Low 当前无有效实测值；不推算、不填 0，不提供完整游戏总分。',
             '记录价格可能过时，二手约价不是新机现价。数据总体验收含待完成人工 / WPS 项。']}
+    method=result.decision_context.get('method','topsis')
+    if di.get('selection_rules',{}).get('evaluation_mode')=='spec_reference':
+        bundle['limitations'][2]='游戏参考分由处理器80%与电池容量20%推导，不是游戏帧率、功耗、实测续航或完整游戏体验。'
+        bundle['limitations'][3]='七维百分制采用固定锚点的初始设计，未由真实用户实验校准；缺失输入保留空值，有效0分不等于缺失。'
+    bundle['method']=method
+    bundle['score_label']='融合排序分' if method=='hybrid_rrf' else 'TOPSIS 贴近度'
+    if method=='hybrid_rrf':
+        bundle['limitations'][0]='混合排序（实验）是当前可比候选集内的融合排序，尚未证明更准确；不是绝对性能或购买概率。'
+        bundle['limitations'].append('经典 TODIM 逆权重损失项可能与重要性直觉冲突；权重来自用户确认，非学习所得。')
     bundle['evidence_sha256']=digest(bundle)
     return bundle
 
@@ -85,7 +103,7 @@ def render_template(bundle: dict, fact_ids=None) -> str:
     context=bundle['decision_context']
     lines.append('已确认筛选与权重：'+json.dumps(context,ensure_ascii=False,allow_nan=False))
     for model in bundle['models']:
-        lines.append(f"{model['name']} · {model['variant_name'] or '版本未记载'} · {model['config']} · {model['sku_id']}：相对分 {model['score']:.4f}")
+        lines.append(f"{model['name']} · {model['variant_name'] or '版本未记载'} · {model['config']} · {model['sku_id']}：{bundle.get('score_label','相对分')} {model['score']:.4f}")
         lines.append(f"价格快照 {model['price_id'] or '缺失'}；成色 {model['condition'] or '未知'}；记录日期 {model['observed_at'] or '未记载'}"+
                      ('；估计价，非实时成交价' if model['is_estimated'] else '；非实时价格承诺'))
         for ident,fact in bundle['facts'].items():

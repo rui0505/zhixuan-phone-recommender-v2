@@ -1,83 +1,77 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark"><title>知选 · 可解释手机推荐</title>
-  <link rel="icon" href="data:,"><link rel="stylesheet" href="/styles.css?v=glass-20261011">
-  <link rel="preload" as="image" href="/assets/zhixuan-ai-network.jpg"><link rel="stylesheet" href="/glass.css?v=20261023-ai-network"><meta name="theme-color" content="#092d35"><script type="module" src="/app.mjs?v=glass-20261011"></script><script type="module" src="/motion.mjs?v=20261011-r1"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light"><meta name="theme-color" content="#eaf8fc"><title>知选 · 找到真正适合你的手机</title>
+<link rel="icon" href="data:,"><link rel="preload" as="image" href="/assets/alpine-panorama.png">
+<link rel="stylesheet" href="/styles.css?v=alpine-20261027"><link rel="stylesheet" href="/glass.css?v=alpine-20261027">
+<link rel="stylesheet" href="/reviews.css?v=buyer-reviews-20261027">
+<script type="module" src="/app.mjs?v=alpine-20261027"></script><script type="module" src="/motion.mjs?v=alpine-20261027"></script>
 </head>
-<body id="top">
-<a class="skip-link" href="#needs-text">跳到需求输入</a><div class="app-shell">
-<header class="header"><a class="brand" href="#top"><svg class="brand-symbol" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 3 28 10v12l-12 7L4 22V10L16 3Z" stroke="currentColor" stroke-width="1.5"/><path d="m10 16 4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brand-name">知选<small>ZHIXUAN</small></span></a><nav aria-label="页面导航"><button class="nav active" data-view="recommend" aria-pressed="true">智能选机</button><button class="nav" data-view="catalog" aria-pressed="false">手机库</button><button class="nav" data-view="compare" aria-pressed="false">对比 <span id="compare-count">0</span></button></nav><div class="header-tools"><button id="motion-toggle" class="motion-toggle" aria-pressed="true" aria-label="关闭界面动效"><span class="motion-indicator" aria-hidden="true"></span><span id="motion-label">动效开启</span></button><button id="refresh-meta" class="quiet">刷新数据状态</button></div></header>
+<body id="top" data-current-view="recommend">
+<a class="skip-link" href="#needs-text">跳到需求输入</a>
+<div class="app-shell">
+<header class="header">
+<a class="brand" href="#top" aria-label="知选首页"><img class="brand-symbol" src="/assets/icons/phone.svg" alt=""><span>知选 <small>ZHIXUAN</small></span></a>
+<nav aria-label="页面导航"><button class="nav" data-view="recommend" aria-pressed="true">智能选机</button><button class="nav" data-view="catalog" aria-pressed="false">手机库</button><button class="nav" data-view="compare" aria-pressed="false">我的对比 <span id="compare-count">0</span></button><button class="nav" data-view="data" aria-pressed="false">数据说明</button></nav>
+<div class="header-tools"><form id="global-search" role="search"><label for="global-query" class="sr-only">搜索手机型号或品牌</label><input id="global-query" type="search" placeholder="搜索手机品牌、机型或关键词…"><button type="submit" aria-label="搜索手机库">搜索</button></form><button id="motion-toggle" class="motion-toggle" aria-pressed="true" aria-label="关闭界面动效"><span class="motion-indicator" aria-hidden="true"></span><span id="motion-label">动效开启</span></button></div>
+</header>
 <main>
 <div id="message" role="status" aria-live="polite" tabindex="-1" hidden></div>
-<section id="recommend-view"><section class="intro"><div class="scene" aria-hidden="true"><img src="/assets/zhixuan-ai-network.jpg" alt="" fetchpriority="high" width="1800" height="1800"><div class="scene-shade"></div></div><h1>选一部手机，<br><span>刚好适合你。</span></h1><p>从你的生活出发，找到值得选择的那一部。<br>说出需求，看清依据，再做决定。</p><a class="intro-link" href="#needs-text">开始我的选机 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></section></section>
-<ol id="steps" class="steps" aria-label="选机步骤"><li class="current" aria-current="step"><span>01</span>描述你的需求</li><li><span>02</span>确认偏好</li><li><span>03</span>找到选机方向</li></ol><div class="workspace">
-      <section id="needs-panel" class="needs-panel glass-panel" aria-labelledby="needs-title">
-        <div class="section-top"><span class="section-number">01</span><span class="small">描述你的需求</span></div><h2 id="needs-title">用一句话，告诉我你想要什么</h2><p class="muted">预算、容量、手感……像和朋友聊天一样说就好。</p>
-        <form id="natural-needs"><label for="needs-text"><span class="sr-only">你的购机需求</span><textarea id="needs-text" rows="3" maxlength="2000" placeholder="例如：3000元以内，至少256GB，轻一点，不要苹果"></textarea></label>
-          <div class="examples"><span>试着说</span><button type="button" data-example="3000元以内，至少256GB，轻一点，不要苹果。">通勤 · 轻巧</button><button type="button" data-example="2000元左右，最多2500元，至少256GB。">日常 · 省预算</button><button type="button" data-example="3000元以内，至少512GB。">大容量 · 多存一点</button></div><div class="actions"><button id="extract-needs" type="submit" class="primary" disabled>理解我的需求</button><button id="manual-needs" type="button">直接手动填写</button></div>
-          <p class="small">点击后将这段购机需求发送给 DeepSeek，提取预算和偏好；你确认后，再由算法生成推荐。</p>
-        </form>
-        <p id="needs-status" role="status" aria-live="polite" class="small">正在检查需求理解服务…</p>
-        <div id="needs-result" aria-live="polite"></div>
-      </section>
-    <details id="preferences-panel" class="panel glass-panel" open><summary>确认你的条件与偏好 <span class="small">你始终决定最终取舍</span></summary><p id="preferences-summary" class="preferences-summary">读取默认条件中…</p>
-      <form id="preferences">
-        <fieldset><legend>先确定范围</legend><div class="field-grid">
-          <label for="mode">价格成色<select id="mode"><option value="new">新机记录</option><option value="used">二手记录</option><option value="all">全部（含成色未知）</option></select></label>
-          <label for="min-price">预算下限（元）<input id="min-price" type="number" min="0" step="any" placeholder="不限"></label>
-          <label for="max-price">预算上限（元）<input id="max-price" type="number" min="0" step="any" placeholder="不限"></label>
-          <label for="min-storage">最低存储（GB）<input id="min-storage" type="number" min="1" step="any" placeholder="不限"></label>
-        </div><label id="budget-unlimited-line" class="confirm-line" hidden><input id="budget-unlimited" type="checkbox">我确认预算不设上限</label><details class="advanced brand-preferences"><summary>品牌范围（可选）</summary><div class="field-grid">          <label for="include-brands">仅包含品牌<select id="include-brands" multiple size="4" aria-describedby="brands-help"></select></label>
+<section id="recommend-view" class="home-hero">
+<div class="hero-copy"><h1>找到真正适合<span>你的手机</span></h1><p class="hero-lead">从真实需求出发，用可解释的数据做选择。</p><div class="hero-promises"><span>基于真实数据<small>客观可回查</small></span><span>多维度对比<small>看清取舍</small></span><span>覆盖主流品牌<small>准确到配置</small></span></div></div>
+<div id="hero-phones" class="hero-phones" aria-label="真实目录机型展示"></div><p class="hero-note">好的手机<br>让生活更自由</p>
+</section>
+<div id="recommend-workspace">
+<section id="needs-panel" class="needs-panel glass-panel" aria-labelledby="needs-title">
+<div class="needs-copy"><h2 id="needs-title">告诉我你的需求</h2><p class="muted">用几句话描述你的使用场景，找到适合自己的选择。</p><button id="manual-needs" type="button" class="text-button">直接手动填写</button></div>
+<form id="natural-needs"><label for="needs-text" class="needs-entry"><span class="sr-only">你的购机需求</span><textarea id="needs-text" rows="1" maxlength="2000" placeholder="例如：平时通勤，至少256GB，希望手机轻一点，预算3000元以内…"></textarea></label><button id="extract-needs" type="submit" class="primary" disabled>理解需求 →</button>
+<div class="examples"><button type="button" data-example="3000元以内，至少256GB，轻一点，不要苹果。">通勤轻巧</button><button type="button" data-example="3000元以内，至少512GB。">大容量</button><button type="button" data-example="4000元以内，拍照重要。">拍照优先</button><button type="button" data-example="3000元以内，游戏重要。">游戏性能</button></div></form>
+<details id="needs-notices" class="needs-notices"><summary id="needs-status" role="status" aria-live="polite">正在检查需求理解服务…</summary><p id="needs-service-notice" class="small">点击理解需求后发送给 DeepSeek；检查并确认后才生成推荐。</p><div id="needs-result" aria-live="polite"></div></details>
+<ol id="steps" class="steps sr-only" aria-label="选机步骤"><li class="current" aria-current="step">描述需求</li><li>确认偏好</li><li>查看推荐</li></ol>
+</section>
+<div class="recommend-layout">
+<section id="recommend-results-view"><div class="section-heading"><div><h2 id="results-title">先看看这些机型</h2><p id="results-subtitle" class="small">来自真实手机库；确认你的偏好后，再生成专属推荐。</p></div><span id="home-catalog-count" class="count-badge">正在读取目录</span></div>
+<div id="results" class="cards" aria-live="polite"><p class="empty">正在读取真实机型…</p></div><details id="more-recommendations" class="more-recommendations" hidden><summary>更多推荐配置</summary><div id="more-results" class="cards"></div></details><details id="decision-details" class="decision-details" hidden><summary>推荐范围与计算说明</summary><div id="decision-summary"></div><div id="downloads" class="actions" hidden><button data-download="csv">导出 CSV</button><button data-download="xlsx">导出 XLSX</button><button data-download="json">导出 JSON</button></div></details><div id="recommend-pagination" class="pagination"></div>
+</section>
+<details id="preferences-panel" class="panel glass-panel" open><summary><span>你的偏好</span><button id="edit-preferences" type="button" class="text-button">编辑</button></summary>
+<form id="preferences">
+<div class="budget-row"><label>预算 <small>元 · 硬性范围</small></label><div class="budget-inputs"><label for="min-price" class="sr-only">预算下限（元）</label><input id="min-price" type="number" min="0" step="any" placeholder="下限不限"><span>—</span><label for="max-price" class="sr-only">预算上限（元）</label><input id="max-price" type="number" min="0" step="any" placeholder="上限不限"></div></div>
+<label id="budget-unlimited-line" class="confirm-line" hidden><input id="budget-unlimited" type="checkbox">我确认预算不设上限</label>
+<fieldset class="performance-preferences"><legend class="sr-only">七项排序偏好</legend><div class="importance-grid"><div class="importance-control"><label for="storage_gb">存储 <output for="storage_gb">未提及</output><input id="storage_gb" type="range" min="0" max="4" step="1" value="1" aria-describedby="storage_gb-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="storage_gb-help" class="small">容量越大越优先，最低存储仍由上方条件筛选。</p></div>
+<div class="importance-control"><label for="weight_g">重量 <output for="weight_g">未提及</output><input id="weight_g" type="range" min="0" max="4" step="1" value="1" aria-describedby="weight_g-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="weight_g-help" class="small">机身越轻越优先。</p></div></div>
+<details id="more-preferences" class="advanced more-preferences"><summary>更多偏好（5 项）</summary><div class="importance-grid"><div class="importance-control"><label for="battery_capacity_mah">电池容量 <output for="battery_capacity_mah">未提及</output><input id="battery_capacity_mah" type="range" min="0" max="4" step="1" value="1" aria-describedby="battery_capacity_mah-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="battery_capacity_mah-help" class="small">按标称容量比较，不代表实际续航时长。</p></div>
+<div class="importance-control"><label for="chipset_tier">处理器档位 <output for="chipset_tier">未提及</output><input id="chipset_tier" type="range" min="0" max="4" step="1" value="1" aria-describedby="chipset_tier-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="chipset_tier-help" class="small">第三方榜单换算，包含估算项，非本站实测；同分不代表体验相同。</p></div>
+<div class="importance-control"><label for="screen_size_inch">屏幕尺寸 <output for="screen_size_inch">未提及</output><input id="screen_size_inch" type="range" min="0" max="4" step="1" value="1" aria-describedby="screen_size_inch-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="screen_size_inch-help" class="small">越接近下方理想尺寸越优先，不是越大越好。</p></div>
+<div class="importance-control"><label for="dxomark_photo">拍照 <output for="dxomark_photo">未提及</output><input id="dxomark_photo" type="range" min="0" max="4" step="1" value="1" aria-describedby="dxomark_photo-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="dxomark_photo-help" class="small">按主摄像素与超广角、长焦规格参考，不代表成像质量；资料缺失不补零。</p></div>
+<div class="importance-control"><label for="honor_of_kings_avg_fps">游戏 <output for="honor_of_kings_avg_fps">未提及</output><input id="honor_of_kings_avg_fps" type="range" min="0" max="4" step="1" value="1" aria-describedby="honor_of_kings_avg_fps-help"></label><div class="importance-scale" aria-hidden="true"><span>不在意</span><span>未提及</span><span>一般</span><span>重要</span><span>非常重要</span></div><p id="honor_of_kings_avg_fps-help" class="small">规格估算：80% 处理器参考分 + 20% 电池容量参考分；不代表实测帧率或实际续航。</p></div></div><label for="target-screen" class="target">理想屏幕尺寸（英寸）<input id="target-screen" type="number" min="3" max="10" step="0.1" value="6.5"></label><p class="small">默认 6.5 英寸；尺寸偏好不等于屏幕显示质量。</p></details></fieldset>
+<details id="advanced-settings" class="advanced advanced-settings"><summary>品牌、配置与排序设置</summary><p id="preferences-summary" class="preferences-summary">读取默认条件中…</p><fieldset><legend>价格与品牌 · 硬性条件</legend><label for="mode">价格成色<select id="mode"><option value="new">新机记录</option><option value="used">二手记录</option><option value="all">全部（含成色未知）</option></select></label><label for="min-storage">最低存储（GB）<input id="min-storage" type="number" min="1" step="any" placeholder="不限"></label><details class="advanced brand-preferences"><summary>品牌范围（可选）</summary><div class="field-grid">          <label for="include-brands">仅包含品牌<select id="include-brands" multiple size="4" aria-describedby="brands-help"></select></label>
           <label for="exclude-brands">排除品牌<select id="exclude-brands" multiple size="4" aria-describedby="brands-help"></select></label>
-</div><p id="brands-help" class="small">不选代表不限品牌。可多选；电脑按 Ctrl / Command 选择，同一品牌不能同时包含和排除。</p></details></fieldset>
-        <details class="advanced weight-preferences"><summary>更多偏好与数据说明</summary><fieldset><legend>再确定取舍</legend><p class="small">0 表示不参与排序；试验默认值并非模型学习结果。各项相对权重由后端归一。</p>
-          <div class="weight-grid">
-            <label for="price_cny">价格 <output for="price_cny">0</output><input id="price_cny" type="range" min="0" max="10" step="1" value="0"></label>
-            <label for="weight_g">轻巧 <output for="weight_g">0</output><input id="weight_g" type="range" min="0" max="10" step="1" value="0"></label>
-            <label for="storage_gb">存储 <output for="storage_gb">0</output><input id="storage_gb" type="range" min="0" max="10" step="1" value="0"></label>
-            <label for="refresh_rate_hz">刷新率 <output for="refresh_rate_hz">0</output><input id="refresh_rate_hz" type="range" min="0" max="10" step="1" value="0"></label>
-            <label for="screen_size_inch">尺寸匹配 <output for="screen_size_inch">0</output><input id="screen_size_inch" type="range" min="0" max="10" step="1" value="0"></label>
-            <label for="dxomark_photo">DXOMARK 照片 <output for="dxomark_photo">0</output><input id="dxomark_photo" type="range" min="0" max="10" step="1" value="0"></label>
-            <label for="honor_of_kings_avg_fps">王者荣耀帧率 <output for="honor_of_kings_avg_fps">0</output><input id="honor_of_kings_avg_fps" type="range" min="0" max="10" step="1" value="0"></label>
-          </div>
-          <label for="target-screen" class="target">理想屏幕尺寸（英寸）<input id="target-screen" type="number" min="3" max="10" step="0.1" value="6.5"></label>
-          <p class="small">尺寸按距目标的偏差计算，不是越大越好。照片分须协议可比；游戏只比同条件的王者荣耀平均帧率。缺失不填 0，不提供完整游戏总分。</p>
-        </fieldset></details>
-        <div class="confirm-line"><label for="confirmed"><input id="confirmed" type="checkbox">我已检查条件、权重和数据限制</label><button id="generate" type="submit" class="primary" disabled>寻找适合我的手机</button></div>
-      </form>
-    </details>
+</div><p id="brands-help" class="small">不选代表不限品牌。可多选；电脑按 Ctrl / Command 选择，同一品牌不能同时包含和排除。</p></details></fieldset><fieldset class="ranking-options"><legend>选择排序方式</legend>
+          <label for="evaluation-mode">评分资料<select id="evaluation-mode" aria-describedby="evaluation-help"><option value="spec_reference">默认 · 规格参考分</option><option value="measured">可选 · 可比实测资料</option></select></label>
+          <p id="evaluation-help" class="small">默认用七项固定规则换算为 0—100 分的规格参考，不是实测体验分。游戏按 80% 处理器参考分 + 20% 电池容量参考分估算，容量不代表实际续航。切换资料模式后需重新确认。</p>
+          <label for="method">排序方式<select id="method" aria-describedby="method-help"><option value="topsis">默认 · TOPSIS</option><option value="hybrid_rrf">实验 · 混合排序</option></select></label>
+          <p id="method-help" class="small">默认按 TOPSIS 排序。实验混合使用固定参数 theta=1、alpha=0.5、k=10；未证明更准确，不是学习所得。切换后需重新确认。</p>
+          <p id="method-status" class="small" aria-live="polite"></p>
+        </fieldset>
+        <p id="preference-policy" class="small">五档重视程度，价格和品牌仅作硬筛选。</p><label id="game-scope-control" for="game-scope" hidden>游戏实测参考范围<select id="game-scope"><option value="unconfirmed">尚未确认游戏范围</option><option value="honor_of_kings">使用王者荣耀测试参考</option><option value="unsupported">其他游戏暂无实测</option></select></label><div class="actions"><button type="button" data-not-count="dxomark_photo">拍照暂不计入</button><button type="button" data-not-count="honor_of_kings_avg_fps">游戏暂不计入</button></div><p id="performance-counts" class="small" aria-live="polite">正在读取可比资料覆盖…</p><details class="advanced"><summary>偏好原话与评分依据</summary><div id="performance-summary" aria-live="polite"></div></details></details>
+<p id="performance-blocker" class="warning" role="status" aria-live="polite"></p><div class="confirm-line"><label for="confirmed"><input id="confirmed" type="checkbox">我已检查条件、偏好与数据限制</label><button id="generate" type="submit" class="primary" disabled>确认并生成推荐 →</button></div>
+</form></details></div>
+<section class="tradeoff-rail glass-panel"><div class="rail-title"><h2>看清取舍</h2><p class="small">在你关注的方面<br>不同手机各有取舍</p></div><div id="tradeoff-items" class="rail-items"></div><button class="rail-link" data-view="compare">多机型对比 →</button></section>
 </div>
-<details class="release-strip"><summary id="release-status">正在连接数据服务…</summary><div id="release-info" class="release-info"></div></details>
-    <section id="recommend-results-view">
-      <div class="section-heading"><h2>看清选择，也看清取舍。</h2><button id="edit-preferences" class="quiet">调整需求与偏好</button></div>
-      <div id="decision-summary"></div><div id="downloads" class="actions" hidden><button data-download="csv">导出 CSV</button><button data-download="xlsx">导出 XLSX</button><button data-download="json">导出 JSON</button></div>
-      <div id="results" class="cards" aria-live="polite"></div><div id="recommend-pagination" class="pagination"></div>
-    </section>
-    <section id="catalog-view" hidden><div class="section-heading"><h2>手机库</h2><span class="small">一张卡片代表一个准确配置</span></div>
-      <div class="catalog-scenarios">
-        <div id="category-filters" class="category-filters" role="group" aria-label="按使用场景浏览手机">
-          <button type="button" data-category="all" aria-pressed="true">全部</button>
-          <button type="button" data-category="gaming" aria-pressed="false">游戏手机</button>
-          <button type="button" data-category="senior" aria-pressed="false">长辈友好</button>
-          <button type="button" data-category="photography" aria-pressed="false">拍照手机</button>
-        </div>
-        <p id="category-help" class="small">按场景查找可回查的资料，同一机型可以有多个标签；有资料不代表表现优秀。</p>
-        <label id="category-status-control" class="category-status-control" for="category-status" hidden>资料状态<select id="category-status"><option value="evidence_available">有评测资料</option><option value="pending_review">待评估机型</option></select></label>
-        <p class="small">分类计数按机型去重；下方列表按准确配置展示，并继续应用预算、品牌与存储条件。</p>
-        <details id="category-methods" class="small"><summary>分类依据与数据限制</summary>
+<section id="catalog-view" hidden>
+<div class="page-hero"><div><h1>手机库</h1><p>按品牌、场景和配置，查看每一部手机的真实资料</p></div><span id="catalog-count" class="count-badge">正在读取目录</span></div>
+<div class="catalog-toolbar glass-panel"><form id="catalog-search" role="search"><label for="search" class="sr-only">搜索型号、品牌或配置</label><input id="search" type="search" placeholder="搜索型号、品牌或配置"><button type="submit">搜索</button></form><div id="category-filters" class="category-filters" role="group" aria-label="按使用场景浏览手机"><button type="button" data-category="all" aria-pressed="true">全部</button><button type="button" data-category="gaming" aria-pressed="false">游戏手机</button><button type="button" data-category="photography" aria-pressed="false">拍照手机</button><button type="button" data-category="senior" aria-pressed="false">长辈友好</button></div><label for="catalog-sort" class="sr-only">排序当前页配置</label><select id="catalog-sort" aria-label="排序当前页配置"><option value="default">目录顺序</option><option value="price-asc">价格从低到高 · 本页</option><option value="price-desc">价格从高到低 · 本页</option></select></div>
+<div class="catalog-notes"><p id="catalog-status" role="status" class="small"></p><details class="catalog-filter-details"><summary>筛选条件与分类说明</summary><p id="catalog-applied-filters" class="small">目录使用当前确认表单中的预算、品牌、存储与成色筛选。</p><button type="button" id="apply-catalog">应用当前筛选</button><button type="button" id="catalog-edit-filters">修改筛选</button><button type="button" id="clear-catalog-filters">清空目录筛选</button><p id="category-help" class="small">有评测资料不代表表现优秀。</p><label id="category-status-control" class="category-status-control" for="category-status" hidden>资料状态<select id="category-status"><option value="evidence_available">有评测资料</option><option value="pending_review">待评估机型</option></select></label><details id="category-methods" class="small"><summary>分类依据与数据限制</summary>
           <p>游戏重点关注持续稳帧、发热、功耗与触控；拍照关注日常、夜景、人像、抓拍和长焦实拍；长辈选机关注操作、字体、通话、广告干扰和紧急联系。</p>
           <p>本版先按“是否有可回查的相关评测资料”划分参考池，不是完整适用性认证。目前长辈功能资料尚未核实；游戏与拍照资料也未覆盖所有上述维度，不能据此推断体验优秀。不同协议不混分。</p>
           <p>维度参考少量社区讨论与评测，并非全网热门帖统计：<a href="https://v2ex.com/t/1185495" target="_blank" rel="noopener noreferrer">长辈选机讨论</a>、<a href="https://www.antutu.com/doc/137994" target="_blank" rel="noopener noreferrer">游戏评测维度</a>、<a href="https://sspai.com/post/84510" target="_blank" rel="noopener noreferrer">影像体验维度</a>。具体机型依据请查看卡片的“详情与来源”。</p>
-        </details>
-      </div>
-      <form id="catalog-search"><label for="search">搜索型号、品牌或配置<input id="search" type="search" placeholder="例如：华为、iPhone、512GB"></label><button type="submit">搜索</button><button type="button" id="apply-catalog">应用上方筛选</button></form>
-      <p id="catalog-status" role="status" class="small"></p><div id="catalog-results" class="cards"></div><div id="catalog-pagination" class="pagination"></div>
-    </section>
-    <section id="compare-view" hidden><div class="section-heading"><h2>看清取舍</h2><button id="clear-comparison">清空对比</button></div><div id="compare-content" aria-live="polite"></div></section>
-    <footer><strong>选机的最后一步，是看清取舍。</strong><p>记录价格不承诺实时成交；参数不等于实际体验。解释基于数据证据，不由大模型决定排名。</p><p class="small">视觉素材：<a href="https://unsplash.com/photos/abstract-blue-lines-and-dots-on-black-background-KKx5r-w1dPo" target="_blank" rel="noopener noreferrer">Max Petrunin / Unsplash</a></p></footer>
-  </main>
-</div>
-<dialog id="detail-dialog" aria-labelledby="detail-title"><div class="section-heading"><h2 id="detail-title">配置详情与来源</h2><button id="close-detail">关闭</button></div><div id="detail-content"></div></dialog>
+        </details></details></div>
+<div id="catalog-featured" aria-live="polite"></div><div id="catalog-results" class="cards catalog-cards"></div><div id="catalog-pagination" class="pagination"></div><p class="catalog-image-note small">手机图片用于机型展示；颜色、成色与配置以具体记录为准。价格为历史快照。</p>
+</section>
+<section id="compare-view" hidden><div id="compare-content" aria-live="polite"></div><div class="compare-bottom glass-panel"><div><h2>更多值得对比的机型</h2><p class="small">从真实目录继续添加，一起对比更全面</p></div><div id="compare-suggestions" class="rail-items"></div><button id="clear-comparison" class="quiet">清空对比</button></div></section>
+<section id="data-view" hidden><div class="page-hero data-hero"><div><h1>数据说明</h1><p>每一个推荐，都有清晰、可回查的依据</p><span class="status-badge">历史数据快照 · 记录可追溯</span></div><p class="hero-note">让选择<br>更清晰</p></div><div id="data-content"></div><details class="release-strip"><summary id="release-status">正在连接数据服务…</summary><div id="release-info" class="release-info"></div></details><button id="refresh-meta" class="quiet">刷新数据状态 →</button></section>
+<footer><p class="small">手机图片仅作机型展示，颜色与成色以准确配置记录为准。</p><strong>选机的最后一步，是看清取舍。</strong><p>记录价格不承诺实时成交；参数不等于实际体验。推荐基于已确认偏好与数据，模型不决定排名。</p></footer>
+</main></div>
+<dialog id="detail-dialog" aria-labelledby="detail-title"><div class="section-heading detail-heading"><h2 id="detail-title" tabindex="-1">配置详情与来源</h2><button id="view-buyer-reviews" class="review-entry" disabled aria-controls="detail-content" aria-pressed="false">查看淘宝买家评价</button><button id="close-detail">关闭</button></div><div id="detail-content" aria-live="polite"></div></dialog>
 </body></html>

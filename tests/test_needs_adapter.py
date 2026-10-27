@@ -12,11 +12,11 @@ class AdapterTests(unittest.TestCase):
         return extract_needs(text, classifier=MockClassifier())
 
     def test_grades_and_original_record(self):
-        result = self.result('预算3000以内，最轻的手机，价格无所谓')
+        result = self.result('预算3000以内，最轻的手机，拍照无所谓')
         original = copy.deepcopy(result)
         blue = to_blue_needs(result)
         self.assertEqual(blue['preferences']['weight'], 'very_important')
-        self.assertEqual(blue['preferences']['price'], 'unimportant')
+        self.assertEqual(blue['preferences']['photo'], 'unimportant')
         self.assertEqual(blue['extraction_record'], result)
         blue['extraction_record']['budget']['max'] = 9999
         self.assertEqual(result, original)

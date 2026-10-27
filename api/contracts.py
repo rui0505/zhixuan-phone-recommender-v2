@@ -5,12 +5,19 @@ import math
 import re
 
 from catalog.adapter import resolve_brands
+from ranking_modes import ALGORITHM_VERSIONS
+from .performance import BATTERY_METRIC
+from schemas import WEIGHT_TABLE
 
-METRICS = ('price_cny','weight_g','storage_gb','refresh_rate_hz','screen_size_inch',
-           'dxomark_photo','honor_of_kings_avg_fps')
-DEFAULT_WEIGHTS = dict(zip(METRICS, (5,2,2,1,0,0,0)))
+METRICS = ('weight_g','storage_gb','screen_size_inch','battery_capacity_mah',
+           'dxomark_photo','honor_of_kings_avg_fps','chipset_tier')
+# Legacy TOPSIS callers may still send the former metrics. Hybrid accepts
+# only seven preference dimensions; price and brand remain candidate filters.
+LEGACY_METRICS = ('price_cny', 'refresh_rate_hz')
+DEFAULT_WEIGHTS = {metric:WEIGHT_TABLE[criterion]['未提及'] for metric,criterion in zip(METRICS,('weight','storage','screen','battery','photo','game','chipset'))}
 RELEASE_FIELDS = {'dataset_version','feature_rule_version','snapshot_sha256','manifest_sha256'}
 REQUEST_FIELDS = {'needs','weights','target_screen','mode','confirmed','expected_release'}
+OPTIONAL_REQUEST_FIELDS = {'method', 'expected_algorithm_version', 'game_scope', 'defaulted_metrics', 'evaluation_mode', 'expected_reference_rule_version'}
 
 
 class ApiError(Exception):
@@ -27,6 +34,12 @@ class RecommendationRequest:
     mode: str
     confirmed: bool
     expected_release: dict[str,str]
+    method: str = 'topsis'
+    expected_algorithm_version: str | None = None
+    game_scope: str = 'honor_of_kings'
+    defaulted_metrics: tuple[str,...] = ()
+    evaluation_mode: str = 'measured'
+    expected_reference_rule_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -104,13 +117,34 @@ def _hash(value):
 
 
 def parse_recommendation(body: dict, known_brands: list[str]) -> RecommendationRequest:
-    obj = _object(body,REQUEST_FIELDS,required=REQUEST_FIELDS)
+    obj = _object(body,REQUEST_FIELDS | OPTIONAL_REQUEST_FIELDS,required=REQUEST_FIELDS)
+    method = obj.get('method', 'topsis')
+    if type(method) is not str or method not in ALGORITHM_VERSIONS:
+        invalid('请选择标准排序或混合排序（实验）')
+    version = obj.get('expected_algorithm_version')
+    if 'expected_algorithm_version' in obj and (type(version) is not str or not version or len(version)>256):
+        invalid('算法版本格式无效')
     if obj['confirmed'] is not True:
         invalid('请先检查条件、权重和数据限制并确认')
-    weights = _object(obj['weights'],set(METRICS))
+    weights = _object(obj['weights'],set(METRICS) | set(LEGACY_METRICS) | {BATTERY_METRIC})
+    if BATTERY_METRIC in weights and _real(weights[BATTERY_METRIC], maximum=10)>0:
+        raise ApiError(422, 'unsupported_metric', '当前没有合格续航实测，不能按续航排序；请确认是否暂不计入该项')
     if not weights:
         invalid('至少一项偏好权重必须大于 0')
-    canonical = {k:_real(weights[k],maximum=10) for k in METRICS if k in weights}
+    canonical = {k:_real(weights[k],maximum=10) for k in (*METRICS, *LEGACY_METRICS) if k in weights}
+    if method == 'hybrid_rrf':
+        if any(canonical.get(k,0)>0 for k in LEGACY_METRICS):
+            invalid('混合排序仅支持七项偏好；价格和品牌请在硬性条件中设置')
+        canonical = {k:v for k,v in canonical.items() if k in METRICS}
+    game_scope = obj.get('game_scope', 'honor_of_kings')
+    defaults = validate_defaulted_metrics(obj.get('defaulted_metrics',[]),canonical)
+    evaluation_mode = validate_evaluation_mode(obj.get('evaluation_mode','measured'))
+    reference_version = obj.get('expected_reference_rule_version')
+    if 'expected_reference_rule_version' in obj and (type(reference_version) is not str or not reference_version or len(reference_version)>256):
+        invalid('参考评分规则版本格式无效')
+    if evaluation_mode=='spec_reference' and any(canonical.get(k,0)>0 for k in LEGACY_METRICS):
+        invalid('规格参考仅支持七项偏好；价格和品牌请使用硬性筛选')
+    validate_game_scope(game_scope, {} if evaluation_mode=='spec_reference' else {k:v for k,v in canonical.items() if k not in defaults})
     if not any(canonical.values()):
         invalid('至少一项偏好权重必须大于 0')
     target = _real(obj['target_screen'],minimum=3,maximum=10,nullable=True)
@@ -123,7 +157,29 @@ def parse_recommendation(body: dict, known_brands: list[str]) -> RecommendationR
     for key in ('snapshot_sha256','manifest_sha256'):
         _hash(release[key])
     return RecommendationRequest(_needs(obj['needs'],known_brands),canonical,target,
-                                 _mode(obj['mode']),True,deepcopy(release))
+                                 _mode(obj['mode']),True,deepcopy(release),method,version,game_scope,defaults,evaluation_mode,reference_version)
+
+
+def validate_evaluation_mode(value):
+    if type(value) is not str or value not in ('measured','spec_reference'):
+        invalid('请选择规格参考或实测资料模式')
+    return value
+
+
+def validate_defaulted_metrics(value, weights):
+    if (type(value) not in (list,tuple) or any(type(k) is not str or k not in METRICS for k in value)
+            or len(set(value))!=len(value)
+            or any(k not in weights or weights[k]!=DEFAULT_WEIGHTS[k] for k in value)):
+        invalid('系统初始偏好标记与权重不一致，请重新确认等级')
+    return tuple(sorted(value))
+
+
+def validate_game_scope(scope, weights):
+    if type(scope) is not str or scope not in ('honor_of_kings', 'unconfirmed', 'unsupported'):
+        invalid('请确认游戏实测参考范围')
+    if weights.get('honor_of_kings_avg_fps', 0)>0 and scope != 'honor_of_kings':
+        code = 'unsupported_game' if scope == 'unsupported' else 'game_scope_unconfirmed'
+        raise ApiError(422, code, '当前仅支持王者荣耀平均帧率；请明确选择参考该游戏，或主动将游戏权重设为0')
 
 
 def _queries(items, allowed, repeat=()):

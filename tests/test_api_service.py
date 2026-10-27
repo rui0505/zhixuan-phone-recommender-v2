@@ -119,7 +119,7 @@ class ServiceTests(unittest.TestCase):
             di=original(*args,**kwargs)
             self.db.with_name('release_manifest.json').write_text('{}',encoding='utf-8')
             return di
-        with patch('api.service.build_input',side_effect=change):
+        with patch('catalog.default_references.build_input',side_effect=change):
             with self.assertRaises(ApiError) as e:self.service.recommend(self.request)
         self.assertEqual(e.exception.status,409)
 
@@ -141,4 +141,7 @@ class ServiceTests(unittest.TestCase):
         actual=service.recommend(request).result
         self.assertEqual(actual.ranking_sha256,core.ranking_sha256)
         self.assertEqual(actual.decision_sha256,core.decision_sha256)
-        self.assertEqual(len(actual.ranked),51); self.assertEqual(file_sha(db),before)
+        # 2026-10-26：默认权重新增 电池容量2 / 处理器档位2，两者都是正权重，
+        # 没有这两项数据的机型不再具备资格——候选从 51 条降到 40 条（少 4 个机型）。
+        # 这是「未提及给默认值」的代价，不是 bug。
+        self.assertEqual(len(actual.ranked),40); self.assertEqual(file_sha(db),before)

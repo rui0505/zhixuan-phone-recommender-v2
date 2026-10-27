@@ -6,13 +6,19 @@ from pathlib import Path
 import sqlite3
 import threading
 
+from bridge import infer_budget_range
 from needs_extraction import extract_needs, validate_result, budget_bound_has_source
 from providers.jev import JevUnavailable, normalise_response
 from providers.llm import SYSTEM_PROMPT, USER_TEMPLATE, post_chat, content_of, extract_json_object
-from schemas import LEVEL_MAP, UNMENTIONED_LEVEL
+from schemas import WEIGHT_TABLE
 from .contracts import ApiError, METRICS, _needs
+from .performance import PERFORMANCE_METRICS, BATTERY_METRIC
 
-CONTROL_KEYS = dict(zip(('price','weight','storage','refresh','screen'), METRICS[:5]))
+# 维度 → 矩阵指标。**必须显式写，不能用 METRICS 的位置切片**：
+# CRITERIA 已经不含 price，按位置映射会让 weight 错位到 price_cny。
+CONTROL_KEYS = {'weight':'weight_g','storage':'storage_gb','screen':'screen_size_inch',
+                'photo':'dxomark_photo','game':'honor_of_kings_avg_fps',
+                'battery':'battery_capacity_mah','chipset':'chipset_tier'}
 
 
 class OfficialNeedsClassifier:
@@ -87,25 +93,40 @@ class NeedsService:
                         if not any(c['field']==f'budget.{bound}' for c in result['clarifications']):
                             result['clarifications'].append({'field':f'budget.{bound}',
                                 'question':'预算上限是多少？也可以明确选择不限。' if bound=='max' else '是否需要设置预算下限？请在表单中确认。',
-                                'reason':'含糊预算不能推断筛选边界，已清除没有明确原文依据的数值'})
+                                'reason':'模型给出了原文没有依据的预算边界，已清除'})
                 if validate_result(result):
                     raise ValueError('invalid extraction')
-                needs = _needs({'budget':{k:result['budget'][k] for k in ('min','max')},
+                # 含糊预算（「5000左右」）：用户没有明确边界，但给了锚点。
+                # 按非对称阶梯推断一个区间填进草稿，并在 notice 里明说是推断值——
+                # 红线是"不得静默封顶"，不是"不得封顶"。既无锚点也无边界时留空。
+                budget_min, budget_max = result['budget']['min'], result['budget']['max']
+                inferred = None
+                if budget_min is None and budget_max is None and result['budget'].get('reference') is not None:
+                    inferred = infer_budget_range(result['budget']['reference'])
+                    budget_min, budget_max = inferred[0], inferred[1]
+                needs = _needs({'budget':{'min':budget_min,'max':budget_max},
                                 'min_storage':result['min_storage'], 'brands':result['brands']}, known_brands)
-                weights = dict.fromkeys(METRICS, 0)
+                weights = dict.fromkeys((*METRICS, BATTERY_METRIC), 0)
                 for pref in result['preferences']:
-                    weights[CONTROL_KEYS[pref['criterion']]] = (UNMENTIONED_LEVEL if pref['level']=='未提及'
-                                                               else LEVEL_MAP[pref['level']])
-                if result['target_screen'] is None:
-                    weights['screen_size_inch']=0
+                    metric = CONTROL_KEYS.get(pref['criterion'])
+                    if metric:
+                        weights[metric] = WEIGHT_TABLE[pref['criterion']][pref['level']]
                 if not any(weights.values()):
                     raise ValueError('no active preferences')
             except (ValueError, TypeError, KeyError, ApiError):
                 return {'status':'degraded', 'extraction':result, 'draft':None,
                         'notice':'条件、品牌或偏好未能可靠匹配，请在下方手动确认；没有自动放宽条件'}
+            notice='已生成待确认草稿，七项偏好按维度等级表赋权，拍照与游戏未提及时保留初值 1。规格模式按固定规则估算；实测模式若可比资料不完整或游戏范围未确认，会保留初始偏好并说明本次未计入。电池容量不等于续航，价格和品牌仅作硬性筛选，请检查后确认。'
+            if inferred is not None:
+                notice=(f'你说的是「{result["budget"]["reference"]:g} 元左右」，'
+                        f'已按 ¥{inferred[0]:,}–¥{inferred[1]:,} 推断预算范围（推断值，可修改）。'
+                        + notice)
             return {'status':result['status'], 'extraction':result,
-                    'draft':{'needs':needs, 'weights':weights, 'target_screen':result['target_screen'], 'confirmed':False},
-                    'notice':'已生成待确认草稿。未提及的基础偏好使用系统默认1；拍照和游戏未自动计权，新机/二手请手动选择'}
+                    'draft':{'needs':needs, 'weights':weights, 'target_screen':result['target_screen'] if result['target_screen'] is not None else 6.5,
+                             'defaulted_metrics':sorted(CONTROL_KEYS[p['criterion']] for p in result['preferences'] if p['level']=='未提及'),
+                             'confirmed':False, 'budget_inferred':inferred is not None,
+                             'desired_weights':dict(weights), 'game_scope':result['game_use']['game_scope']},
+                    'notice':notice}
         finally:
             self.lock.release()
 

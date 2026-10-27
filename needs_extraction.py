@@ -37,32 +37,39 @@ from providers.jev import (
     JevResult,
     JevUnavailable,
     classify_preferences,
+    performance_evidence_valid,
+    performance_clauses,
+    game_name_polarities,
 )
-from schemas import CHOICES, CRITERIA
+from schemas import CHOICES, CRITERIA, EXTRACTION_CRITERIA, PERFORMANCE_CRITERIA
 
 try:
     from providers.llm import PROMPT_VERSION
 except ImportError:  # pragma: no cover - 只在 providers 缺失时触发
     PROMPT_VERSION = "unknown"
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 
+# 必须与 `schemas.CRITERIA` / `schemas.CRITERIA_LABELS` 保持一致。
+# 价格不在这里——它由预算区间单独表达，不是偏好维度。
 CRITERION_LABELS = {
-    "price": "价格更低",
     "weight": "机身更轻",
     "storage": "存储更大",
-    "refresh": "刷新率更高",
     "screen": "屏幕接近偏好",
+    "photo": "拍照更好",
+    "game": "王者荣耀帧率更高",
+    "battery": "电池容量更大",
+    "chipset": "处理器档位更高",
 }
 
+# 数据覆盖不到的需求。「影像」「处理器性能」已移出：它们分别由 photo 和
+# chipset 维度覆盖，再标成未覆盖会自相矛盾。
 UNSUPPORTED_VALUES = (
-    "影像",
     "续航",
     "真实游戏性能",
     "分辨率",
     "机身尺寸手感",
     "信号质量",
-    "处理器性能",
 )
 
 # 字段名 → (契约字段路径, 给用户看的问题, 为什么要问)
@@ -233,8 +240,8 @@ def validate_result(result: Mapping[str, Any]) -> list[str]:
 
     preferences = result["preferences"]
     seen = [item.get("criterion") for item in preferences]
-    if sorted(seen) != sorted(CRITERIA):
-        problems.append(f"preferences 必须恰好包含 {list(CRITERIA)}，实际 {seen}")
+    if sorted(seen) != sorted(EXTRACTION_CRITERIA):
+        problems.append(f"preferences 必须恰好包含 {list(EXTRACTION_CRITERIA)}，实际 {seen}")
     for item in preferences:
         if item.get("level") not in CHOICES:
             problems.append(
@@ -242,6 +249,13 @@ def validate_result(result: Mapping[str, Any]) -> list[str]:
             )
         if not isinstance(item.get("evidence"), str):
             problems.append(f"{item.get('criterion')} 的 evidence 必须是字符串")
+        if item.get('criterion') in PERFORMANCE_CRITERIA:
+            if item.get('verdict') not in ('unknown', 'inferred', 'extracted'):
+                problems.append('性能偏好缺少有效 verdict')
+            if item.get('confirmed') is not False or type(item.get('needs_confirmation')) is not bool:
+                problems.append('性能偏好必须保留未确认状态')
+            if item.get('level') != '未提及' and not performance_evidence_valid(item['criterion'], item.get('evidence'), result['input_text']):
+                problems.append('性能偏好缺少原文证据')
 
     for item in result["unsupported_needs"]:
         if item.get("need") not in UNSUPPORTED_VALUES:
@@ -416,9 +430,12 @@ def _blank_result(text: str, status: str, error: str | None, started: float) -> 
         "target_screen": None,
         "brands": {"include": [], "exclude": []},
         "preferences": [
-            {"criterion": criterion, "level": "未提及", "evidence": ""}
-            for criterion in CRITERIA
+            {"criterion": criterion, "level": "未提及", "evidence": "",
+             "verdict": "unknown", "confirmed": False, "needs_confirmation": False}
+            for criterion in EXTRACTION_CRITERIA
         ],
+        "game_use": {"names": [], "evidence": "", "game_scope": "unconfirmed",
+                     "source_fragments": [], "needs_scope_confirmation": False},
         "unsupported_needs": [],
         "clarifications": [_clarification(field) for field in FALLBACK_ASKS],
         "meta": {
@@ -459,10 +476,10 @@ def _degradations(result: JevResult, text: str) -> list[dict[str, str]]:
     raw_by: dict[str, Mapping[str, Any]] = {}
     for item in raw_items:
         criterion = item.get("criterion")
-        if criterion in CRITERIA:
+        if criterion in EXTRACTION_CRITERIA:
             raw_by[criterion] = item
 
-    for criterion in CRITERIA:
+    for criterion in EXTRACTION_CRITERIA:
         label = CRITERION_LABELS[criterion]
         item = raw_by.get(criterion)
         if item is None:
@@ -484,7 +501,9 @@ def _degradations(result: JevResult, text: str) -> list[dict[str, str]]:
                 )
             )
         evidence = _text(item.get("evidence"))
-        if evidence and evidence not in text:
+        if (evidence and evidence not in text) or (
+                criterion in PERFORMANCE_CRITERIA and choice != '未提及'
+                and not performance_evidence_valid(criterion, evidence, text)):
             issues.append(
                 _clarification(
                     f"preferences.{criterion}",
@@ -552,26 +571,30 @@ def _clarifications(
     """组装澄清清单。顺序即优先级：预算最影响候选集，排最前。"""
     items: list[dict[str, str]] = []
 
-    # **确定性兜底，不依赖模型**：上界没定就必须问。
+    # **确定性兜底，不依赖模型**：既没有明确上界、也没有可推断的锚点时，必须问。
     #
-    # 契约 §4.1 的红线是「含糊预算不自动封顶，由确认页问用户」。实测
-    # DeepSeek 对「预算三千左右，想要轻一点的，主要看价格，256G 起步就行」
-    # 返回 `asks: []`——它把预算上限记在了 `budget_reference` 上，却没把它
-    # 列进 `asks`。若只信模型的 `asks`，界面就不会追问，用户永远拿不到
-    # 「最多能接受到多少」这个问题，红线也就落空了。
+    # 口径已于 2026-10-25 修订：用户给了锚点（「5000左右」「三千多」）时不再追问
+    # 上界，改由 `bridge._snap_budget` 按非对称阶梯推断区间并回显，用户直接改控件
+    # 比回答开放式问题省事。红线「不得静默封顶」仍成立——推断值会写进 notes。
+    # 真正没有任何依据（`reference` 与 `high` 都为空）时才必须问。
+    #
+    # 实测依据：DeepSeek 对「预算三千左右，想要轻一点的…」返回 `asks: []`，
+    # 若只信模型的 `asks`，用户永远拿不到这个问题。所以这里必须自己判。
     #
     # 判定条件与 `bridge._snap_budget` 的 pending 逻辑**保持一致**：
-    # `high is None`（原文没给明确上界）→ 问。两处口径必须同源，
+    # `high is None and reference is None` → 问。两处口径必须同源，
     # 否则会出现「结果区提示未确认、对话里却不问」这种自相矛盾。
-    if high is None:
+    if high is None and reference is None:
         items.append(_budget_max_item(reference))
 
     for field in result.asks:
         if field == "excluded_brands":
             continue  # 下面按实际品牌给更具体的问题
         if field == "budget_max":
-            # 兜底已经放过了，这里再来一次由去重合并；文案同源
-            items.append(_budget_max_item(reference))
+            # 有锚点就不问——否则是否追问取决于模型是否填了 asks，行为不确定。
+            # 兜底分支已经在上面处理过，这里只补「无锚点」的情况。
+            if reference is None:
+                items.append(_budget_max_item(reference))
         else:
             items.append(_clarification(field))
 
@@ -607,13 +630,22 @@ def _shape(text: str, result: JevResult, started: float) -> dict[str, Any]:
 
     judgements = {item.criterion: item for item in result.judgements}
     preferences = []
-    for criterion in CRITERIA:
+    for criterion in EXTRACTION_CRITERIA:
         item = judgements.get(criterion)
+        level = item.choice if item is not None else '未提及'
+        evidence = _text(item.evidence) if item is not None else ''
+        verdict = item.verdict if item is not None else 'unknown'
+        if (criterion in PERFORMANCE_CRITERIA and level != '未提及'
+                and not performance_evidence_valid(criterion, evidence, text)):
+            level, verdict = '未提及', 'unknown'
         preferences.append(
             {
                 "criterion": criterion,
-                "level": item.choice if item is not None else "未提及",
-                "evidence": _text(item.evidence) if item is not None else "",
+                "level": level,
+                "evidence": evidence,
+                "verdict": verdict,
+                "confirmed": False,
+                "needs_confirmation": level != '未提及',
             }
         )
 
@@ -625,6 +657,8 @@ def _shape(text: str, result: JevResult, started: float) -> dict[str, Any]:
     )
     degradations = _degradations(result, text)
     clarifications.extend(degradations)
+    game = next(p for p in preferences if p['criterion']=='game')
+    game_use = _game_use(text, game)
 
     payload = _blank_result(text, STATUS_OK, None, started)
     payload["status"] = STATUS_DEGRADED if degradations else STATUS_OK
@@ -638,7 +672,11 @@ def _shape(text: str, result: JevResult, started: float) -> dict[str, Any]:
     payload["target_screen"] = screen
     payload["brands"] = {"include": include, "exclude": exclude}
     payload["preferences"] = preferences
+    payload['game_use'] = game_use
     payload["unsupported_needs"] = _unsupported_items(result, text)
+    # A provider must not silently erase unsupported requested game scope.
+    if game_use['needs_scope_confirmation'] and not any(i['need']=='真实游戏性能' for i in payload['unsupported_needs']):
+        payload['unsupported_needs'].append({'need': '真实游戏性能', 'evidence': game_use['evidence']})
     payload["clarifications"] = clarifications
     payload["meta"] = {
         "provider": result.provider,
@@ -647,6 +685,20 @@ def _shape(text: str, result: JevResult, started: float) -> dict[str, Any]:
         "error": None,
     }
     return payload
+
+
+def _game_use(text: str, game: Mapping[str, Any]) -> dict[str, Any]:
+    evidence = game['evidence'] if game['evidence'] and game['evidence'] in text else ''
+    active_names = game_name_polarities(text)
+    names = [name for name, active in active_names.items() if active]
+    source_fragments = [evidence] if evidence else []
+    source_fragments.extend(clause for clause in performance_clauses(text)
+                            if any(name in clause for name in active_names))
+    scope = ('unsupported' if any(name != '王者荣耀' for name in names)
+             else 'honor_of_kings' if names == ['王者荣耀'] else 'unconfirmed')
+    return {'names': names, 'evidence': evidence, 'game_scope': scope,
+            'source_fragments': list(dict.fromkeys(source_fragments)),
+            'needs_scope_confirmation': game['level'] not in ('未提及', '不在意') and scope != 'honor_of_kings'}
 
 
 __all__ = [

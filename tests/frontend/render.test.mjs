@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {renderCard,renderDetail} from '../../frontend/render.mjs';
+import * as rendering from '../../frontend/render.mjs';
+const {renderCard,renderDetail}=rendering;
 
 class Node {
   constructor(tag){this.tagName=tag;this.children=[];this.attributes={};this.dataset={};this.listeners={};this.className='';this.open=false;this._text='';this.classList={add:(name)=>{this.className+=` ${name}`;}};}
@@ -22,11 +23,12 @@ test('consumer prose is visible and technical explanation is collapsed separatel
   const card=renderCard(row,{reason,explanation:'TECHNICAL_JSON snapshot_sha256=abc'});
   const prose=byClass(card,'recommendation-reason')[0];
   assert.ok(prose,'missing consumer explanation section');
-  assert.match(prose.textContent,/按你确认的预算/);assert.match(prose.textContent,/不是本次最轻/);
+  assert.match(prose.textContent,/按你确认的预算/);assert.doesNotMatch(prose.textContent,/不是本次最轻/);
   assert.doesNotMatch(prose.textContent,/TECHNICAL_JSON|snapshot_sha256|TOPSIS|F1/);
   const technical=walk(card).find(n=>n.tagName==='details'&&n.children.some(c=>c.tagName==='summary'&&c.textContent==='查看数据与计算依据'));
   assert.ok(technical);assert.equal(technical.open,false);assert.match(technical.textContent,/snapshot_sha256/);
   assert.match(technical.textContent,/TOPSIS/);
+  assert.match(technical.textContent,/不是本次最轻/);assert.match(technical.textContent,/没有真实续航测试/);
 });
 
 test('category tags mean evidence availability not certified quality',()=>{
@@ -48,4 +50,38 @@ test('detail shows pending category reasons even with no observations',()=>{
     {id:'senior',label:'长辈友好',status:'pending_review',reason:'尚未核实简易模式',evidence_refs:[],rule_version:'v1'}]},
     specifications:[],prices:[],benchmark_runs:[],observations:[],sources:[]});
   assert.match(node.textContent,/尚未核实简易模式/);assert.match(node.textContent,/待评估/);
+});
+
+test('hybrid card and decision use their bound score label without promising accuracy',()=>{
+  const card=renderCard(row,{method:'hybrid_rrf',scoreLabel:'实验融合分'});
+  assert.match(card.textContent,/实验融合分 0.8000/);assert.doesNotMatch(card.textContent,/TOPSIS 相对贴近度/);
+  const decision=rendering.renderDecision({results:{status:'ready',ranked_total:3,reason:'可比',method:'hybrid_rrf',score_label:'实验融合分',algorithm_version:'hybrid-v1',effective_weights:{price_cny:1},unscored:[],backups:[]}});
+  assert.match(decision.textContent,/实验/);assert.match(decision.textContent,/theta=1/);assert.match(decision.textContent,/未证明.*更准确/);assert.doesNotMatch(decision.textContent,/TOPSIS 分数/);
+});
+
+test('performance summary distinguishes user importance, inferred evidence and default coverage',()=>{
+  assert.equal(typeof rendering.renderPerformance,'function');
+  const capabilities={honor_of_kings_avg_fps:{label:'王者荣耀平均帧率',eligible_model_count:7,eligible_sku_count:9,scope:'仅王者荣耀',reason:'同条件'}};
+  const intent={extraction:{game_use:{names:['和平精英'],game_scope:'unsupported'},preferences:[{criterion:'game',level:'重要',verdict:'inferred',evidence:'爱打和平精英',needs_confirmation:true}]}};
+  const node=rendering.renderPerformance(capabilities,{honor_of_kings_avg_fps:2},intent,false);
+  assert.match(node.textContent,/默认新机/);assert.match(node.textContent,/当前条件待验证/);assert.match(node.textContent,/7.*9/);assert.match(node.textContent,/推断/);assert.match(node.textContent,/爱打和平精英/);assert.match(node.textContent,/和平精英/);
+  assert.doesNotMatch(node.textContent,/当前条件有 7/);
+  const current=rendering.renderPerformance(capabilities,{honor_of_kings_avg_fps:0},intent,true);
+  assert.match(current.textContent,/不参与排序/);assert.match(current.textContent,/本次已计算条件/);assert.doesNotMatch(current.textContent,/默认新机/);
+});
+
+test('reference scores show all seven dimensions with zero valid and missing values unscored',()=>{
+  const card=renderCard({...row,reference_scores:[
+    {metric_key:'ref_storage',name_cn:'存储',score:0,basis:'容量固定锚点',inputs:{storage_gb:128},estimated:true},
+    {metric_key:'ref_photo',name_cn:'拍照',score:null,basis:'主摄资料缺失',inputs:{main_mp:null},estimated:true},
+    {metric_key:'ref_game',name_cn:'游戏',score:82.5,basis:'80%处理器+20%容量',inputs:{chipset:80,battery:92.5},estimated:true}
+  ]},{referenceRuleVersion:'ref-1'});
+  const scores=byClass(card,'reference-score');assert.equal(scores.length,7);
+  assert.match(scores[0].textContent,/0 \/ 100/);assert.doesNotMatch(scores[0].textContent,/资料不足/);
+  assert.equal(walk(scores[0]).find(n=>n.tagName==='progress').value,0);
+  const photo=scores.find(n=>n.dataset.metricKey==='ref_photo');assert.match(photo.textContent,/资料不足/);assert.equal(walk(photo).some(n=>n.tagName==='progress'),false);
+  assert.match(card.textContent,/游戏.*规格估算/);assert.match(card.textContent,/80%.*处理器.*20%.*电池容量/);
+  assert.match(card.textContent,/不代表实际续航/);assert.match(card.textContent,/尺寸匹配.*不代表屏幕显示质量/);assert.match(card.textContent,/拍照规格.*不代表成像质量/);
+  const basis=byClass(card,'reference-basis')[0];assert.equal(basis.open,false);assert.match(basis.textContent,/主摄资料缺失/);assert.match(basis.textContent,/ref-1/);
+  assert.match(card.textContent,/TOPSIS 相对贴近度 0.8000/);
 });

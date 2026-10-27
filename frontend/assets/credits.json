@@ -11,5 +11,29 @@
     "height": 1800,
     "sha256": "debf5bf1a059aa75ceb1e8b3fa1aa09a08947fa6cd5f00b0c7e215431963cc36",
     "usage": "Decorative homepage hero only; not a diagram of this project's algorithm"
+  },
+  "alpine-panorama.png": {
+    "title": "Alpine lake and glacier panorama",
+    "creator": "OpenAI Image Generation",
+    "generated_on": "2026-10-27",
+    "width": 1832,
+    "height": 858,
+    "sha256": "9d5636137d6b16384601789af5a143b64c1f5bf7cda5031b3d11290be2745703",
+    "usage": "Decorative landscape matching user supplied light alpine UI references; no product imagery or data claims"
+  },
+  "workflow-illustration.png": {
+    "creator": "OpenAI Image Generation",
+    "generated_on": "2026-10-27",
+    "width": 2172,
+    "height": 724,
+    "usage": "Decorative four-step illustration, not a system diagram or product evidence",
+    "sha256": "e807b91958ea754b74f293569981d6831b568cda3b3b1867121e311ab3ac8e44"
+  },
+  "icons": {
+    "library": "Bootstrap Icons",
+    "version": "1.11.3",
+    "source": "https://github.com/twbs/icons",
+    "license": "MIT",
+    "usage": "Unmodified library SVG files for interface icons"
   }
 }

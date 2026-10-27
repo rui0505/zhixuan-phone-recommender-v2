@@ -3,7 +3,10 @@ import os
 import sqlite3
 from pathlib import Path
 import streamlit as st
-from catalog.adapter import build_input,resolve_brands
+from catalog.adapter import build_input,resolve_brands,CONTROL_MAP
+from catalog.default_references import build_reference_input
+from catalog.spec_reference import build_spec_reference_input, card_scores
+from api.contracts import ApiError,validate_game_scope
 from catalog.evidence import build_evidence,digest,render_template
 from engine import rank_decision_input
 from ui.catalog_views import (file_sha,load_release,invalidate_confirmation,clear_result,
@@ -63,14 +66,30 @@ if prompt:
         except ValueError:
             extracted['status']='failed';extracted['meta']['error']='抽取的品牌无法唯一匹配；不自动放宽品牌条件，请手动选择后确认。'
     if extracted['status']!='failed':
-        bridged,_=bridge_contract(extracted,known_brands=sorted({r['brand'] for r in all_rows}))
+        bridged,_=bridge_contract(extracted,known_brands=sorted({r['brand'] for r in all_rows}),
+                                  price_index=[(r['price_cny'],r['model_id']) for r in all_rows
+                                               if r.get('price_cny') is not None])
         state['manual_brands']=list(bridged.brands);state['manual_excludes']=list(bridged.excluded_brands)
-        for edge in ('min','max'):
-            value=extracted['budget'][edge];state['manual_use_'+edge]=value is not None
-            if value is not None:state['manual_'+edge]=float(value)
+        # 明确边界优先；两边界都没给但有锚点时，用 bridge 推断出的区间
+        # （推断值已在 bridged.notes 里写明"可修改"，不是静默封顶）。
+        budget_in=extracted['budget'];inferred=(budget_in['min'] is None and budget_in['max'] is None
+                                                and budget_in.get('reference') is not None)
+        for edge,explicit,guess in (('min',budget_in['min'],bridged.budget[0]),
+                                    ('max',budget_in['max'],bridged.budget[1])):
+            if explicit is not None:
+                state['manual_use_'+edge]=True;state['manual_'+edge]=float(explicit)
+            elif inferred:
+                state['manual_use_'+edge]=True;state['manual_'+edge]=float(guess)
+            else:
+                state['manual_use_'+edge]=False
+        # 只有推断时才回显；用户明确给了边界就不必解释。
+        state['budget_inferred_note']=(next((n for n in bridged.notes if '推断' in n),'')
+                                       if inferred else '')
         state['manual_storage']=float(extracted.get('min_storage') or 0)
         if extracted.get('target_screen') is not None:state['manual_target']=float(extracted['target_screen'])
-        for key,value in bridged.weights.items():state['manual_w_'+key]=min(10,max(0,int(round(value*10))))
+        for key,value in bridged.weights.items():state['manual_w_'+key]=min(10,max(0,int(round(value))))
+        state['manual_defaulted']=[p['criterion'] for p in extracted['preferences'] if p['level']=='未提及']
+        state['manual_game_scope']={'honor_of_kings':'王者荣耀测试参考','unsupported':'其他游戏暂无实测','unconfirmed':'尚未确认游戏范围'}[extracted.get('game_use',{}).get('game_scope','unconfirmed')]
         state['ask_rounds']=min(MAX_ASK_ROUNDS,state.get('ask_rounds',0)+1)
 if state.get('extracted_needs'):
     with st.expander('需求抽取与待澄清内容',expanded=True):
@@ -88,9 +107,14 @@ if st.button('清空需求与结果'):
         if key.startswith('manual_'):state.pop(key,None)
     st.rerun()
 
-labels={'price':'价格更低','weight':'机身更轻','storage':'存储更大','refresh':'屏幕刷新率更高（非游戏性能）',
-    'screen':'屏幕接近目标','photo':'拍照：DXOMARK 照片子分','game':'游戏：王者荣耀实测平均帧率'}
-defaults={'price':5,'weight':2,'storage':2,'refresh':1,'screen':0,'photo':0,'game':0}
+labels={'weight':'机身更轻','storage':'存储更大',
+    'screen':'屏幕接近目标','photo':'拍照：DXOMARK 照片子分','battery':'电池容量更大（容量≠续航）',
+    'chipset':'处理器档位（第三方榜单换算，非实测）','game':'游戏：王者荣耀实测平均帧率'}
+defaults={'weight':2,'storage':3,'screen':1,'photo':1,'battery':2,'chipset':2,'game':1}
+state.setdefault('manual_defaulted',list(defaults))
+state.setdefault('manual_game_scope','王者荣耀测试参考')
+def mark_weight_explicit(key):
+    state['manual_defaulted']=[k for k in state.get('manual_defaulted',[]) if k!=key]
 for key,value in {'manual_min':0.0,'manual_max':5000.0,'manual_storage':0.0,'manual_target':6.5,
                   **{'manual_w_'+key:value for key,value in defaults.items()}}.items():state.setdefault(key,value)
 with st.sidebar:
@@ -101,18 +125,29 @@ with st.sidebar:
     min_price=st.number_input('预算下限（元）',min_value=0.0,value=None,step=100.0,key='manual_min')
     use_max=st.checkbox('启用预算上限',key='manual_use_max')
     max_price=st.number_input('预算上限（元）',min_value=0.0,value=None,step=100.0,key='manual_max')
+    # 推断出来的区间必须显示出来，否则就是"静默封顶"，违反红线。
+    if state.get('budget_inferred_note'):
+        st.caption(state['budget_inferred_note'])
     min_storage=st.number_input('最低存储（GB，0 表示不筛选）',min_value=0.0,value=None,step=128.0,key='manual_storage')
     brands=sorted({r['brand'] for r in all_rows})
     included=st.multiselect('仅看这些品牌（空表示不限）',brands,key='manual_brands')
     excluded=st.multiselect('排除这些品牌',brands,key='manual_excludes')
     target=st.slider('目标屏幕尺寸（英寸）',3.0,10.0,None,0.1,key='manual_target')
+    score_mode=st.selectbox('维度评分依据',['实测资料与原始规格','七维百分制规格参考'],key='manual_evaluation_mode')
+    evaluation_mode='spec_reference' if score_mode=='七维百分制规格参考' else 'measured'
+    if evaluation_mode=='spec_reference':
+        labels.update(photo='影像规格参考（非成片质量）',game='游戏参考（处理器80%＋电池容量20%）')
+        st.caption('规格参考采用百分制；电池容量不等于实际续航，屏幕分仅表示尺寸匹配。')
     st.caption('以下为试验默认权重；0 表示不参与排序。未提及不等于已理解你的偏好。')
-    weights={key:st.slider(label,0,10,None,key='manual_w_'+key) for key,label in labels.items()}
+    weights={key:st.slider(label,0,10,None,key='manual_w_'+key,on_change=mark_weight_explicit,args=(key,)) for key,label in labels.items()}
+    scope_label=st.selectbox('游戏比较范围',['王者荣耀测试参考','其他游戏暂无实测','尚未确认游戏范围'],key='manual_game_scope')
+    game_scope={'王者荣耀测试参考':'honor_of_kings','其他游戏暂无实测':'unsupported','尚未确认游戏范围':'unconfirmed'}[scope_label]
     checked=st.checkbox('我已检查条件、权重和数据限制',key='manual_confirm')
     confirm=st.button('确认需求并生成推荐',type='primary')
 needs={'budget':{'min':min_price if use_min else None,'max':max_price if use_max else None},
        'min_storage':min_storage or None,'brands':{'include':included,'exclude':excluded}}
-request={'needs':needs,'weights':weights,'target':target,'mode':mode};request_hash=digest(request)
+defaulted=[CONTROL_MAP[k] for k in state['manual_defaulted'] if k in weights]
+request={'needs':needs,'weights':weights,'target':target,'mode':mode,'defaulted_metrics':defaulted,'game_scope':game_scope,'evaluation_mode':evaluation_mode};request_hash=digest(request)
 if state.get('request_hash') and state['request_hash']!=request_hash:
     clear_result(state);st.info('条件已修改，旧结果已清除；请重新确认。')
 if confirm:
@@ -121,10 +156,16 @@ if confirm:
     elif set(included)&set(excluded):st.error('同一品牌不能同时包含和排除。')
     else:
         try:
-            di=build_input(repo,needs,weights,target,mode);result=rank_decision_input(di,target_screen=target)
+            validate_game_scope(game_scope,{} if evaluation_mode=='spec_reference' else {CONTROL_MAP[k]:v for k,v in weights.items() if CONTROL_MAP[k] not in defaulted})
+            di=(build_spec_reference_input(repo,needs,weights,target,mode) if evaluation_mode=='spec_reference' else
+                build_reference_input(repo,needs,weights,target,mode,defaulted,game_scope))
+            for item in di['selection_rules'].get('default_reference_policy',{}).get('deferred',[]):st.warning(item['reason'])
+            result=rank_decision_input(di,target_screen=target)
             state['catalog_input']=di;state['catalog_result']=result
             state['confirmed_request']=request;state['request_hash']=request_hash
             if result.status=='ready':state['catalog_bundle']=build_evidence(di,result,needs)
+        except ApiError as exc:
+            clear_result(state);st.error(exc.message)
         except (ValueError,KeyError,TypeError,OverflowError):
             clear_result(state)
             st.error('条件、权重或可比输入无效；请检查预算上下界和正权重。不生成推荐成绩。')
@@ -145,6 +186,10 @@ with recommend:
             st.subheader('本次可比候选的 TOPSIS 相对排序')
             display_records([{k:r.get(k) for k in ('sku_id','score','display_name','variant_name','ram_raw','storage_raw','price_cny','condition','observed_at','is_estimated','price_id')} for r in repo.as_records(result.ranked)])
             bundle=state['catalog_bundle']
+            if evaluation_mode=='spec_reference':
+                st.subheader('七维规格参考分（百分制）')
+                display_records([{'sku_id':r['sku_id'],**{s['name_cn']:s['score'] for s in card_scores(di,r['sku_id'])}}
+                    for r in repo.as_records(result.ranked)])
             with st.expander('已核验程序解释与事实依据'):
                 st.text(render_template(bundle));st.json(bundle,expanded=False)
                 links=set()

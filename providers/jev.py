@@ -39,6 +39,8 @@ from typing import Any, Mapping, Protocol, Sequence
 from schemas import (
     CHOICES,
     CRITERIA,
+    EXTRACTION_CRITERIA,
+    PERFORMANCE_CRITERIA,
     HardConstraints,
     Needs,
     PreferenceItem,
@@ -86,13 +88,17 @@ CN_DIGITS: dict[str, int] = {
 VAGUE_MARKERS: tuple[str, ...] = ("左右", "多", "上下", "来", "把", "大约", "差不多")
 
 # 数据无法覆盖的需求 → 关键词。漏标会导致虚假结论，宁可保守多标。
+# 数据覆盖不到的需求。2026-10-26 修订：
+# - 移除「影像」「处理器性能」——它们已分别由 photo / chipset 维度覆盖，
+#   再标成"未覆盖"会自相矛盾。
+# - 游戏规则收窄到**非王者荣耀**：库里只有王者荣耀的实测帧率，用户说「打游戏」
+#   或提到别的游戏时不能拿王者帧率冒充，必须如实标为未覆盖。
 UNSUPPORTED_RULES: tuple[tuple[tuple[str, ...], str], ...] = (
-    (("拍照", "影像", "相机好"), "影像"),
-    (("续航", "电池耐用", "待机"), "续航"),
-    (("打游戏", "游戏性能", "不卡"), "真实游戏性能"),
+    (("续航", "电池耐用", "待机", "一天一充", "能用一天", "用一整天"), "续航"),
+    (("打游戏", "游戏性能", "不卡", "开黑排位",
+      "原神", "和平精英", "崩坏", "蛋仔", "永劫", "金铲铲"), "真实游戏性能"),
     (("分辨率", "清晰度"), "分辨率"),
     (("单手", "手感", "拿得住"), "机身尺寸手感"),
-    (("性价比",), "处理器性能"),
     (("信号",), "信号质量"),
 )
 
@@ -101,6 +107,53 @@ ASK_BUDGET_MAX = "budget_max"
 ASK_MIN_STORAGE = "min_storage"
 ASK_TARGET_SCREEN = "target_screen"
 ASK_EXCLUDED_BRANDS = "excluded_brands"
+
+GAME_NAMES = ('王者荣耀', '和平精英', '原神', '崩坏：星穹铁道', '绝区零', '三角洲行动')
+PERFORMANCE_EVIDENCE_PATTERNS = {
+    'photo': r'拍照|影像|相机|摄影',
+    'battery': r'电池(?=容量|(?:要|越)?大|不重要|无所谓|不在意|不太在意)|大电池|毫安|[mM][aA][hH]',
+    'game': r'游戏|爱打|爱玩|喜欢玩|只玩|平均帧率|' + '|'.join(GAME_NAMES),
+}
+
+
+def performance_evidence_valid(criterion: str, evidence: str, source: str) -> bool:
+    """A performance grade requires source text that actually concerns that dimension."""
+    return bool(evidence and evidence in source
+                and re.search(PERFORMANCE_EVIDENCE_PATTERNS[criterion], evidence))
+
+
+def performance_clauses(text: str) -> list[str]:
+    """Keep contrastive statements separate so one dimension's negation stays local."""
+    subjects = '|'.join(f'(?P<{key}>{pattern})'
+                        for key, pattern in PERFORMANCE_EVIDENCE_PATTERNS.items())
+    clauses = []
+    for part in re.split(r'[，。；,;\n]|但是|但|不过|而且|并且|同时', text):
+        start, previous = 0, None
+        for match in re.finditer(subjects, part):
+            if previous and match.lastgroup != previous.lastgroup:
+                gap = part[previous.end():match.start()]
+                # Coordinated subjects may share a grade; distinct assertions may not.
+                if not re.fullmatch(r'\s*(?:和|与|及|、)\s*', gap):
+                    clauses.append(part[start:match.start()].strip())
+                    start = match.start()
+            previous = match
+        clauses.append(part[start:].strip())
+    return [clause for clause in clauses if clause]
+
+
+def game_name_polarities(text: str) -> dict[str, bool]:
+    """Track each named game's latest local acceptance, including postposed rejection."""
+    states: dict[str, bool] = {}
+    rejection = r'(?:不(?:太|怎么|再)?(?:玩|打|考虑|要|在意|重要)|无所谓)'
+    modifiers = r'(?:(?:我|也|都|完全|从来|基本|根本|一直|现在|已经|就)\s*)*'
+    for clause in performance_clauses(text):
+        for name in GAME_NAMES:
+            if name in clause:
+                token = re.escape(name)
+                rejected = (re.search(rejection + r'\s*' + token, clause)
+                            or re.search(token + r'\s*' + modifiers + rejection, clause))
+                states[name] = not bool(rejected)
+    return states
 
 
 @dataclass(frozen=True)
@@ -114,7 +167,7 @@ class CriterionJudgement:
     confidence: float | None = None
 
     def __post_init__(self) -> None:
-        if self.criterion not in CRITERIA:
+        if self.criterion not in EXTRACTION_CRITERIA:
             raise SchemaError(f"未知维度：{self.criterion!r}")
         if self.choice not in CHOICES:
             raise SchemaError(f"{self.criterion} 的 choice 非法：{self.choice!r}")
@@ -190,7 +243,7 @@ class MockClassifier:
 
     def classify(self, text: str) -> JevResult:
         source = text or ""
-        judgements = [self._judge(criterion, source) for criterion in CRITERIA]
+        judgements = [self._judge(criterion, source) for criterion in EXTRACTION_CRITERIA]
         judgements = self._apply_blanket(source, judgements)
 
         hard, asks = self._hard_constraints(source)
@@ -272,7 +325,7 @@ class MockClassifier:
             return list(judgements)
         patched: list[CriterionJudgement] = []
         for item in judgements:
-            if item.choice == "未提及":
+            if item.choice == "未提及" and item.criterion in CRITERIA:
                 patched.append(
                     CriterionJudgement(
                         criterion=item.criterion,
@@ -313,17 +366,40 @@ class MockClassifier:
             verdict=VERDICT_UNKNOWN,
         )
 
-    def _judge_price(self, text: str) -> CriterionJudgement:
-        return self._pick("price", text, (
-            (("价格无所谓", "价格不太在意", "价格不太在乎", "价格不重要"), "不在意"),
-            (("价格最重要", "预算最重要", "最看重价格"), "非常重要"),
-            (("越便宜越好", "主要看价格", "价格优先"), "重要"),
-            (("性价比",), "重要"),
+    # 价格不在这里——它由预算区间（budget_min/max/reference）单独表达，
+    # 不再作为偏好维度参与权重。
+
+    def _judge_photo(self, text: str) -> CriterionJudgement:
+        # 顺序要紧：「不在意」先判，否则「拍照无所谓」会被下面的宽匹配「拍照」抢走。
+        return self._pick("photo", text, (
+            (("拍照无所谓", "拍照不重要", "拍照不太在意", "拍照不太在乎", "不拍照"), "不在意"),
+            (("拍照最重要", "影像最重要", "相机最重要"), "非常重要"),
+            (("拍照好", "拍照要好", "影像好", "相机好", "拍照强", "拍照优先", "拍照"), "重要"),
+        ))
+
+    def _judge_game(self, text: str) -> CriterionJudgement:
+        # 只认**王者荣耀**。说「打游戏」或别的游戏时这里保持未提及，
+        # 由 `_unsupported` 标成「真实游戏性能」——库里没有那些游戏的实测数据，
+        # 拿王者帧率顶替就是造假。
+        return self._pick("game", text, (
+            (("主要打王者", "王者最重要", "只为打王者"), "非常重要"),
+            (("打王者", "玩王者", "王者荣耀", "王者"), "重要"),
+            (("不打游戏", "不玩游戏", "游戏无所谓", "游戏不太在意"), "不在意"),
+        ))
+
+    def _judge_battery(self, text: str) -> CriterionJudgement:
+        return self._judge_performance('battery', text)
+
+    def _judge_chipset(self, text: str) -> CriterionJudgement:
+        return self._pick("chipset", text, (
+            (("处理器最重要", "芯片最重要", "性能最重要"), "非常重要"),
+            (("处理器好", "处理器要强", "芯片好", "芯片强", "性能好", "性能强"), "重要"),
+            (("处理器无所谓", "处理器不重要", "性能无所谓", "处理器不太在意"), "不在意"),
         ))
 
     def _judge_weight(self, text: str) -> CriterionJudgement:
         return self._pick("weight", text, (
-            (("最轻", "必须轻", "一定要轻"), "非常重要"),
+            (("最轻", "必须轻", "一定要轻", "重量最重要", "轻最重要"), "非常重要"),
             (("越轻越好", "重量要轻", "轻一些好", "轻一点好"), "重要"),
             (("别太重", "轻一点", "稍微轻", "不要太重"), "一般"),
         ))
@@ -333,8 +409,8 @@ class MockClassifier:
         # 注意「越大越好」必须带存储语境，否则会误吞 CN-10 那种指屏幕尺寸的
         # 「越大越好」——同一措辞在不同语境下指向不同维度。
         return self._pick("storage", text, (
-            (("存储最重要", "容量最重要"), "非常重要"),
-            (("存储越大越好", "容量越大越好", "存储越大", "容量越大"), "重要"),
+            (("存储最重要", "存储容量最重要"), "非常重要"),
+            (("存储越大越好", "存储容量越大越好", "存储越大", "存储容量越大"), "重要"),
         ))
 
     def _judge_refresh(self, text: str) -> CriterionJudgement:
@@ -364,7 +440,47 @@ class MockClassifier:
             criterion="screen", choice="未提及", verdict=VERDICT_UNKNOWN,
         )
 
-    # --- 硬约束 ---------------------------------------------------------
+    def _judge_performance(self, criterion: str, text: str) -> CriterionJudgement:
+        # Last clause that names this preference wins; unrelated later turns do not erase it.
+        relevant = [part for part in performance_clauses(text)
+                    if re.search(PERFORMANCE_EVIDENCE_PATTERNS[criterion], part)]
+        if criterion == 'game':
+            states = game_name_polarities(text)
+            general_positive = any(not game_name_polarities(part)
+                                   and not re.search(r'不在意|不重要|无所谓|不太在意|不玩|不打', part)
+                                   for part in relevant)
+            scoped = []
+            for part in relevant:
+                local = game_name_polarities(part)
+                if local and not any(local.values()):
+                    # Rejecting one title does not cancel a different active title or generic priority.
+                    if any(states.values()) or general_positive:
+                        continue
+                elif local and not any(states[name] for name in local):
+                    continue  # A later rejection of the same title superseded this use.
+                scoped.append(part)
+            relevant = scoped
+        if not relevant:
+            return CriterionJudgement(criterion, '未提及')
+        evidence = re.sub(r'^\s*\d+[.、]\s*', '', relevant[-1])
+        if re.search(r'不在意|不重要|无所谓|不太在意|不(?:太|怎么|再)?(?:玩|打)', evidence):
+            choice, verdict = '不在意', VERDICT_EXTRACTED
+        elif re.search(r'最重要|最看重|必须|一定要|优先级最高', evidence):
+            choice, verdict = '非常重要', VERDICT_EXTRACTED
+        elif re.search(r'重要|优先|越.+越好|要好|要强|(?:拍照|影像|相机|电池容量)[好强大]$', evidence):
+            choice, verdict = '重要', VERDICT_EXTRACTED
+        elif re.search(r'一般|够用|好一点|好点', evidence):
+            choice, verdict = '一般', VERDICT_EXTRACTED
+        else:
+            choice, verdict = '重要', VERDICT_INFERRED
+        return CriterionJudgement(criterion, choice, evidence, verdict)
+
+    def _judge_game(self, text: str) -> CriterionJudgement:
+        return self._judge_performance('game', text)
+
+    def _judge_photo(self, text: str) -> CriterionJudgement:
+        return self._judge_performance('photo', text)
+
 
     def _hard_constraints(self, text: str) -> tuple[dict[str, Any], list[str]]:
         asks: list[str] = []
@@ -514,6 +630,7 @@ class MockClassifier:
     @staticmethod
     def _brands(text: str) -> list[str]:
         """品牌白名单。排除式表达（不要华为）不转成白名单。"""
+        text = text.replace('王者荣耀', '')
         names: list[str] = []
         for alias, label in BRAND_ALIASES.items():
             if alias not in text or label in names:
@@ -560,16 +677,18 @@ def normalise_response(
     `source_text` 传入原始需求文本时，额外校验 `evidence` 是否真的出现在
     原文里：不在则把 verdict 从 extracted 降级为 inferred（模型可能编造
     证据），但**不丢弃 choice**——choice 是模型判断，evidence 只是佐证。
-    不传则跳过该校验，保持既有调用方行为不变。
+    新性能偏好必须有对应维度的原文证据；无依据时退回未提及。
+    不传 source_text 则跳过原文包含校验，保持既有调用方行为不变；
+    对外 extraction 入口仍会在 shaping 时再次核对性能证据。
     """
     judgements: list[CriterionJudgement] = []
     raw_items = body.get("judgements") or body.get("results") or []
     by_criterion: dict[str, Mapping[str, Any]] = {}
     for item in raw_items:
-        if isinstance(item, Mapping) and item.get("criterion") in CRITERIA:
+        if isinstance(item, Mapping) and item.get("criterion") in EXTRACTION_CRITERIA:
             by_criterion[item["criterion"]] = item
 
-    for criterion in CRITERIA:
+    for criterion in EXTRACTION_CRITERIA:
         item = by_criterion.get(criterion)
         if item is None:
             judgements.append(
@@ -592,6 +711,17 @@ def normalise_response(
             )
             continue
         verdict = item.get("verdict", VERDICT_INFERRED)
+        if verdict not in (VERDICT_EXTRACTED, VERDICT_INFERRED, VERDICT_UNKNOWN):
+            verdict = VERDICT_UNKNOWN
+        if (criterion in PERFORMANCE_CRITERIA and choice != '未提及'
+                and source_text is not None and not performance_evidence_valid(criterion, evidence, source_text)):
+            # Performance intent needs actual source, even if the provider labels it inferred.
+            choice, verdict = '未提及', VERDICT_UNKNOWN
+        if (criterion in PERFORMANCE_CRITERIA and choice not in ('未提及', '不在意')
+                and evidence and not re.search(r'重要|最看重|必须|一定要|优先|越.+越好|要好|要强|一般|够用|好一点|好点|(?:拍照|影像|相机|电池容量)[好强大]$', evidence)):
+            verdict = VERDICT_INFERRED
+            if choice == '非常重要':
+                choice = '重要'
         if (
             source_text is not None
             and verdict == VERDICT_EXTRACTED
@@ -670,7 +800,7 @@ class HttpClassifier:
                 f"环境变量 {self.api_key_env} 未设置。密钥不写入代码或日志。"
             )
         payload = json.dumps(
-            {"text": text, "criteria": list(CRITERIA), "choices": list(CHOICES)}
+            {"text": text, "criteria": list(EXTRACTION_CRITERIA), "choices": list(CHOICES)}
         ).encode("utf-8")
 
         last_error: Exception | None = None
@@ -682,7 +812,8 @@ class HttpClassifier:
             try:
                 with urllib.request.urlopen(request, timeout=self.timeout) as response:
                     body = json.loads(response.read().decode("utf-8"))
-                return self._normalise(body)
+                return normalise_response(body, provider=self.name,
+                                          model_version=self.model_version, source_text=text)
             except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
                 last_error = error
         raise JevUnavailable(
@@ -745,6 +876,7 @@ def parse_needs(
 
     preferences = [
         item.to_preference(confirmed=confirmed) for item in result.judgements
+        if item.criterion in CRITERIA
     ]
 
     # 排除式品牌用带值形式（便于确认页直接展示「排除了谁」），
