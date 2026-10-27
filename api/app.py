@@ -16,6 +16,7 @@ from .service import CatalogService
 from .images import ImageCatalog
 from .explanations import ExplanationService
 from .needs import NeedsService, parse_needs_text
+from semantic_aism import semantic_structure
 from .buyer_reviews import BuyerReviews, parse_query as parse_review_query
 from catalog.evidence import build_evidence
 from .contracts import (ApiError, parse_recommendation, parse_catalog_query,
@@ -93,6 +94,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         if path=='/readyz':return response_json({'status':'ready','release':service.meta()['release']})
         if path=='/api/v1/meta':
             meta=service.meta(); meta['features']['needs_extraction']=needs_service.available
+            meta['needs_semantic_structure']=semantic_structure()
             return response_json(meta)
         if path=='/api/v1/needs':
             return response_json(needs_service.extract(parse_needs_text(body),service.meta()['brands']))

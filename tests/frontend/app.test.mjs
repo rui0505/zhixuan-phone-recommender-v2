@@ -136,6 +136,33 @@ test('offline extraction preview discloses fixture instead of claiming paid prov
   assert.doesNotMatch(h.ids.get('needs-service-notice').textContent,/发送给 DeepSeek/);
 });
 
+test('AISM structure is inspectable without per-issue confirmations or preference propagation',async()=>{
+  const h=await harness(),walk=node=>[node,...node.children.flatMap(walk)];
+  h.ids.get('needs-text').value='最多3000元，游戏最重要';
+  const structure={model_version:'aism-seven-dimensions-v1',model_sha256:'a'.repeat(64),basis_type:'project_scoring_dependencies',empirically_validated:false,
+    nodes:[{id:'weight',label:'重量'},{id:'storage',label:'存储'},{id:'screen',label:'屏幕尺寸'},
+           {id:'photo',label:'拍照'},{id:'game',label:'游戏'},{id:'battery',label:'电池容量'},{id:'chipset',label:'处理器档位'}],
+    relations:[{source:'chipset',target:'game'},{source:'battery',target:'game'}],
+    up_layers:[['weight','storage','screen','photo','game'],['battery','chipset']],
+    down_layers:[['weight','storage','screen','photo','battery','chipset'],['game']]};
+  h.setNeeds({status:'ok',notice:'按AISM结构抽取',extraction:{budget:{reference:null},
+    preferences:[{criterion:'game',level:'非常重要',evidence:'游戏最重要',verdict:'extracted'}],
+    clarifications:[],unsupported_needs:[],semantic_structure:structure},
+    draft:{confirmed:false,needs:{budget:{min:null,max:3000},min_storage:null,brands:{include:[],exclude:[]}},
+      weights:{...weights,honor_of_kings_avg_fps:9},target_screen:6.5}});
+  await h.ids.get('natural-needs').emit('submit');await settle();
+  const panel=h.ids.get('needs-result'),nodes=walk(panel);
+  assert.match(panel.textContent,/处理器档位 → 游戏/);assert.match(panel.textContent,/电池容量 → 游戏/);
+  assert.match(panel.textContent,/UP/);assert.match(panel.textContent,/DOWN/);
+  assert.match(panel.textContent,/尚未|未经/);
+  assert.equal(nodes.filter(n=>n.tagName==='input'&&n.type==='checkbox').length,0);
+  const detail=nodes.find(n=>n.tagName==='details'&&n.textContent.includes('查看维度关系（AISM）'));
+  assert.ok(detail);assert.equal(detail.open,false);
+  await h.generate();const body=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).at(-1).body;
+  assert.equal(body.weights.honor_of_kings_avg_fps,9);assert.equal(body.weights.chipset_tier,2);
+  assert.equal(body.weights.battery_capacity_mah,2);assert.equal(body.needs.budget.max,3000);
+});
+
  test('each real slider submits its mapped weight and any change revokes confirmation',async()=>{
   const h=await harness();
   for(const [key,want] of Object.entries({storage_gb:9,weight_g:9,battery_capacity_mah:9,chipset_tier:9,screen_size_inch:8,dxomark_photo:9,honor_of_kings_avg_fps:9})){

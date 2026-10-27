@@ -42,6 +42,7 @@ from providers.jev import (
     game_name_polarities,
 )
 from schemas import CHOICES, CRITERIA, EXTRACTION_CRITERIA, PERFORMANCE_CRITERIA
+from semantic_aism import semantic_structure
 
 try:
     from providers.llm import PROMPT_VERSION
@@ -423,6 +424,7 @@ def _blank_result(text: str, status: str, error: str | None, started: float) -> 
     return {
         "schema_version": SCHEMA_VERSION,
         "prompt_version": PROMPT_VERSION,
+        "semantic_structure": semantic_structure(),
         "status": status,
         "input_text": text,
         "budget": {"reference": None, "min": None, "max": None, "evidence": ""},

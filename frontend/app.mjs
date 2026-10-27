@@ -1,7 +1,7 @@
 import {createState,setPreferences,applyMeta,beginRequest,acceptResponse,addComparison,removeComparison} from './state.mjs';
 import {fetchJson,fetchDownload} from './api.mjs';
 import {element,button,labels,renderCard,renderDecision,renderComparison,renderDetail,renderPerformance} from './render.mjs';
-import {draftFields} from './needs.mjs';
+import {draftFields,renderAismStructure} from './needs.mjs';
 import {requestFields,withoutCriterion,reviseNeedsText,preferenceMetrics,importanceLevels,importanceWeight,importancePosition} from './preferences.mjs';
 import {uniqueModels,diverseModels,renderHero,renderRail,renderFeatured,renderComparisonBoard,renderData} from './alpine.mjs';
 import {renderReviews,renderReviewError} from './reviews.mjs';
@@ -101,6 +101,7 @@ function addToCompare(id){
 function showNeeds(payload){
   const panel=$('needs-result');panel.replaceChildren(element('p',payload.notice));
   const extracted=payload.extraction;if(!extracted)return;
+  const structureView=renderAismStructure(extracted.semantic_structure);if(structureView)panel.append(structureView);
   if(payload.draft?.budget_inferred)panel.append(element('p',`预算为程序推断：${payload.draft.needs.budget.min}—${payload.draft.needs.budget.max} 元（参考锚点 ${extracted.budget.reference} 元）。可在硬性条件中修改，确认后才用于筛选。`));
   else if(extracted.budget.reference!==null)panel.append(element('p',`预算参考锚点：${extracted.budget.reference} 元；实际筛选范围以你确认的硬性条件为准。`));
   const list=element('ul');const titles={weight:'重量',storage:'存储',screen:'屏幕尺寸',game:'游戏',photo:'拍照',battery:'电池容量',chipset:'处理器档位'};
