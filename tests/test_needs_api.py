@@ -108,7 +108,14 @@ class NeedsApiTests(unittest.TestCase):
                            ('2000元左右，最多2200元左右，轻一点',2200)]:
             result=self.service(classifier=FixedCapClassifier(value)).extract(text,['Apple'])
             self.assertNotEqual(result['draft']['needs']['budget']['max'],value)
-            self.assertTrue(result['draft']['budget_inferred'])
+            if '二千五百' in text:
+                # Independent rules now recover the complete explicit Chinese amount.
+                self.assertEqual(result['draft']['needs']['budget']['max'],2500)
+                self.assertFalse(result['draft']['budget_inferred'])
+            else:
+                # Two contradictory vague anchors require review, not a guessed range.
+                self.assertIsNone(result['draft']['needs']['budget']['max'])
+                self.assertFalse(result['draft']['budget_inferred'])
         from needs_extraction import budget_bound_has_source
         self.assertFalse(budget_bound_has_source('2000元左右，至少256 GB',256,'min'))
 

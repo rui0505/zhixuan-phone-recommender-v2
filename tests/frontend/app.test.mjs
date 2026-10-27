@@ -29,7 +29,7 @@ const weights={weight_g:2,storage_gb:3,screen_size_inch:1,battery_capacity_mah:2
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 const discoveryRows=Array.from({length:6},(_,index)=>({sku_id:`S${index}`,model_id:`M${index}`,display_name:`真实目录机型${index}`,brand:'测试品牌',ram_raw:'12GB',storage_raw:'256GB',storage_gb:256,price_cny:2000+index*100,condition:'new',observed_at:'2026-01-01',image:{url:`/media/model_${index}.webp`,alt:`真实目录机型${index}展示图`}}));
 let ordinal=0;
-async function harness({offline=false}={}){
+async function harness({offline=false,needsHttpFailure=false}={}){
   const html=await readFile(new URL('../../frontend/index.html',import.meta.url),'utf8'),ids=new Map(),groups={};
   for(const match of html.matchAll(/<(\w+)\b[^>]*>/g)){
     const tag=match[0],node=new Node(match[1]),id=tag.match(/\bid="([^"]+)"/)?.[1];
@@ -50,7 +50,10 @@ async function harness({offline=false}={}){
     calls.push({path,body:options.body?JSON.parse(options.body):undefined});
     let payload=meta;
     if(path.startsWith('/api/v1/recommend')){const body=JSON.parse(options.body);payload={release,status:'ready',method:body.method,evaluation_mode:body.evaluation_mode,reference_rule_version:body.expected_reference_rule_version,algorithm_version:body.expected_algorithm_version,score_label:body.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度',ranked:[],ranked_total:3,page:1,page_size:12,effective_weights:body.weights,unscored:[],backups:[],performance_capabilities:{}};}
-    if(path==='/api/v1/needs')payload=needsPayload;
+    if(path==='/api/v1/needs'){
+      if(needsHttpFailure)return {ok:false,status:429,json:async()=>({error:{code:'needs_daily_limit',message:'今日次数已用完'}})};
+      payload=needsPayload;
+    }
     if(path.startsWith('/api/v1/catalog'))payload={release,items:discoveryRows,total:6,page:1,page_size:24};
     if(path.startsWith('/api/v1/skus/')){const row=discoveryRows.find(row=>path.endsWith(row.sku_id))??discoveryRows[0];payload={release,model:{display_name:row.display_name,brand:row.brand},sku:row,specifications:[],prices:[{amount:row.price_cny,condition:row.condition,observed_at:row.observed_at}],benchmark_runs:[],observations:[],sources:[]};}
     if(path.includes('/reviews?')){const q=new URL(path,'http://localhost').searchParams,grade=q.get('grade'),page=Number(q.get('page'));payload={release,model:{display_name:discoveryRows[0].display_name},available:true,sample_total:21,total:grade==='bad'?1:21,grade,page,page_size:20,grade_counts:{good:20,bad:1},items:[{username:'淘**友',grade_label:grade==='bad'?'差评':'好评',content:'采集的买家原文',purchase_spec:'256GB'}]};}
@@ -134,6 +137,61 @@ test('offline extraction preview discloses fixture instead of claiming paid prov
   assert.match(h.ids.get('needs-service-notice').textContent,/离线测试/);
   assert.match(h.ids.get('needs-status').textContent,/离线测试/);
   assert.doesNotMatch(h.ids.get('needs-service-notice').textContent,/发送给 DeepSeek/);
+});
+
+function reviewPayload(){
+  return {status:'degraded',notice:'发现2项解析异常',extraction:{budget:{reference:null},preferences:[],
+    clarifications:[],unsupported_needs:[],verification:{version:'needs-rules-v1',status:'review_required',issues:[
+      {id:'budget',field:'budget.max',model_value:9000,rule_value:3000,evidence:'最多3000元',message:'预算与原文不一致'},
+      {id:'photo',field:'preferences.photo',model_value:'重要',rule_value:'不在意',evidence:'拍照不重要',message:'偏好与原文不一致'}]}},
+    draft:{confirmed:false,needs:{budget:{min:null,max:3000},min_storage:null,brands:{include:[],exclude:[]}},
+           weights:{...weights,dxomark_photo:0},target_screen:6.5}};
+}
+const descendants=node=>[node,...node.children.flatMap(descendants)];
+
+test('real exception checkboxes block recommendation until all are reviewed and overall confirmed',async()=>{
+  const h=await harness();h.ids.get('needs-text').value='最多3000元，拍照不重要';h.setNeeds(reviewPayload());
+  await h.ids.get('natural-needs').emit('submit');await settle();
+  assert.match(h.ids.get('needs-result').textContent,/9000/);assert.match(h.ids.get('needs-result').textContent,/3000/);
+  const boxes=descendants(h.ids.get('needs-result')).filter(n=>n.tagName==='input'&&n.type==='checkbox');
+  assert.equal(boxes.length,2);
+  await h.generate();assert.equal(h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).length,0);
+  boxes[0].checked=true;await boxes[0].emit('change');await h.generate();
+  assert.equal(h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).length,0);
+  boxes[1].checked=true;await boxes[1].emit('change');
+  assert.equal(h.ids.get('confirmed').checked,false);
+  await h.generate();const body=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).at(-1).body;
+  assert.equal(body.needs.budget.max,3000);assert.equal(body.weights.dxomark_photo,0);
+});
+
+test('editing manual controls revokes exception acknowledgements and existing recommendation',async()=>{
+  const h=await harness();h.ids.get('needs-text').value='最多3000元';h.setNeeds(reviewPayload());
+  await h.ids.get('natural-needs').emit('submit');await settle();
+  const boxes=descendants(h.ids.get('needs-result')).filter(n=>n.tagName==='input'&&n.type==='checkbox');
+  assert.equal(boxes.length,2);
+  for(const box of boxes){box.checked=true;await box.emit('change');}
+  await h.generate();const before=h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).length;
+  assert.equal(before,1);await h.input('max-price',3500);
+  assert.ok(boxes.every(box=>!box.checked));await h.generate();
+  assert.equal(h.calls.filter(c=>c.path.startsWith('/api/v1/recommend')).length,before);
+});
+
+test('failed new extraction revokes old ranking confirmation while preserving manual fields',async()=>{
+  const h=await harness();await h.generate();assert.equal(h.ids.get('downloads').hidden,false);
+  const old=h.ids.get('max-price').value;h.ids.get('needs-text').value='新需求';
+  h.setNeeds({status:'failed',notice:'改用手动填写',draft:null,extraction:{budget:{reference:null},preferences:[],clarifications:[],unsupported_needs:[]}});
+  await h.ids.get('natural-needs').emit('submit');await settle();
+  assert.equal(h.ids.get('confirmed').checked,false);assert.equal(h.ids.get('downloads').hidden,true);
+  assert.equal(h.ids.get('max-price').value,old);
+});
+
+test('HTTP failure on re-extraction revokes previous ranking, export and confirmation',async()=>{
+  const h=await harness({needsHttpFailure:true});await h.generate();
+  assert.equal(h.ids.get('confirmed').checked,true);assert.equal(h.ids.get('downloads').hidden,false);
+  h.ids.get('needs-text').value='同一段需求重新理解';
+  await h.ids.get('natural-needs').emit('submit');await settle();
+  assert.equal(h.ids.get('confirmed').checked,false);assert.equal(h.ids.get('generate').disabled,true);
+  assert.equal(h.ids.get('downloads').hidden,true);assert.match(h.ids.get('needs-status').textContent,/今日次数已用完/);
 });
 
  test('each real slider submits its mapped weight and any change revokes confirmation',async()=>{

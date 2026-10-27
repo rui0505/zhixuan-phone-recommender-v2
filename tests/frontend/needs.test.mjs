@@ -28,3 +28,12 @@ test('late natural-language extraction cannot overwrite changed manual preferenc
   assert.equal(acceptResponse(state,'needs',token,{status:'ok'}),false);
   assert.equal(state.responses.needs,undefined);
 });
+
+test('review gate requires each distinct issue to be acknowledged',()=>{
+  assert.equal(typeof needs.pendingReview,'function');
+  const report={issues:[{id:'budget',field:'budget.max'},{id:'photo',field:'preferences.photo'}]};
+  assert.equal(needs.pendingReview(report,new Set(['unrelated'])).length,2);
+  assert.deepEqual(needs.pendingReview(report,new Set(['budget'])),[{id:'photo',field:'preferences.photo'}]);
+  assert.equal(needs.pendingReview(report,new Set(['budget','photo'])).length,0);
+  assert.deepEqual(needs.pendingReview(undefined,new Set()),[]);
+});
