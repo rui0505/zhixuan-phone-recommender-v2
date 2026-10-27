@@ -29,7 +29,7 @@ class FrontendTests(unittest.TestCase):
             self.assertIn(name,controls);self.assertIn(name,labels)
     def test_navigation_and_core_containers_are_served(self):
         nodes=self.document.nodes
-        self.assertEqual({a['data-view'] for tag,a in nodes if tag=='button' and 'data-view' in a},{'recommend','catalog','compare'})
+        self.assertEqual({a['data-view'] for tag,a in nodes if tag=='button' and 'data-view' in a},{'recommend','catalog','compare','data'})
         ids={a.get('id') for tag,a in nodes}
         self.assertTrue({'detail-dialog','compare-view','downloads','results','catalog-results'}.issubset(ids))
     def test_dependencies_are_local_and_reachable(self):

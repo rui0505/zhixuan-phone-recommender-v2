@@ -3,9 +3,12 @@ import {fetchJson,fetchDownload} from './api.mjs';
 import {element,button,labels,renderCard,renderDecision,renderComparison,renderDetail,renderPerformance} from './render.mjs';
 import {draftFields} from './needs.mjs';
 import {requestFields,withoutCriterion,reviseNeedsText,preferenceMetrics,importanceLevels,importanceWeight,importancePosition} from './preferences.mjs';
+import {uniqueModels,diverseModels,renderHero,renderRail,renderFeatured,renderComparisonBoard,renderData} from './alpine.mjs';
 
 const $=id=>document.getElementById(id),state=createState(),controllers=new Map();
 let view='recommend',metaSequence=0,needsPendingBudget=false,catalogCategory='all';
+let discovery=[],discoverySequence=0,featuredIndex=0,featuredSequence=0;
+const featuredDetails=new Map();
 const metrics=preferenceMetrics;
 function notify(message,error=false){const node=$('message');node.textContent=message;node.hidden=!message;node.setAttribute('role',error?'alert':'status');if(error)node.focus();}
 function abortRequests(){for(const controller of controllers.values())controller.abort();controllers.clear();}
@@ -35,18 +38,17 @@ function preferencesSummary(){
   $('extract-needs').disabled=!state.meta?.features.needs_extraction||state.loading.needs||!$('needs-text').value.trim();
 }
 function clearResults(){
-  $('results').replaceChildren();$('recommend-pagination').replaceChildren();$('downloads').hidden=true;
+  $('results').replaceChildren();$('more-results').replaceChildren();$('more-recommendations').hidden=true;$('decision-details').hidden=true;$('recommend-pagination').replaceChildren();$('downloads').hidden=true;
   $('decision-summary').replaceChildren(renderDecision(state));$('confirmed').checked=false;
   $('catalog-results').replaceChildren();$('catalog-pagination').replaceChildren();$('catalog-status').textContent='筛选已变更，请点击“应用上方筛选”。';
-  if($('detail-dialog').open)$('detail-dialog').close();preferencesSummary();
+  $('catalog-featured').replaceChildren();if($('detail-dialog').open)$('detail-dialog').close();preferencesSummary();renderDiscovery();renderSupportingPhones();
 }
 function changed(){abortRequests();setPreferences(state,fields());clearResults();notify('条件已变更，旧推荐已清除，请重新检查并确认。');}
 function compareCount(){$('compare-count').textContent=state.comparisonIds.length;}
 function setView(next){
-  view=next;for(const name of ['recommend','catalog','compare'])$(`${name}-view`).hidden=name!==view;
-  $('recommend-results-view').hidden=view!=='recommend';
-  $('needs-panel').hidden=view!=='recommend';$('steps').hidden=view!=='recommend';
-  $('preferences-panel').hidden=view==='compare';
+  notify('');$('top')?.scrollIntoView?.({block:'start'});
+  view=next;for(const name of ['recommend','catalog','compare','data'])$(`${name}-view`).hidden=name!==view;
+  document.body.dataset.currentView=view;$('recommend-workspace').hidden=view!=='recommend';
   for(const node of document.querySelectorAll('[data-view]'))node.setAttribute('aria-pressed',String(node.dataset.view===view));
   if(view==='catalog')loadCatalog(1);if(view==='compare')loadComparison();
 }
@@ -66,6 +68,10 @@ async function refreshMeta(initial=false){
     const acceptance=meta.acceptance;
     $('release-status').textContent=`${meta.counts.phone_models} 机型 · ${meta.counts.skus} 配置 · 机器 ${acceptance.machine_acceptance||'未知'} / 总体 ${acceptance.overall_acceptance||'未知'} · WPS ${acceptance.wps_review||'未知'}`;
     $('release-info').replaceChildren(element('p',`数据 ${meta.release.dataset_version} / 规则 ${meta.release.feature_rule_version} / 规格参考 ${meta.reference_rule_version??'版本未提供'}`),element('p',`人工抽查仍待完成；当前发布未提供人工全通过证明。已关联 ${meta.features.image_models??0} 个机型展示图；${meta.features.offline_fixture?'需求理解为本地离线测试夹具':`DeepSeek ${meta.features.needs_extraction?'需求理解已配置':meta.features.llm?'已配置（仅解释）':'未启用'}`}；VIKOR 未实现。`),element('p','默认七项规格参考分为固定规则估算，不是实测体验分。可选实测模式要求照片子分协议可比，游戏仅限同条件王者荣耀平均帧率；1% Low 缺失，不推算完整游戏总分。'),element('p',`数据库指纹 ${meta.release.snapshot_sha256}`,'small'));
+    const catalogCount=`${meta.counts.phone_models} 个机型 · ${meta.counts.skus} 个配置`;
+    $('home-catalog-count').textContent=catalogCount;$('catalog-count').textContent=catalogCount;
+    $('data-content').replaceChildren(renderData(meta));
+    if(initial||changedRelease){discovery=[];featuredDetails.clear();loadDiscovery();}
     if(!initial)notify(changedRelease?'数据或算法版本已变化，请重新确认并生成推荐。':'数据和算法状态已刷新，版本未变化。');
   }catch(error){if(ordinal!==metaSequence)return;abortRequests();state.release=null;setPreferences(state,fields());clearResults();$('release-status').textContent='数据服务暂不可用';notify(error.message,true);}
 }
@@ -88,7 +94,7 @@ async function request(channel,path,options,onSuccess){
 }
 function addToCompare(id){
   if(!addComparison(state,id)){notify(state.comparisonIds.includes(id)?'该配置已在对比中。':'最多对比四个配置，请先移除一个。');return;}
-  controllers.get('compare')?.abort();compareCount();notify(`已加入对比（${state.comparisonIds.length}/4）。`);renderCurrentCards();
+  controllers.get('compare')?.abort();compareCount();notify(`已加入对比（${state.comparisonIds.length}/4）。`);renderCurrentCards();if(view==='compare')loadComparison();
 }
 function showNeeds(payload){
   const panel=$('needs-result');panel.replaceChildren(element('p',payload.notice));
@@ -117,7 +123,7 @@ async function understandNeeds(event){
       needsPendingBudget=payload.extraction.clarifications.some(c=>c.field==='budget.max');$('budget-unlimited').checked=false;$('budget-unlimited-line').hidden=!needsPendingBudget;
       setPreferences(state,fields());clearResults();notify('已填入待确认草稿，请检查条件与权重；尚未生成推荐。');
     }
-    showNeeds(payload);$('preferences-panel').open=true;
+    showNeeds(payload);$('preferences-panel').open=true;$('needs-notices').open=true;
     $('needs-status').textContent=draft?'需求已理解，请检查下方表单并确认。':'未取得可靠草稿，请使用下方手动填写。';
   }catch(error){
     if(error.name==='AbortError'||!acceptResponse(state,'needs',token,{error}))return;
@@ -137,8 +143,44 @@ function explain(id,container){
   });
 }
 function renderCurrentCards(){
-  if(state.results?.ranked)$('results').replaceChildren(...state.results.ranked.map(row=>renderCard(row,cardContext(row.sku_id,state.results.explanations,state.results.recommendation_reasons))));
-  if(state.responses.catalog)$('catalog-results').replaceChildren(...state.responses.catalog.items.map(row=>renderCard(row,{...cardContext(row.sku_id),category:state.responses.catalog.category})));
+  if(state.results?.ranked){
+    const rows=state.results.ranked,render=row=>renderCard(row,cardContext(row.sku_id,state.results.explanations,state.results.recommendation_reasons));
+    $('results-title').textContent='为你推荐';$('results-subtitle').textContent='基于你已确认的条件，说明值得考虑的理由与取舍。';
+    const primary=uniqueModels(rows).slice(0,3),selected=new Set(primary.map(row=>row.sku_id)),remaining=rows.filter(row=>!selected.has(row.sku_id));$('results').replaceChildren(...primary.map(render));$('more-results').replaceChildren(...remaining.map(render));$('more-recommendations').hidden=!remaining.length;$('decision-details').hidden=false;
+  }else renderDiscovery();
+  if(state.responses.catalog)renderCatalogCards();
+  renderSupportingPhones();
+}
+function renderDiscovery(){
+  if(state.results)return;
+  $('results-title').textContent='先看看这些机型';$('results-subtitle').textContent='来自真实手机库；确认你的偏好后，再生成专属推荐。';
+  $('results').replaceChildren(...uniqueModels(discovery).slice(0,3).map(row=>renderCard(row,{...cardContext(row.sku_id),discovery:true})));
+  if(!discovery.length)$('results').append(element('p',state.release?'正在读取真实机型…':'数据连接后展示真实机型。','empty'));
+}
+function renderSupportingPhones(){
+  const rows=state.results?.ranked?.length?state.results.ranked:discovery;
+  $('tradeoff-items').replaceChildren(...renderRail(rows,{onDetails:loadDetail}));
+  $('compare-suggestions').replaceChildren(...renderRail(discovery.filter(row=>!state.comparisonIds.includes(row.sku_id)),{onCompare:addToCompare,selected:state.comparisonIds}));
+}
+async function loadDiscovery(){
+  const ordinal=++discoverySequence,release=JSON.stringify(state.release);
+  try{const payload=await fetchJson('/api/v1/catalog?mode=new&page=1&page_size=100');
+    if(ordinal!==discoverySequence||release!==JSON.stringify(state.release)||!Array.isArray(payload.items))return;
+    if(payload.release&&JSON.stringify(payload.release)!==release)return;
+    discovery=diverseModels(payload.items);$('hero-phones').replaceChildren(renderHero(discovery));renderDiscovery();renderSupportingPhones();
+  }catch(error){if(ordinal!==discoverySequence)return;$('results').replaceChildren(element('p',`手机库暂未载入：${error.message}。可刷新数据状态后重试。`,'empty'));}
+}
+function catalogRows(){const rows=[...(state.responses.catalog?.items??[])],sort=$('catalog-sort').value;if(sort==='price-asc')rows.sort((a,b)=>(a.price_cny??Infinity)-(b.price_cny??Infinity));if(sort==='price-desc')rows.sort((a,b)=>(b.price_cny??-Infinity)-(a.price_cny??-Infinity));return rows;}
+function renderCatalogCards(){
+  const rows=catalogRows();if(!rows.length){$('catalog-featured').replaceChildren();return;}
+  featuredIndex=Math.min(featuredIndex,rows.length-1);const feature=rows[featuredIndex];
+  const secondary=uniqueModels(rows.filter(row=>row.model_id!==feature.model_id)),shown=secondary.slice(0,4),seen=new Set([feature.sku_id,...shown.map(row=>row.sku_id)]);
+  const context=row=>({...cardContext(row.sku_id),category:state.responses.catalog.category});
+  $('catalog-results').replaceChildren(...shown.map(row=>renderCard(row,context(row))));
+  const remaining=rows.filter(row=>!seen.has(row.sku_id));if(remaining.length){const more=element('details',undefined,'catalog-more');more.append(element('summary',`查看本页其他 ${remaining.length} 个准确配置`));const cards=element('div',undefined,'cards');cards.append(...remaining.map(row=>renderCard(row,context(row))));more.append(cards);$('catalog-results').append(more);}
+  const showFeature=()=>{const current=catalogRows()[featuredIndex];if(!current)return;$('catalog-featured').replaceChildren(renderFeatured(current,featuredDetails.get(current.sku_id),{...cardContext(current.sku_id),onPrevious:()=>{featuredIndex=(featuredIndex-1+rows.length)%rows.length;renderCatalogCards();},onNext:()=>{featuredIndex=(featuredIndex+1)%rows.length;renderCatalogCards();}}));};
+  showFeature();
+  if(!featuredDetails.has(feature.sku_id)){const ordinal=++featuredSequence;fetchJson(`/api/v1/skus/${encodeURIComponent(feature.sku_id)}`).then(item=>{if(ordinal!==featuredSequence||!state.release||JSON.stringify(item.release)!==JSON.stringify(state.release))return;featuredDetails.set(feature.sku_id,item);if(catalogRows()[featuredIndex]?.sku_id===feature.sku_id)showFeature();}).catch(()=>{});}
 }
 function pagination(id,page,total,size,onPage){
   const pages=Math.max(1,Math.ceil(total/size));const previous=button('上一页',()=>onPage(page-1)),next=button('下一页',()=>onPage(page+1));previous.disabled=page<=1;next.disabled=page>=pages;
@@ -165,11 +207,12 @@ function categoryControls(payload){
   if(payload?.category_notice)$('category-help').textContent=payload.category_notice;
 }
 function loadCatalog(page=1){
-  if(!state.release)return;const f=fields(),q=new URLSearchParams({mode:f.mode,page:String(page),page_size:'12',q:$('search').value});
+  if(!state.release)return;const f=fields(),q=new URLSearchParams({mode:f.mode,page:String(page),page_size:'24',q:$('search').value});
   if(catalogCategory!=='all'){q.set('category',catalogCategory);q.set('category_status',$('category-status').value);}
   for(const [key,value] of [['min_price',f.needs.budget.min],['max_price',f.needs.budget.max],['min_storage',f.needs.min_storage]])if(value!==null)q.set(key,String(value));
   for(const key of ['include','exclude'])for(const brand of f.needs.brands[key])q.append(key,brand);
-  categoryControls();$('catalog-status').textContent='正在读取目录…';$('catalog-results').replaceChildren();$('catalog-pagination').replaceChildren();
+  featuredIndex=0;featuredSequence++;categoryControls();$('catalog-status').textContent='正在读取目录…';$('catalog-results').replaceChildren();$('catalog-featured').replaceChildren();$('catalog-pagination').replaceChildren();
+  $('catalog-applied-filters').textContent=`当前筛选：${$('preferences-summary').textContent}${f.needs.brands.exclude.length?` · 排除 ${f.needs.brands.exclude.join('、')}`:''}。下方为准确配置；分类计数按机型去重。`;
   request('catalog',`/api/v1/catalog?${q}`,{},payload=>{
     $('catalog-status').textContent=`共 ${payload.total} 个准确配置 · 价格为记录快照`;
     categoryControls(payload);renderCurrentCards();
@@ -187,12 +230,11 @@ function loadDetail(id){
   request('detail',`/api/v1/skus/${encodeURIComponent(id)}`,{},payload=>$('detail-content').replaceChildren(renderDetail(payload)));
 }
 function loadComparison(){
-  if(!state.comparisonIds.length){$('compare-content').replaceChildren(renderComparison([]));return;}
+  const context={onDetails:loadDetail,onAdd:()=>setView('catalog'),onRemove:id=>{removeComparison(state,id);controllers.get('compare')?.abort();compareCount();renderCurrentCards();loadComparison();}};
+  if(!state.comparisonIds.length){$('compare-content').replaceChildren(renderComparisonBoard([],context));renderSupportingPhones();return;}
   const ids=[...state.comparisonIds];$('compare-content').replaceChildren(element('p','正在按准确配置关联对比…'));
   request('compare','/api/v1/compare',{method:'POST',body:{sku_ids:ids}},payload=>{
-    const controls=element('div',undefined,'actions');for(const item of payload.items)controls.append(button(`移除 ${item.model.display_name} · ${item.sku.storage_raw}`,()=>{removeComparison(state,item.sku.sku_id);controllers.get('compare')?.abort();compareCount();renderCurrentCards();loadComparison();}));
-    $('compare-content').replaceChildren(controls,renderComparison(payload.items));
-    for(const item of payload.items){const sourceButton=button(`查看来源 · ${item.sku.sku_id}`,()=>loadDetail(item.sku.sku_id));$('compare-content').append(sourceButton);}
+    $('compare-content').replaceChildren(renderComparisonBoard(payload.items,context));renderSupportingPhones();
   });
 }
 async function download(format){
@@ -211,15 +253,19 @@ $('preferences').addEventListener('input',event=>{
   if(event.target.id==='budget-unlimited'&&event.target.checked)$('max-price').value='';
   event.target.id==='confirmed'&&event.target.checked?preferencesSummary():changed();
 });
-$('preferences').addEventListener('submit',event=>{event.preventDefault();if(!$('confirmed').checked||!state.release||$('generate').disabled)return;state.confirmedRequest={...structuredClone(fields()),confirmed:true,expected_release:structuredClone(state.release)};for(const item of $('needs-result').querySelectorAll('[data-clarification]'))item.textContent=`已检查确认：${item.textContent.replace(/^待确认：/,'')}`;if($('needs-result').childElementCount)$('needs-status').textContent='表单已确认，推荐将按下方结果显示。';$('preferences-panel').open=false;setView('recommend');generate();});
+$('preferences').addEventListener('submit',event=>{event.preventDefault();if(!$('confirmed').checked||!state.release||$('generate').disabled)return;state.confirmedRequest={...structuredClone(fields()),confirmed:true,expected_release:structuredClone(state.release)};for(const item of $('needs-result').querySelectorAll('[data-clarification]'))item.textContent=`已检查确认：${item.textContent.replace(/^待确认：/,'')}`;if($('needs-result').childElementCount)$('needs-status').textContent='表单已确认，推荐将按下方结果显示。';$('preferences-panel').open=true;$('more-preferences').open=false;$('advanced-settings').open=false;$('needs-notices').open=false;setView('recommend');generate();});
 $('natural-needs').addEventListener('submit',understandNeeds);
 $('needs-text').addEventListener('input',()=>{abortRequests();reviseNeedsText(state,fields());clearResults();$('needs-result').replaceChildren();$('needs-status').textContent='需求文字已改变，请重新理解并确认；也可检查表单后手动确认。';});
 for(const node of document.querySelectorAll('[data-not-count]'))node.addEventListener('click',()=>{
   const reset=withoutCriterion(fields(),node.dataset.notCount);$(node.dataset.notCount).value=0;changed();
   notify('本次已暂不计入该项；原始需求和硬条件已保留，请重新检查并确认。');
 });
-$('manual-needs').addEventListener('click',()=>{$('preferences-panel').open=true;$('mode').focus();});
-$('edit-preferences').addEventListener('click',()=>{$('preferences-panel').open=true;$('mode').focus();});
+$('manual-needs').addEventListener('click',()=>{$('preferences-panel').open=true;$('max-price').focus();});
+$('edit-preferences').addEventListener('click',()=>{$('preferences-panel').open=true;$('max-price').focus();});
+$('global-search').addEventListener('submit',event=>{event.preventDefault();$('search').value=$('global-query').value;setView('catalog');});
+$('catalog-sort').addEventListener('change',()=>{featuredIndex=0;renderCatalogCards();});
+$('catalog-edit-filters').addEventListener('click',()=>{setView('recommend');$('preferences-panel').open=true;$('advanced-settings').open=true;$('max-price').focus();});
+$('clear-catalog-filters').addEventListener('click',()=>{for(const id of ['min-price','max-price','min-storage'])$(id).value='';for(const id of ['include-brands','exclude-brands'])for(const option of $(id).options)option.selected=false;$('search').value='';$('global-query').value='';catalogCategory='all';changed();loadCatalog(1);});
 $('refresh-meta').addEventListener('click',()=>refreshMeta());$('catalog-search').addEventListener('submit',event=>{event.preventDefault();loadCatalog();});$('apply-catalog').addEventListener('click',()=>loadCatalog());
 for(const node of document.querySelectorAll('[data-category]'))node.addEventListener('click',()=>{catalogCategory=node.dataset.category;loadCatalog(1);});
 $('category-status').addEventListener('change',()=>loadCatalog(1));

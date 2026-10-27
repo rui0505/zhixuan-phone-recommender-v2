@@ -15,7 +15,7 @@ export function renderSources(sources){
   }if(!list.childNodes.length)list.append(element('li','暂无可公开链接；不代表该指标已实测。'));return list;
 }
 export function renderCard(record,context={}){
-  const card=element('article',undefined,'card');card.dataset.skuId=record.sku_id;
+  const card=element('article',undefined,`card${context.discovery?' discovery-card':''}`);card.dataset.skuId=record.sku_id;
   const panel=renderImage(record);
   const body=element('div',undefined,'card-body');body.append(element('h3',record.display_name),element('p',`${record.variant_name||'版本未记载'} · ${record.ram_raw||'内存未记载'} / ${record.storage_raw||'存储未记载'}`,'small'));
   body.append(element('p',record.price_cny==null?'价格未记载':`¥ ${record.price_cny}`,'price'));
@@ -24,14 +24,16 @@ export function renderCard(record,context={}){
   if(categories.length){const tags=element('div',undefined,'category-tags');tags.setAttribute('aria-label','有评测资料的场景，不代表性能认证');for(const c of categories)tags.append(element('span',`${c.label} · 有资料`,'category-tag'));body.append(tags);}
   const pending=(record.category_assessments??[]).find(c=>c.id===context.category&&c.status==='pending_review');
   if(pending)body.append(element('p',`${pending.label} · 待评估：${pending.reason}`,'category-pending'));
-  if(Array.isArray(record.reference_scores))body.append(renderReferenceScores(record.reference_scores,context.referenceRuleVersion));
   if(context.reason)body.append(renderReason(context.reason));
-  if(context.explanation||record.score!=null){
+  if(record.score!=null){const match=element('div',undefined,'match-score');match.append(element('span',context.scoreLabel??(context.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度')));const bar=element('progress');bar.max=1;bar.value=Number(record.score);bar.setAttribute('aria-label','当前候选集内相对排序分');match.append(bar,element('strong',Number(record.score).toFixed(4)));body.append(match);}
+  if(context.explanation||record.score!=null||context.reason||Array.isArray(record.reference_scores)){
     const detail=element('details',undefined,'technical-evidence');detail.append(element('summary','查看数据与计算依据'));
     detail.append(element('p',`配置编号：${record.sku_id}`,'small'));
     if(record.score!=null){detail.append(element('div',`${context.scoreLabel??(context.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度')} ${Number(record.score).toFixed(4)}`,'score'));detail.append(element('p','综合排序分只表示当前候选集的相对位置，不是百分制性能分。','small'));}
     if(context.explanation)detail.append(element('p',context.explanation,'explanation'));
     if(context.reason?.fact_ids?.length)detail.append(element('p',`上述理由引用：${context.reason.fact_ids.join('、')}`,'small'));
+    if(Array.isArray(record.reference_scores))detail.append(renderReferenceScores(record.reference_scores,context.referenceRuleVersion));
+    for(const [key,title] of [['matches','符合偏好之处'],['tradeoffs','需要权衡'],['limitations','资料限制']])if(context.reason?.[key]?.length){detail.append(element('h4',title));for(const text of context.reason[key])detail.append(element('p',text,'small'));}
     if(context.onExplain){const ai=button('DeepSeek 辅助核查',()=>context.onExplain(record.sku_id,detail));ai.disabled=!context.llmEnabled;detail.append(ai,element('p',context.llmEnabled?'仅向服务方发送本配置推荐证据；不改变分数与排名。':'自然语言理由由程序依据数据生成，不需要大模型调用。','small'));}body.append(detail);
   }
   const actions=element('div',undefined,'card-actions');actions.append(button('详情与来源',()=>context.onDetails?.(record.sku_id)),button(context.selected?'已加入对比':'加入对比',()=>context.onCompare?.(record.sku_id)));body.append(actions);card.append(panel,body);return card;
@@ -57,13 +59,10 @@ function renderReferenceScores(scores,version){
 }
 function renderReason(reason){
   const section=element('section',undefined,'recommendation-reason');section.setAttribute('aria-label','为什么适合你');
-  section.append(element('h4','为什么适合你'),element('p',reason.summary));
-  if(reason.matches?.length){const list=element('ul',undefined,'reason-matches');for(const text of reason.matches)list.append(element('li',text));section.append(list);}
-  if(reason.tradeoffs?.length){section.append(element('h4','你需要权衡'));for(const text of reason.tradeoffs)section.append(element('p',text,'reason-tradeoff'));}
-  for(const text of reason.limitations??[])section.append(element('p',text,'reason-limitation'));
+  section.append(element('p',reason.summary));
   return section;
 }
-function renderImage(record){
+export function renderImage(record){
   const panel=element('div',undefined,'brand-panel');
   const placeholder=()=>panel.replaceChildren(element('strong',record.brand||'手机配置'),element('span','该机型图片暂不可用'));
   const info=record.image;

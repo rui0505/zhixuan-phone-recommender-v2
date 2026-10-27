@@ -38,7 +38,10 @@ def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
             'name':row.get('display_name',row.get('产品名称')),'variant_name':row.get('variant_name'),
             'config':str(row.get('ram_raw') or '缺失')+' / '+str(row.get('storage_raw') or '缺失'),
             'score':row['score'],'price_id':row.get('price_id'),'condition':row.get('condition'),
-            'observed_at':row.get('observed_at'),'is_estimated':row.get('is_estimated')})
+            'observed_at':row.get('observed_at'),'is_estimated':row.get('is_estimated'),
+            # Explanatory context only: these fields never enter the criterion matrix.
+            'price_cny':original.get('price_cny'),'storage_gb':original.get('storage_gb'),
+            'ram_gb':original.get('ram_gb')})
         for j,criterion in enumerate(di['criterion_definitions']):
             key=criterion['metric_key'];ev=di['provenance'][index]['criteria'][j]
             if ev['value']!=di['X'][index][j] or ev['metric_key']!=key:
@@ -48,6 +51,11 @@ def build_evidence(di,result,needs: dict, *, sku_ids=None) -> dict:
                   'value':ev['value'],'sources':ev.get('sources',[]),
                   'dataset_version':result.dataset_version,'feature_rule_version':result.feature_rule_version,
                   'algorithm_version':result.algorithm_version,'weight':di['weights'][key]}
+            if key.startswith('ref_'):
+                # Bind the price snapshot to a citeable fact without adding a price
+                # criterion or replacing the seven derived-reference facts.
+                fact['model_context']={key:models[-1].get(key) for key in
+                    ('price_cny','price_id','condition','observed_at','is_estimated','storage_gb','ram_gb')}
             if criterion['direction']=='target' and fact['value'] is not None:
                 target=result.decision_context['target_screen']
                 fact['transformation']={'rule':'abs(value - target)','target':target,

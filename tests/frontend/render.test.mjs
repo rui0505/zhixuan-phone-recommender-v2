@@ -23,11 +23,12 @@ test('consumer prose is visible and technical explanation is collapsed separatel
   const card=renderCard(row,{reason,explanation:'TECHNICAL_JSON snapshot_sha256=abc'});
   const prose=byClass(card,'recommendation-reason')[0];
   assert.ok(prose,'missing consumer explanation section');
-  assert.match(prose.textContent,/按你确认的预算/);assert.match(prose.textContent,/不是本次最轻/);
+  assert.match(prose.textContent,/按你确认的预算/);assert.doesNotMatch(prose.textContent,/不是本次最轻/);
   assert.doesNotMatch(prose.textContent,/TECHNICAL_JSON|snapshot_sha256|TOPSIS|F1/);
   const technical=walk(card).find(n=>n.tagName==='details'&&n.children.some(c=>c.tagName==='summary'&&c.textContent==='查看数据与计算依据'));
   assert.ok(technical);assert.equal(technical.open,false);assert.match(technical.textContent,/snapshot_sha256/);
   assert.match(technical.textContent,/TOPSIS/);
+  assert.match(technical.textContent,/不是本次最轻/);assert.match(technical.textContent,/没有真实续航测试/);
 });
 
 test('category tags mean evidence availability not certified quality',()=>{

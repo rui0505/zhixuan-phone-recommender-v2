@@ -91,6 +91,14 @@ class CatalogService:
 
     def meta(self):
         release=self.store.get(); repo=release.repo
+        # The catalog records topic kinds, not verified publisher identities.
+        # Never turn empty publishers into invented official/reviewer percentages.
+        kinds={'spec':'规格资料','brightness':'亮度资料','camera':'影像资料','camera_other':'影像资料',
+               'game':'游戏资料','price':'价格资料'}
+        source_counts={}
+        for row in repo.as_records(repo._q('SELECT source_kind,count(*) AS n FROM sources GROUP BY source_kind')):
+            label=kinds.get(row['source_kind'],'其他资料')
+            source_counts[label]=source_counts.get(label,0)+int(row['n'])
         image_count=self.images.count if self.images and self.images.matches(release.key['snapshot_sha256']) else 0
         brands=sorted(set(r['brand'] for r in repo.as_records(repo.list_models()) if r.get('brand')))
         if self._performance_cache is None or self._performance_cache[0]!=release.key:
@@ -103,6 +111,7 @@ class CatalogService:
                               for method,version in ALGORITHM_VERSIONS.items()],
                 'performance_capabilities':deepcopy(self._performance_cache[1]),
                 'reference_rule_version':reference_version(repo),
+                'source_summary':[{'label':label,'count':count} for label,count in source_counts.items()],
                 'brands':brands,'metrics':list(METRICS),'defaults':{'weights':dict(DEFAULT_WEIGHTS),'defaulted_metrics':list(METRICS),'target_screen':6.5,'mode':'new','evaluation_mode':'spec_reference'},
                 'categories':self._category_counts(self._category_index(release)),
                 'acceptance':deepcopy(release.manifest.get('acceptance',{})),

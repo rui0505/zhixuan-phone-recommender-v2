@@ -101,14 +101,106 @@ def _price_match(fact, model, needs):
     return text
 
 
+def _reference_parts(fact):
+    """Short consumer clauses; scores only gate wording, never become claims of use."""
+    key, score = fact['metric_key'], fact['value']
+    raw = fact.get('raw_inputs') or {}
+
+    def number(field):
+        value = raw.get(field)
+        return value if _number(value) and value > 0 else None
+
+    if key == 'ref_storage' and (value := number('storage_gb')) is not None:
+        capacity = _fmt(value) + ' GB'
+        if value >= 512:
+            return capacity + ' 存储空间比较宽裕，照片和应用可以多留一些', None
+        if value >= 256:
+            return capacity + ' 存储给照片和应用留出了不少空间', None
+        return None, capacity + ' 存储空间较紧，照片和应用多的话要留意空间'
+    if key == 'ref_weight' and (value := number('weight_g')) is not None:
+        weight = _fmt(value) + ' 克'
+        if value <= 180:
+            return weight + '的机身比较轻，随身带着负担小一些', None
+        if value >= 210:
+            return None, '机身有 ' + weight + '，分量偏重，建议先试试握持感'
+        return '机身重 ' + weight + '，是否合手可以按自己的习惯试拿', None
+    if key == 'ref_battery' and (value := number('battery_capacity_mah')) is not None:
+        capacity = _fmt(value) + ' mAh'
+        return (capacity + ' 标称电池容量比较充裕' if value >= 5500 else
+                '电池标称容量为 ' + capacity), None
+    if key == 'ref_screen' and (value := number('screen_size_inch')) is not None:
+        target = number('target_screen')
+        if target is not None:
+            screen = _fmt(value) + ' 英寸屏幕'
+            if abs(value - target) <= .2 + 1e-9:
+                return screen + '和你想要的 ' + _fmt(target) + ' 英寸比较接近', None
+            return None, screen + '与你想要的 ' + _fmt(target) + ' 英寸有距离，建议先确认大小'
+    if key == 'ref_game':
+        if score >= 75:
+            return '如果也会玩游戏，这款可以放进备选里，具体表现还要看整机实测', None
+        return None, '游戏表现还要看整机实测，建议先了解常玩游戏的测试再决定'
+    if key == 'ref_chipset':
+        return '处理器配置可以结合你常用的应用，再对照整机测试来选', None
+    if key == 'ref_photo':
+        return '相机配置可以结合你的拍摄习惯，再看看实际样张', None
+    return None, None
+
+
+def _reference_summary(usable, model, needs, cite):
+    """Give the card one connected paragraph with a concrete, honest compromise."""
+    parts = [(ident, fact, *_reference_parts(fact)) for ident, fact in usable
+             if fact['metric_key'].startswith('ref_')]
+    if not parts:
+        return None
+    positives, cautions = [], []
+    budget = needs.get('budget') or {}
+    low, high, price = budget.get('min'), budget.get('max'), model.get('price_cny')
+    price_fact = next((ident for ident, fact, _, _ in parts
+                       if (fact.get('model_context') or {}).get('price_cny') == price
+                       and _number(price) and price > 0), None)
+    if (price_fact and _number(high) and high > 0 and price <= high
+            and (not _number(low) or price >= low)):
+        room = ('预算还能留出一些' if price <= high * .85 else
+                '在你的预算内' if price < high else '刚好到你的预算上限')
+        kind = '二手估计价' if model.get('condition')=='used' and model.get('is_estimated') else '二手记录价' if model.get('condition')=='used' else '参考价'
+        positives.append((price_fact, kind + ' ' + _fmt(price) + ' 元，' + room))
+    for ident, fact, positive, caution in parts:
+        if positive:
+            positives.append((ident, positive))
+        if caution:
+            cautions.append((ident, caution))
+    chosen = positives[:2]
+    if chosen:
+        opening = '' if chosen[0][1].startswith(('按', '如果')) else '这款的 '
+        text = opening + '，'.join(sentence.replace('存储空间比较宽裕，照片和应用可以多留一些','存储宽裕，照片和应用能多留些') for _, sentence in chosen) + '。'
+        for ident, _ in chosen:
+            cite(ident)
+    elif cautions:
+        ident, sentence = cautions.pop(0)
+        text = '这款的 ' + sentence + '。'
+        cite(ident)
+    else:
+        return None
+    if cautions:
+        ident, caution = cautions[0]
+        caution=caution.replace('机身有 ','').replace('，分量偏重，建议先试试握持感','，机身偏重，建议先试握持感')
+        text += '不过，' + caution + '。'
+        cite(ident)
+    elif any(fact['metric_key'] == 'ref_battery' for _, fact, _, _ in parts):
+        ident = next(ident for ident, fact, _, _ in parts if fact['metric_key'] == 'ref_battery')
+        text += '不过，能用多久还要看你的用法，建议结合续航实测再决定。'
+        cite(ident)
+    elif not any(fact['metric_key'] == 'ref_game' and fact['value'] >= 75
+                 for _, fact, _, _ in parts):
+        text += '下单前建议再核对当前价格和配置，也尽量试试握持感。'
+    return text
+
+
 def _match(fact, model, needs, target):
     key, value = fact['metric_key'], _fmt(fact['value'])
     if key.startswith('ref_'):
-        inputs=fact.get('raw_inputs',{})
-        raw_key,unit={'ref_storage':('storage_gb','GB'),'ref_weight':('weight_g','克'),
-            'ref_battery':('battery_capacity_mah','mAh')}.get(key,(None,''))
-        detail=f'；记录规格 {_fmt(inputs[raw_key])} {unit}' if raw_key and _number(inputs.get(raw_key)) else ''
-        return f'{_LABELS[key]}为 {value}/100（规格估算{detail}）。'
+        positive, caution = _reference_parts(fact)
+        return (positive or caution) + '。' if positive or caution else None
     if key == 'price_cny':
         return _price_match(fact, model, needs)
     if key == 'weight_g':
@@ -284,6 +376,9 @@ def recommendation_reason(bundle, sku_id) -> dict:
 
     price = next(((ident, fact) for ident, fact in own
                   if fact.get('metric_key') == 'price_cny' and _number(fact.get('value'))), None)
+    if not price:
+        price = next(((ident, {'observed_at': fact['model_context'].get('observed_at')})
+                      for ident, fact in own if _number((fact.get('model_context') or {}).get('price_cny'))), None)
     if price:
         ident, fact = price
         observed = _record_date(model.get('observed_at') or fact.get('observed_at'))
@@ -293,7 +388,8 @@ def recommendation_reason(bundle, sku_id) -> dict:
         limit('目前没有足够的已核实资料对应这次设置的重点，暂不强行给出匹配结论。')
     if not limitations and not tradeoffs:
         limit('当前推荐仅依据已记录的参数，实际使用感受仍需进一步确认。')
-    summary = ('结合这次确认的重点，可以先看这款配置的' + '、'.join(_LABELS[key] for key in matched_keys) + '。'
+    summary = _reference_summary(usable, model, needs, cite)
+    summary = summary or ('结合这次确认的重点，可以先看这款配置的' + '、'.join(_LABELS[key] for key in matched_keys) + '。'
                if matches else '现有资料暂时不足以说明这款配置与你的重点如何匹配。')
     return {'summary': summary, 'matches': matches, 'tradeoffs': tradeoffs,
             'limitations': limitations, 'fact_ids': used_ids}
