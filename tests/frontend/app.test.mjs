@@ -29,7 +29,7 @@ const weights={weight_g:2,storage_gb:3,screen_size_inch:1,battery_capacity_mah:2
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 const discoveryRows=Array.from({length:6},(_,index)=>({sku_id:`S${index}`,model_id:`M${index}`,display_name:`真实目录机型${index}`,brand:'测试品牌',ram_raw:'12GB',storage_raw:'256GB',storage_gb:256,price_cny:2000+index*100,condition:'new',observed_at:'2026-01-01',image:{url:`/media/model_${index}.webp`,alt:`真实目录机型${index}展示图`}}));
 let ordinal=0;
-async function harness({offline=false}={}){
+async function harness({offline=false,catalogTotal=6,catalogModels=6,holdCatalog=false}={}){
   const html=await readFile(new URL('../../frontend/index.html',import.meta.url),'utf8'),ids=new Map(),groups={};
   for(const match of html.matchAll(/<(\w+)\b[^>]*>/g)){
     const tag=match[0],node=new Node(match[1]),id=tag.match(/\bid="([^"]+)"/)?.[1];
@@ -39,26 +39,101 @@ async function harness({offline=false}={}){
       if(value){const key=attr.replace(/-([a-z])/g,(_,c)=>c.toUpperCase());node.dataset[key]=value;(groups[attr]??=[]).push(node);}
     }
   }
-  for(const [id,values] of Object.entries({mode:['new','used','all'],method:['topsis','hybrid_rrf'],'evaluation-mode':['spec_reference','measured'],'game-scope':['honor_of_kings','unconfirmed','unsupported']})){
+  for(const [id,values] of Object.entries({mode:['new','used','all'],'catalog-mode':['all','new','used'],method:['topsis','hybrid_rrf'],'evaluation-mode':['spec_reference','measured'],'game-scope':['honor_of_kings','unconfirmed','unsupported'],'category-status':['evidence_available','pending_review']})){
     const node=ids.get(id);if(!node)continue;node.options=values.map(value=>Object.assign(new Node('option'),{value}));
     const selectBody=html.match(new RegExp(`<select id="${id}"[^>]*>(.*?)</select>`,'s'))?.[1];node.value=selectBody?.match(/value="([^"]+)"/)?.[1]??values[0];
   }
   const outputs=new Map();globalThis.document={getElementById:id=>ids.get(id),createElement:tag=>new Node(tag),createTextNode:text=>Object.assign(new Node(),{textContent:text}),body:new Node(),querySelector:selector=>{if(!outputs.has(selector))outputs.set(selector,new Node('output'));return outputs.get(selector);},querySelectorAll:selector=>groups[selector.match(/data-([\w-]+)/)?.[1]]??[]};
-  const calls=[];let needsPayload;
+  const calls=[],pendingCatalog=[];let needsPayload;
   const meta={release,algorithms,reference_rule_version:'spec-reference-v1',metrics:Object.keys(weights),defaults:{weights,mode:'new',target_screen:6.5,evaluation_mode:'spec_reference'},brands:['华为','苹果'],features:{needs_extraction:true,llm:false,offline_fixture:offline},counts:{phone_models:10,skus:20,sources:7,metric_observations:30},source_summary:[{label:'规格资料',count:5},{label:'价格资料',count:2}],acceptance:{},performance_capabilities:{}};
   globalThis.fetch=async(path,options)=>{
     calls.push({path,body:options.body?JSON.parse(options.body):undefined});
     let payload=meta;
     if(path.startsWith('/api/v1/recommend')){const body=JSON.parse(options.body);payload={release,status:'ready',method:body.method,evaluation_mode:body.evaluation_mode,reference_rule_version:body.expected_reference_rule_version,algorithm_version:body.expected_algorithm_version,score_label:body.method==='hybrid_rrf'?'实验融合分':'TOPSIS 相对贴近度',ranked:[],ranked_total:3,page:1,page_size:12,effective_weights:body.weights,unscored:[],backups:[],performance_capabilities:{}};}
     if(path==='/api/v1/needs')payload=needsPayload;
-    if(path.startsWith('/api/v1/catalog'))payload={release,items:discoveryRows,total:6,page:1,page_size:24};
+    if(path.startsWith('/api/v1/catalog')){
+      const q=new URL(path,'http://localhost').searchParams;
+      payload={release,items:discoveryRows,total:catalogTotal,page:Number(q.get('page')??1),page_size:Number(q.get('page_size')??24),
+        category:q.get('category')??'all',category_status:q.get('category_status')??'evidence_available',
+        category_counts:[{id:'gaming',model_count:catalogModels,evidence_available:3,pending_review:3},
+                         {id:'photography',model_count:catalogModels,evidence_available:1,pending_review:5},
+                         {id:'senior',model_count:catalogModels,evidence_available:0,pending_review:6}]};
+      if(holdCatalog&&q.get('page_size')==='24')return await new Promise(resolve=>pendingCatalog.push({path,payload,respond(){resolve({ok:true,json:async()=>this.payload});}}));
+    }
     if(path.startsWith('/api/v1/skus/')){const row=discoveryRows.find(row=>path.endsWith(row.sku_id))??discoveryRows[0];payload={release,model:{display_name:row.display_name,brand:row.brand},sku:row,specifications:[],prices:[{amount:row.price_cny,condition:row.condition,observed_at:row.observed_at}],benchmark_runs:[],observations:[],sources:[]};}
     if(path.includes('/reviews?')){const q=new URL(path,'http://localhost').searchParams,grade=q.get('grade'),page=Number(q.get('page'));payload={release,model:{display_name:discoveryRows[0].display_name},available:true,sample_total:21,total:grade==='bad'?1:21,grade,page,page_size:20,grade_counts:{good:20,bad:1},items:[{username:'淘**友',grade_label:grade==='bad'?'差评':'好评',content:'采集的买家原文',purchase_spec:'256GB'}]};}
     return {ok:true,json:async()=>payload};
   };
   await import(`../../frontend/app.mjs?test=${++ordinal}`);await settle();
-  return {ids,groups,calls,setNeeds:payload=>{needsPayload=payload;},async input(id,value){ids.get(id).value=String(value);await ids.get('preferences').emit('input',ids.get(id));},async generate(){ids.get('confirmed').checked=true;await ids.get('preferences').emit('input',ids.get('confirmed'));await ids.get('preferences').emit('submit');await settle();}};
+  return {ids,groups,calls,pendingCatalog,setNeeds:payload=>{needsPayload=payload;},async input(id,value){ids.get(id).value=String(value);await ids.get('preferences').emit('input',ids.get(id));},async generate(){ids.get('confirmed').checked=true;await ids.get('preferences').emit('input',ids.get('confirmed'));await ids.get('preferences').emit('submit');await settle();}};
 }
+
+const catalogCalls=h=>h.calls.filter(c=>c.path.startsWith('/api/v1/catalog?')&&new URL(c.path,'http://localhost').searchParams.get('page_size')==='24');
+async function catalogView(h){await h.groups.view.find(n=>n.dataset.view==='catalog').emit('click');await settle();}
+
+test('catalog opens the complete library independently from recommendation budget, mode and brands',async()=>{
+  const h=await harness({catalogTotal:484,catalogModels:147});await h.input('max-price',3000);await h.input('mode','new');
+  h.ids.get('exclude-brands').options.find(o=>o.value==='苹果').selected=true;
+  await h.ids.get('preferences').emit('input',h.ids.get('exclude-brands'));await catalogView(h);
+  const query=new URL(catalogCalls(h).at(-1).path,'http://localhost').searchParams;
+  assert.equal(query.get('mode'),'all');assert.equal(query.has('max_price'),false);assert.equal(query.has('exclude'),false);
+  assert.match(h.ids.get('catalog-status').textContent,/147.*机型.*484.*配置/);
+  assert.equal(h.ids.get('max-price').value,'3000');assert.equal(h.ids.get('mode').value,'new');
+});
+
+test('catalog reset and own filters preserve confirmed recommendation, export and form',async()=>{
+  const h=await harness();await h.input('max-price',3000);await h.generate();
+  assert.equal(h.ids.get('confirmed').checked,true);await catalogView(h);
+  assert.ok(h.ids.has('catalog-filters'),'catalog-local filter form is missing');
+  h.ids.get('catalog-mode').value='used';h.ids.get('catalog-max-price').value='1800';h.ids.get('catalog-min-storage').value='256';
+  h.ids.get('catalog-include-brands').options.find(o=>o.value==='华为').selected=true;
+  await h.ids.get('catalog-filters').emit('submit');await settle();
+  let query=new URL(catalogCalls(h).at(-1).path,'http://localhost').searchParams;
+  assert.equal(query.get('mode'),'used');assert.equal(query.get('max_price'),'1800');assert.equal(query.get('min_storage'),'256');
+  assert.deepEqual(query.getAll('include'),['华为']);assert.equal(h.ids.get('confirmed').checked,true);
+  assert.equal(h.ids.get('downloads').hidden,false);assert.equal(h.ids.get('max-price').value,'3000');
+  await h.ids.get('clear-catalog-filters').emit('click');await settle();
+  query=new URL(catalogCalls(h).at(-1).path,'http://localhost').searchParams;
+  assert.equal(query.get('mode'),'all');assert.equal(query.has('max_price'),false);assert.equal(query.has('include'),false);
+  assert.equal(h.ids.get('confirmed').checked,true);assert.equal(h.ids.get('max-price').value,'3000');assert.equal(h.ids.get('mode').value,'new');
+});
+
+test('catalog filters survive recommendation edits and returning to the catalog',async()=>{
+  const h=await harness();await catalogView(h);assert.ok(h.ids.has('catalog-filters'));
+  h.ids.get('catalog-max-price').value='1800';await h.ids.get('catalog-filters').emit('submit');await settle();
+  const old=h.ids.get('catalog-results').textContent;
+  await h.groups.view.find(n=>n.dataset.view==='recommend').emit('click');await h.input('max-price',6000);
+  assert.equal(h.ids.get('catalog-results').textContent,old);
+  await catalogView(h);const query=new URL(catalogCalls(h).at(-1).path,'http://localhost').searchParams;
+  assert.equal(query.get('max_price'),'1800');assert.equal(query.get('mode'),'all');assert.equal(h.ids.get('max-price').value,'6000');
+});
+
+test('catalog pagination uses applied filters while a pending form edit stays unapplied',async()=>{
+  const h=await harness({catalogTotal:48});await catalogView(h);assert.ok(h.ids.has('catalog-max-price'));
+  h.ids.get('catalog-max-price').value='1800';
+  await h.ids.get('catalog-pagination').children.find(n=>n.textContent==='下一页').emit('click');await settle();
+  let query=new URL(catalogCalls(h).at(-1).path,'http://localhost').searchParams;
+  assert.equal(query.get('page'),'2');assert.equal(query.has('max_price'),false);
+  h.ids.get('search').value='华为';await h.ids.get('catalog-search').emit('submit');await settle();
+  query=new URL(catalogCalls(h).at(-1).path,'http://localhost').searchParams;
+  assert.equal(query.get('page'),'1');assert.equal(query.get('q'),'华为');assert.equal(query.has('max_price'),false);
+});
+
+test('recommendation revision does not cancel or reject a pending catalog response',async()=>{
+  const h=await harness({holdCatalog:true});await catalogView(h);assert.equal(h.pendingCatalog.length,1);
+  await h.input('max-price',3000);h.pendingCatalog[0].respond();await settle();
+  assert.match(h.ids.get('catalog-status').textContent,/6.*配置/);assert.ok(h.ids.get('catalog-featured').children.length);
+});
+
+test('an older catalog response cannot overwrite a newly filtered response',async()=>{
+  const h=await harness({holdCatalog:true});await catalogView(h);assert.ok(h.ids.has('catalog-filters'));
+  h.ids.get('catalog-max-price').value='1800';await h.ids.get('catalog-filters').emit('submit');await settle();
+  assert.equal(h.pendingCatalog.length,2);
+  h.pendingCatalog[1].payload.total=1;h.pendingCatalog[1].payload.category_counts[0].model_count=1;
+  h.pendingCatalog[1].respond();await settle();const status=h.ids.get('catalog-status').textContent;
+  h.pendingCatalog[0].respond();await settle();assert.equal(h.ids.get('catalog-status').textContent,status);
+  assert.match(status,/1.*配置/);
+});
 
 test('detail entry loads actual review endpoint, filters, paginates and returns to cached specifications',async()=>{
   const h=await harness(),walk=node=>[node,...node.children.flatMap(walk)];

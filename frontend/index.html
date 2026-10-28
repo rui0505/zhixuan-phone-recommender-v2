@@ -60,13 +60,24 @@
 <section class="tradeoff-rail glass-panel"><div class="rail-title"><h2>看清取舍</h2><p class="small">在你关注的方面<br>不同手机各有取舍</p></div><div id="tradeoff-items" class="rail-items"></div><button class="rail-link" data-view="compare">多机型对比 →</button></section>
 </div>
 <section id="catalog-view" hidden>
-<div class="page-hero"><div><h1>手机库</h1><p>按品牌、场景和配置，查看每一部手机的真实资料</p></div><span id="catalog-count" class="count-badge">正在读取目录</span></div>
+<div class="page-hero"><div><h1>手机库</h1><p>浏览全部机型与配置，按品牌、场景和价格筛选</p></div><span id="catalog-count" class="count-badge">正在读取目录</span></div>
 <div class="catalog-toolbar glass-panel"><form id="catalog-search" role="search"><label for="search" class="sr-only">搜索型号、品牌或配置</label><input id="search" type="search" placeholder="搜索型号、品牌或配置"><button type="submit">搜索</button></form><div id="category-filters" class="category-filters" role="group" aria-label="按使用场景浏览手机"><button type="button" data-category="all" aria-pressed="true">全部</button><button type="button" data-category="gaming" aria-pressed="false">游戏手机</button><button type="button" data-category="photography" aria-pressed="false">拍照手机</button><button type="button" data-category="senior" aria-pressed="false">长辈友好</button></div><label for="catalog-sort" class="sr-only">排序当前页配置</label><select id="catalog-sort" aria-label="排序当前页配置"><option value="default">目录顺序</option><option value="price-asc">价格从低到高 · 本页</option><option value="price-desc">价格从高到低 · 本页</option></select></div>
-<div class="catalog-notes"><p id="catalog-status" role="status" class="small"></p><details class="catalog-filter-details"><summary>筛选条件与分类说明</summary><p id="catalog-applied-filters" class="small">目录使用当前确认表单中的预算、品牌、存储与成色筛选。</p><button type="button" id="apply-catalog">应用当前筛选</button><button type="button" id="catalog-edit-filters">修改筛选</button><button type="button" id="clear-catalog-filters">清空目录筛选</button><p id="category-help" class="small">有评测资料不代表表现优秀。</p><label id="category-status-control" class="category-status-control" for="category-status" hidden>资料状态<select id="category-status"><option value="evidence_available">有评测资料</option><option value="pending_review">待评估机型</option></select></label><details id="category-methods" class="small"><summary>分类依据与数据限制</summary>
+<div class="catalog-notes"><p id="catalog-status" role="status" class="small"></p><button type="button" id="catalog-edit-filters">筛选商品</button></div>
+<p id="catalog-applied-filters" class="small catalog-filter-summary">默认展示全部商品，手机库筛选与智能选机独立。</p>
+<details id="catalog-filter-details" class="catalog-filter-details glass-panel"><summary>手机库筛选与分类说明</summary>
+<form id="catalog-filters"><fieldset><legend>只筛选手机库商品</legend><div class="catalog-local-grid">
+<label for="catalog-mode">商品成色<select id="catalog-mode"><option value="all">全部（含成色未知）</option><option value="new">新机记录</option><option value="used">二手记录</option></select></label>
+<label for="catalog-min-price">最低价格（元）<input id="catalog-min-price" type="number" min="0" step="any" placeholder="不限"></label>
+<label for="catalog-max-price">最高价格（元）<input id="catalog-max-price" type="number" min="0" step="any" placeholder="不限"></label>
+<label for="catalog-min-storage">最低存储（GB）<input id="catalog-min-storage" type="number" min="1" step="any" placeholder="不限"></label>
+<label for="catalog-include-brands">仅看品牌<select id="catalog-include-brands" multiple size="4"></select></label>
+<label for="catalog-exclude-brands">排除品牌<select id="catalog-exclude-brands" multiple size="4"></select></label>
+</div><p class="small">品牌不选代表不限；可多选。修改后点击“应用手机库筛选”，不会改变智能选机条件或已确认推荐。</p></fieldset><div class="actions"><button type="submit" id="apply-catalog" class="primary">应用手机库筛选</button><button type="button" id="clear-catalog-filters">恢复全部商品</button></div></form>
+<p id="category-help" class="small">有评测资料不代表表现优秀。</p><label id="category-status-control" class="category-status-control" for="category-status" hidden>资料状态<select id="category-status"><option value="evidence_available">有评测资料</option><option value="pending_review">待评估机型</option></select></label><details id="category-methods" class="small"><summary>分类依据与数据限制</summary>
           <p>游戏重点关注持续稳帧、发热、功耗与触控；拍照关注日常、夜景、人像、抓拍和长焦实拍；长辈选机关注操作、字体、通话、广告干扰和紧急联系。</p>
           <p>本版先按“是否有可回查的相关评测资料”划分参考池，不是完整适用性认证。目前长辈功能资料尚未核实；游戏与拍照资料也未覆盖所有上述维度，不能据此推断体验优秀。不同协议不混分。</p>
           <p>维度参考少量社区讨论与评测，并非全网热门帖统计：<a href="https://v2ex.com/t/1185495" target="_blank" rel="noopener noreferrer">长辈选机讨论</a>、<a href="https://www.antutu.com/doc/137994" target="_blank" rel="noopener noreferrer">游戏评测维度</a>、<a href="https://sspai.com/post/84510" target="_blank" rel="noopener noreferrer">影像体验维度</a>。具体机型依据请查看卡片的“详情与来源”。</p>
-        </details></details></div>
+        </details></details>
 <div id="catalog-featured" aria-live="polite"></div><div id="catalog-results" class="cards catalog-cards"></div><div id="catalog-pagination" class="pagination"></div><p class="catalog-image-note small">手机图片用于机型展示；颜色、成色与配置以具体记录为准。价格为历史快照。</p>
 </section>
 <section id="compare-view" hidden><div id="compare-content" aria-live="polite"></div><div class="compare-bottom glass-panel"><div><h2>更多值得对比的机型</h2><p class="small">从真实目录继续添加，一起对比更全面</p></div><div id="compare-suggestions" class="rail-items"></div><button id="clear-comparison" class="quiet">清空对比</button></div></section>
