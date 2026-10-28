@@ -64,3 +64,9 @@
 - 一次独立代码审查没有遗留Critical/Important；发现的HTTP兼容、管理协议保护、超长参数、非法Unicode和重复审核动作已修复并补测。
 
 界面截图与测试日志保存在 `local_evidence/feedback-*20261028*`，仅本机留存。
+
+## 正式站点更新（2026-10-28）
+
+评论系统已随机型录入整合版本部署到 `https://zhixuanji.cn/`。正式评论保存在 `/var/lib/zhixuan/feedback.sqlite3`，管理页为 `https://zhixuanji.cn/feedback-admin.html`，与机型管理共用正式维护密钥。双击项目根目录 `打开云端后台.cmd` 可复制本机私有保存的云端密钥，再于管理页按Ctrl+V登录；本机预览密钥与云端密钥分别保管。
+
+本节之前的806项Python/69项Node为反馈功能阶段记录；整合后的最终回归为842项Python、92项Node与37项数据管线通过。已从公网验证未鉴权拒绝、正式密钥鉴权和公开空列表，生产环境未写测试评论。部署、持久目录和验收边界详见 `docs/intake-feedback-delivery-20261028.md`。

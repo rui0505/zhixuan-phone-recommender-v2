@@ -30,3 +30,23 @@
 云端操作脚本 `deploy/releases/deploy-intake-feedback-20261028.py` 固定上一目录与包指纹，先独立验证录入、审核发布、旧评价/图片与导出，再允许原子切换；失败恢复原服务、Nginx配置和current指针。它保留现有域名、监听端口、证书和密钥环境文件，仅补持久目录及反向代理协议/来源头。
 
 此记录中的本地验证与发布包准备，不等于云端已激活。GitHub远端、CI和云端实际切换结果在实际完成后追加，不能仅凭上传成功判为上线。
+
+## GitHub与正式服务验收（2026-10-28）
+
+- 实现提交 `a01be31fa45ba83920ce9d43ab625bfed095cdbb` 已推送至 `codex/user-feedback-20261028`；远端提交与Git树已逐项比对一致。后续文档提交仅补充交付记录。
+- [PR #8](https://github.com/rui0505/zhixuan-phone-recommender-v2/pull/8) 已更新整合范围，目前保持打开、未合并；main没有因本次发布改变。实现提交的 [push CI](https://github.com/rui0505/zhixuan-phone-recommender-v2/actions/runs/40656516033) 与 [PR CI](https://github.com/rui0505/zhixuan-phone-recommender-v2/actions/runs/40656525305) 均成功。
+- 服务器校验ZIP与操作脚本指纹后，先完成隔离验证，再返回 `phase: activated`。正式 `current` 指向 `/opt/zhixuan/releases/intake-feedback-20261028-r1`；上一版 `/opt/zhixuan/releases/alpine-ui-20261027-buyerreviews` 保留，备份与操作报告位于 `/root/zhixuan-intake-feedback-20261028-backup/release.json`。
+- 现有域名、TLS证书和端口保留；Nginx已检查并重新加载，服务已重启。生产环境文件未改，未产生付费模型测试调用。
+- 对 [正式站点](https://zhixuanji.cn/) 使用Windows TLS传输并保持证书校验，37个静态资源逐字节指纹与本地版本一致，健康与就绪检查通过。
+- 正式meta确认AISM结构与新增机型功能启用，原始147款机型、484个配置及基础数据指纹保持一致；独立全量目录484个配置、新机筛选51个、默认推荐40个。CSV/XLSX/JSON导出、原有图片与132条样本买家评价（19条差评）通过。
+- 未登录的两类管理队列与导出均返回401；远程明文HTTP管理访问返回403；密钥及环境文件路径返回404。带正式站点Origin的无效反馈返回422，确认HTTPS代理来源匹配；未插入生产评论。
+- 下载正式维护密钥至本机Git忽略目录后，以该密钥从公网分别验证录入队列和评论审核队列，均成功且总数为0。密钥内容未输出、未加入仓库；本地和云端密钥分别保管。
+- 当前自动浏览器访问正式域名出现连接关闭，公网浏览器画面尚未完成验收；上述公网HTTP、鉴权、静态指纹和导出检查均已实际通过。管理员与发布后自动刷新的浏览器流程在独立本地环境验收完成，不将本地画面充作公网截图。
+
+公网证据：本机 `local_evidence/intake-public-acceptance-20261028.json`；激活终端截图 `local_evidence/intake-cloud-activation-20261028.png`。生产库未添加联调测试机型、虚构反馈或本次Excel内容。
+
+## 现在怎样使用
+
+双击项目根目录的 `打开云端后台.cmd`，脚本从 `local_state/cloud/feedback-admin.key` 复制正式维护密钥并打开 [机型管理](https://zhixuanji.cn/admin.html)，在输入框按Ctrl+V登录。评论审核在 [反馈管理](https://zhixuanji.cn/feedback-admin.html)，两页共用正式密钥。密钥文件只在本机保留，不发聊天、不上传Git。
+
+评论与录入队列分别保存在 `/var/lib/zhixuan/feedback.sqlite3`、`/var/lib/zhixuan/intake.sqlite3`；以后发布的新目录保存在 `/var/lib/zhixuan/catalog/`。资料录入后需复核来源并点击发布，手机库才会更新。缺少必要指标的机型可展示目录，是否进入推荐仍遵循现有资料完整性要求；当前不支持上传新机型图片。
