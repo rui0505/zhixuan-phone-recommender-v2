@@ -1,5 +1,5 @@
 [Unit]
-Description=Zhixuan read-only phone recommendation API
+Description=Zhixuan phone recommendation and moderated feedback API
 After=network.target
 
 [Service]
@@ -11,7 +11,10 @@ Environment=PYTHONUNBUFFERED=1
 Environment=OPENBLAS_NUM_THREADS=1
 Environment=OMP_NUM_THREADS=1
 Environment=PHONE_ENABLE_LLM=false
+Environment=PHONE_FEEDBACK_DB=/var/lib/zhixuan/feedback.sqlite3
 EnvironmentFile=-/etc/zhixuan.env
+StateDirectory=zhixuan
+StateDirectoryMode=0700
 ExecStart=/opt/zhixuan/.venv/bin/python -m uvicorn api.app:app --host 127.0.0.1 --port 8600 --workers 1 --limit-concurrency 12 --timeout-keep-alive 5
 Restart=on-failure
 RestartSec=5

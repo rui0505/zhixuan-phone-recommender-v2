@@ -1,5 +1,13 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {fetchJson,fetchDownload,ApiClientError} from '../../frontend/api.mjs';
+
+test('feedback transport supports public submission and protected moderation without putting key in body',async()=>{
+  const calls=[];await mockFetch(async(path,init)=>{calls.push({path,init});return new Response('{}');},async()=>{
+    await fetchJson('/api/v1/feedback',{method:'POST',body:{content:'使用体验反馈'}});
+    await fetchJson('/api/v1/admin/feedback/12345678-0000-0000-0000-000000000000',{method:'PATCH',headers:{Authorization:'Bearer offline-test'},body:{status:'published'}});
+    assert.equal(calls[1].init.headers.Authorization,'Bearer offline-test');assert.equal(calls[1].init.headers['Content-Type'],'application/json');assert.equal(calls[1].init.body,'{"status":"published"}');
+  });
+});
 async function mockFetch(fn,run){const original=globalThis.fetch;globalThis.fetch=fn;try{await run();}finally{globalThis.fetch=original;}}
 test('transport serializes confirmation and passes cancellation',async()=>{
   const controller=new AbortController();let seen;

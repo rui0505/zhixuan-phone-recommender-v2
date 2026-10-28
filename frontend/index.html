@@ -6,6 +6,8 @@
 <link rel="icon" href="data:,"><link rel="preload" as="image" href="/assets/alpine-panorama.png">
 <link rel="stylesheet" href="/styles.css?v=alpine-20261027"><link rel="stylesheet" href="/glass.css?v=alpine-20261027">
 <link rel="stylesheet" href="/reviews.css?v=buyer-reviews-20261027">
+<link rel="stylesheet" href="/feedback.css?v=feedback-20261028">
+<script type="module" src="/feedback.mjs?v=feedback-20261028"></script>
 <script type="module" src="/app.mjs?v=alpine-20261027"></script><script type="module" src="/motion.mjs?v=alpine-20261027"></script>
 </head>
 <body id="top" data-current-view="recommend">
@@ -13,7 +15,7 @@
 <div class="app-shell">
 <header class="header">
 <a class="brand" href="#top" aria-label="知选首页"><img class="brand-symbol" src="/assets/icons/phone.svg" alt=""><span>知选 <small>ZHIXUAN</small></span></a>
-<nav aria-label="页面导航"><button class="nav" data-view="recommend" aria-pressed="true">智能选机</button><button class="nav" data-view="catalog" aria-pressed="false">手机库</button><button class="nav" data-view="compare" aria-pressed="false">我的对比 <span id="compare-count">0</span></button><button class="nav" data-view="data" aria-pressed="false">数据说明</button></nav>
+<nav aria-label="页面导航"><button class="nav" data-view="recommend" aria-pressed="true">智能选机</button><button class="nav" data-view="catalog" aria-pressed="false">手机库</button><button class="nav" data-view="compare" aria-pressed="false">我的对比 <span id="compare-count">0</span></button><button class="nav" data-view="data" aria-pressed="false">数据说明/反馈</button></nav>
 <div class="header-tools"><form id="global-search" role="search"><label for="global-query" class="sr-only">搜索手机型号或品牌</label><input id="global-query" type="search" placeholder="搜索手机品牌、机型或关键词…"><button type="submit" aria-label="搜索手机库">搜索</button></form><button id="motion-toggle" class="motion-toggle" aria-pressed="true" aria-label="关闭界面动效"><span class="motion-indicator" aria-hidden="true"></span><span id="motion-label">动效开启</span></button></div>
 </header>
 <main>
@@ -81,7 +83,28 @@
 <div id="catalog-featured" aria-live="polite"></div><div id="catalog-results" class="cards catalog-cards"></div><div id="catalog-pagination" class="pagination"></div><p class="catalog-image-note small">手机图片用于机型展示；颜色、成色与配置以具体记录为准。价格为历史快照。</p>
 </section>
 <section id="compare-view" hidden><div id="compare-content" aria-live="polite"></div><div class="compare-bottom glass-panel"><div><h2>更多值得对比的机型</h2><p class="small">从真实目录继续添加，一起对比更全面</p></div><div id="compare-suggestions" class="rail-items"></div><button id="clear-comparison" class="quiet">清空对比</button></div></section>
-<section id="data-view" hidden><div class="page-hero data-hero"><div><h1>数据说明</h1><p>每一个推荐，都有清晰、可回查的依据</p><span class="status-badge">历史数据快照 · 记录可追溯</span></div><p class="hero-note">让选择<br>更清晰</p></div><div id="data-content"></div><details class="release-strip"><summary id="release-status">正在连接数据服务…</summary><div id="release-info" class="release-info"></div></details><button id="refresh-meta" class="quiet">刷新数据状态 →</button></section>
+<section id="data-view" hidden><div class="page-hero data-hero"><div><h1>数据说明/反馈</h1><p>每一个推荐，都有清晰、可回查的依据</p><span class="status-badge">历史数据快照 · 记录可追溯</span></div><p class="hero-note">让选择<br>更清晰</p></div><div id="data-content"></div><details class="release-strip"><summary id="release-status">正在连接数据服务…</summary><div id="release-info" class="release-info"></div></details><button id="refresh-meta" class="quiet">刷新数据状态 →</button>
+<section id="usage-feedback" class="usage-feedback" aria-labelledby="feedback-title">
+<div class="feedback-section-heading"><div><h2 id="feedback-title">你的体验，让知选更好用</h2><p>选机顺不顺手？哪里还可以改进？把真实感受留在这里。</p></div><a href="#feedback-comments">看看大家的反馈 ↓</a></div>
+<div class="feedback-compose">
+<form id="feedback-form" method="post" action="/api/v1/feedback">
+<fieldset id="feedback-fields"><legend class="sr-only">填写使用体验反馈</legend>
+<div class="feedback-form-row"><label for="feedback-nickname">昵称 <span>选填，默认匿名</span><input id="feedback-nickname" name="nickname" maxlength="20" autocomplete="nickname" placeholder="如何称呼你"></label><label for="feedback-category">反馈类型<select id="feedback-category" name="category"><option value="suggestion">改进建议</option><option value="issue">遇到问题</option><option value="praise">体验不错</option><option value="other">其他反馈</option></select></label><label for="feedback-page">涉及页面<select id="feedback-page" name="page"><option value="other">整体体验</option><option value="recommend">智能选机</option><option value="catalog">手机库</option><option value="compare">我的对比</option><option value="data">数据说明</option></select></label></div>
+<fieldset class="feedback-rating"><legend>这次使用体验怎么样？</legend><div class="feedback-stars">
+<label><input class="sr-only" type="radio" name="feedback-rating" value="1" required><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg><span class="sr-only">1 星，很不满意</span></label>
+<label><input class="sr-only" type="radio" name="feedback-rating" value="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg><span class="sr-only">2 星，不太满意</span></label>
+<label><input class="sr-only" type="radio" name="feedback-rating" value="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg><span class="sr-only">3 星，一般</span></label>
+<label><input class="sr-only" type="radio" name="feedback-rating" value="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg><span class="sr-only">4 星，比较满意</span></label>
+<label><input class="sr-only" type="radio" name="feedback-rating" value="5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg><span class="sr-only">5 星，很满意</span></label>
+</div><p>点击星星评分，1 星很不满意，5 星很满意。</p></fieldset>
+<label for="feedback-content" class="feedback-content-label">说说你的使用感受<textarea id="feedback-content" name="content" rows="6" minlength="5" maxlength="2000" required aria-describedby="feedback-writing-help feedback-counter" placeholder="例如：选机结果很清晰，但我想更快找到同型号的不同配置。也欢迎告诉我们遇到的问题和操作步骤。"></textarea></label>
+<div class="feedback-submit-row"><span id="feedback-counter">0 / 2000 字</span><button id="feedback-submit" type="submit" class="primary">提交评论，等待审核</button></div>
+</fieldset><p id="feedback-message" class="feedback-message" role="status" aria-live="polite" tabindex="-1"></p></form>
+<aside class="feedback-notice" aria-labelledby="feedback-notice-title"><h3 id="feedback-notice-title">评论发布须知</h3><ol id="feedback-writing-help"><li>这里收集知选网站的使用体验，手机商品评价请在配置详情中查看。</li><li>提交后由管理员审核，通过后公开展示昵称、评分和正文。</li><li>请勿填写手机号、微信、住址、密码等个人信息。</li><li>欢迎具体问题与不同意见；请勿发布广告、刷屏或人身攻击。</li></ol><p>每一条真实建议，都能帮我们把下一步做得更好。</p></aside>
+</div>
+<div id="feedback-comments" class="feedback-comments"><div class="feedback-section-heading"><div><h3>大家的使用反馈</h3><p id="feedback-summary" role="status" aria-live="polite">正在读取已审核评论…</p></div><button id="feedback-refresh" type="button">刷新评论</button></div><p class="feedback-list-note">最新发布的已审核评论；评分来自用户个人体验。</p><div id="feedback-list" aria-live="polite"></div><div id="feedback-pagination" class="pagination"></div></div>
+<p class="feedback-management-link"><a href="/feedback-admin.html" target="_blank" rel="noopener">反馈管理（管理员，新窗口）</a></p>
+</section></section>
 <footer><p class="small">手机图片仅作机型展示，颜色与成色以准确配置记录为准。</p><strong>选机的最后一步，是看清取舍。</strong><p>记录价格不承诺实时成交；参数不等于实际体验。推荐基于已确认偏好与数据，模型不决定排名。</p></footer>
 </main></div>
 <dialog id="detail-dialog" aria-labelledby="detail-title"><div class="section-heading detail-heading"><h2 id="detail-title" tabindex="-1">配置详情与来源</h2><button id="view-buyer-reviews" class="review-entry" disabled aria-controls="detail-content" aria-pressed="false">查看淘宝买家评价</button><button id="close-detail">关闭</button></div><div id="detail-content" aria-live="polite"></div></dialog>

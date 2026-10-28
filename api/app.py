@@ -16,6 +16,7 @@ from .service import CatalogService
 from .images import ImageCatalog
 from .explanations import ExplanationService
 from .needs import NeedsService, parse_needs_text
+from .feedback import FeedbackStore
 from semantic_aism import semantic_structure
 from .buyer_reviews import BuyerReviews, parse_query as parse_review_query
 from catalog.evidence import build_evidence
@@ -65,7 +66,7 @@ async def read_body(request):
         raise ApiError(400,'invalid_json','请求不是有效的 UTF-8 JSON，或含重复键') from exc
 
 
-def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None, needs_service=None, buyer_reviews=None):
+def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None, needs_service=None, buyer_reviews=None, feedback_store=None):
     # Only trusted process configuration injects paths; HTTP parsers reject them.
     store=ReleaseStore(db_path or Path(os.environ.get('PHONE_CATALOG_PATH',ROOT/'data/catalog.sqlite')))
     if image_catalog is None:
@@ -76,6 +77,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
     service=CatalogService(store,image_catalog,ExplanationService())
     needs_service = needs_service if needs_service is not None else NeedsService()
     buyer_reviews = buyer_reviews if buyer_reviews is not None else BuyerReviews(Path(store.db_path).parent/'buyer_reviews.json')
+    feedback_store = feedback_store if feedback_store is not None else FeedbackStore()
 
     @asynccontextmanager
     async def lifespan(app):
@@ -141,6 +143,36 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
 
     async def health(request):return response_json({'status':'alive'})
 
+    async def feedback(request):
+        try:
+            query=list(request.query_params.multi_items())
+            is_admin=request.url.path.startswith('/api/v1/admin/')
+            if is_admin and request.url.scheme!='https' and (not request.client or request.client.host not in ('127.0.0.1','::1')):
+                raise ApiError(403,'feedback_https_required','反馈管理须通过 HTTPS 访问；本机预览可使用 localhost')
+            if is_admin and not await run_in_threadpool(feedback_store.authorized,request.headers.get('authorization')):
+                raise ApiError(401,'feedback_unauthorized','请输入有效的反馈管理密钥')
+            if request.method in ('POST','PATCH'):
+                if query:raise ApiError(422,'invalid_feedback','提交和审核不接受查询参数')
+                if request.headers.get('content-type','').split(';')[0].strip().lower()!='application/json':
+                    raise ApiError(415,'invalid_feedback','反馈须以 JSON 提交')
+                origin=request.headers.get('origin')
+                if origin and origin!=str(request.base_url).rstrip('/'):
+                    raise ApiError(403,'invalid_feedback','请从知选页面提交反馈')
+                body=await read_body(request)
+                if request.method=='POST':
+                    result=await run_in_threadpool(feedback_store.submit,body,request.client.host if request.client else 'unknown')
+                    return response_json(result,201 if result.created else 200)
+                return response_json(await run_in_threadpool(feedback_store.moderate,request.path_params['feedback_id'],body))
+            if request.url.path.endswith('/export'):
+                if query:raise ApiError(422,'invalid_feedback','反馈导出不接受查询参数')
+                content=await run_in_threadpool(feedback_store.export_csv)
+                return Response(content,media_type='text/csv; charset=utf-8',headers={
+                    'Content-Disposition':'attachment; filename="zhixuan-feedback.csv"','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'})
+            result=await run_in_threadpool(feedback_store.list_admin if is_admin else feedback_store.public,query)
+            return response_json(result)
+        except ApiError as exc:return error_response(exc)
+        except Exception:return error_response(ApiError(500,'internal_error','反馈服务暂不可用，请保留内容后重试'))
+
     async def media(request):
         try:
             release=await run_in_threadpool(store.get)
@@ -156,6 +188,10 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         return error_response(ApiError(exc.status_code,code,'资源不存在或请求方法不允许'))
 
     routes=[Route('/healthz',health),Route('/readyz',endpoint),Route('/api/v1/meta',endpoint),
+            Route('/api/v1/feedback',feedback,methods=['GET','POST']),
+            Route('/api/v1/admin/feedback/export',feedback),
+            Route('/api/v1/admin/feedback',feedback),
+            Route('/api/v1/admin/feedback/{feedback_id}',feedback,methods=['PATCH']),
             Route('/api/v1/catalog',endpoint),Route('/api/v1/skus/{sku_id}/reviews',endpoint),Route('/api/v1/skus/{sku_id}',endpoint),
             Route('/api/v1/compare',endpoint,methods=['POST']),Route('/api/v1/recommend',endpoint,methods=['POST']),
             Route('/api/v1/export/{format}',endpoint,methods=['POST']),Route('/api/v1/explain',endpoint,methods=['POST']),
@@ -166,6 +202,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
     app=Starlette(routes=routes,lifespan=lifespan,exception_handlers={HTTPException:http_error})
     app.state.service=service
     app.state.needs_service=needs_service
+    app.state.feedback_store=feedback_store
     return app
 
 

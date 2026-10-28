@@ -7,6 +7,7 @@ __pycache__/
 .streamlit/secrets.toml
 local_build/
 local_evidence/
+local_state/
 docs/superpowers/
 .superpowers/
 data_pipeline/config/build_config.local.json
