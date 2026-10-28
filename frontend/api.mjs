@@ -2,7 +2,7 @@ export class ApiClientError extends Error{
   constructor(code,message,status=0){super(message);this.name='ApiClientError';this.code=code;this.status=status;}
 }
 function validPath(path){
-  if(typeof path!=='string'||!/^\/api\/v1\/(?:meta|catalog|compare|recommend|explain|needs|feedback|admin\/feedback(?:\/(?:export|[a-f0-9-]+))?|skus\/[A-Za-z0-9_-]+(?:\/reviews)?|export\/(?:csv|xlsx|json))(?:\?[^#\\]*)?$/.test(path))
+  if(typeof path!=='string'||!/^\/api\/v1\/(?:meta|catalog|compare|recommend|explain|needs|feedback|intake\/(?:queue|export|draft|submit|I-[a-f0-9]{32}(?:\/(?:publish|reject))?)|admin\/feedback(?:\/(?:export|[a-f0-9-]+))?|skus\/[A-Za-z0-9_-]+(?:\/reviews)?|export\/(?:csv|xlsx|json))(?:\?[^#\\]*)?$/.test(path))
     throw new ApiClientError('invalid_request','接口路径无效');
 }
 async function send(path,{method='GET',body,signal,headers={}}={}){

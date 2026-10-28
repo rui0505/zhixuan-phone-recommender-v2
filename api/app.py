@@ -2,6 +2,7 @@
 from contextlib import asynccontextmanager
 import json
 import os
+import hmac
 from pathlib import Path
 
 from starlette.applications import Starlette
@@ -17,6 +18,8 @@ from .images import ImageCatalog
 from .explanations import ExplanationService
 from .needs import NeedsService, parse_needs_text
 from .feedback import FeedbackStore
+from .intake import IntakeStore
+from .release_assets import ReleaseImages
 from semantic_aism import semantic_structure
 from .buyer_reviews import BuyerReviews, parse_query as parse_review_query
 from catalog.evidence import build_evidence
@@ -66,9 +69,12 @@ async def read_body(request):
         raise ApiError(400,'invalid_json','请求不是有效的 UTF-8 JSON，或含重复键') from exc
 
 
-def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None, needs_service=None, buyer_reviews=None, feedback_store=None):
+def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_catalog=None, needs_service=None, buyer_reviews=None, feedback_store=None, catalog_state=None):
     # Only trusted process configuration injects paths; HTTP parsers reject them.
-    store=ReleaseStore(db_path or Path(os.environ.get('PHONE_CATALOG_PATH',ROOT/'data/catalog.sqlite')))
+    feedback_store = feedback_store if feedback_store is not None else FeedbackStore()
+    if catalog_state is None and db_path is None:catalog_state=Path(os.environ.get('PHONE_CATALOG_STATE') or feedback_store.path.parent/'catalog')
+    store=ReleaseStore(db_path or Path(os.environ.get('PHONE_CATALOG_PATH',ROOT/'data/catalog.sqlite')),active_root=catalog_state)
+    if image_catalog is None and store.active_root is not None:image_catalog=ReleaseImages(store)
     if image_catalog is None:
         try:snapshot=store.get().key['snapshot_sha256']
         except (ValueError,OSError):snapshot=''
@@ -76,8 +82,8 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         image_catalog=ImageCatalog(data_root/'image_manifest.json',data_root/'media',snapshot)
     service=CatalogService(store,image_catalog,ExplanationService())
     needs_service = needs_service if needs_service is not None else NeedsService()
-    buyer_reviews = buyer_reviews if buyer_reviews is not None else BuyerReviews(Path(store.db_path).parent/'buyer_reviews.json')
-    feedback_store = feedback_store if feedback_store is not None else FeedbackStore()
+    buyer_reviews = buyer_reviews if buyer_reviews is not None else BuyerReviews(lambda:store.data_root()/'buyer_reviews.json')
+    intake_store=IntakeStore(feedback_store.path.parent/'intake.sqlite3',store)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -97,6 +103,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         if path=='/api/v1/meta':
             meta=service.meta(); meta['features']['needs_extraction']=needs_service.available
             meta['needs_semantic_structure']=semantic_structure()
+            meta['features']['intake_admin']=store.active_root is not None
             return response_json(meta)
         if path=='/api/v1/needs':
             return response_json(needs_service.extract(parse_needs_text(body),service.meta()['brands']))
@@ -143,6 +150,39 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
 
     async def health(request):return response_json({'status':'alive'})
 
+    async def management_auth(request):
+        if request.url.scheme!='https' and (not request.client or request.client.host not in ('127.0.0.1','::1')):
+            raise ApiError(403,'management_https_required','管理功能须通过 HTTPS 访问；本机预览可使用 localhost')
+        authorized=await run_in_threadpool(feedback_store.authorized,request.headers.get('authorization'))
+        legacy=os.environ.get('PHONE_ADMIN_TOKEN','') if request.url.path.startswith('/api/v1/intake/') else ''
+        if not authorized and legacy:
+            supplied=request.headers.get('x-intake-token','')
+            authorized=hmac.compare_digest(legacy.encode('utf-8'),supplied.encode('utf-8'))
+        if not authorized:raise ApiError(401,'management_unauthorized','请输入有效的维护管理密钥')
+
+    async def intake(request):
+        try:
+            await management_auth(request)
+            path=request.url.path;query=list(request.query_params.multi_items())
+            if query and (path!='/api/v1/intake/queue' or request.method!='GET'):raise ApiError(422,'invalid_intake','此录入接口不接受查询参数')
+            if request.method in ('POST','PUT'):
+                if request.headers.get('content-type','').split(';')[0].strip().lower()!='application/json':raise ApiError(415,'invalid_intake','录入须以 JSON 提交')
+                origin=request.headers.get('origin')
+                if origin and origin!=str(request.base_url).rstrip('/'):raise ApiError(403,'invalid_intake','请从知选管理页面提交')
+                body=await read_body(request)
+            else:body=None
+            if path=='/api/v1/intake/queue':return response_json(await run_in_threadpool(intake_store.list,query))
+            if path=='/api/v1/intake/export':return response_json(await run_in_threadpool(intake_store.export))
+            if path in ('/api/v1/intake/draft','/api/v1/intake/submit'):
+                return response_json(await run_in_threadpool(intake_store.create,body,'draft' if path.endswith('/draft') else 'submitted'),201)
+            item_id=request.path_params['record_id']
+            if path.endswith('/publish'):return response_json(await run_in_threadpool(intake_store.publish,item_id,body))
+            if path.endswith('/reject'):return response_json(await run_in_threadpool(intake_store.reject,item_id,body))
+            if request.method=='PUT':return response_json(await run_in_threadpool(intake_store.update,item_id,body))
+            return response_json(await run_in_threadpool(intake_store.get,item_id))
+        except ApiError as exc:return error_response(exc)
+        except Exception:return error_response(ApiError(500,'internal_error','录入服务暂不可用，请保留内容后重试'))
+
     async def feedback(request):
         try:
             query=list(request.query_params.multi_items())
@@ -188,6 +228,10 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
         return error_response(ApiError(exc.status_code,code,'资源不存在或请求方法不允许'))
 
     routes=[Route('/healthz',health),Route('/readyz',endpoint),Route('/api/v1/meta',endpoint),
+            Route('/api/v1/intake/queue',intake),Route('/api/v1/intake/export',intake),
+            Route('/api/v1/intake/draft',intake,methods=['POST']),Route('/api/v1/intake/submit',intake,methods=['POST']),
+            Route('/api/v1/intake/{record_id}/publish',intake,methods=['POST']),Route('/api/v1/intake/{record_id}/reject',intake,methods=['POST']),
+            Route('/api/v1/intake/{record_id}',intake,methods=['GET','PUT']),
             Route('/api/v1/feedback',feedback,methods=['GET','POST']),
             Route('/api/v1/admin/feedback/export',feedback),
             Route('/api/v1/admin/feedback',feedback),
@@ -203,6 +247,7 @@ def create_app(db_path: Path | None=None, frontend_dir: Path | None=None, image_
     app.state.service=service
     app.state.needs_service=needs_service
     app.state.feedback_store=feedback_store
+    app.state.intake_store=intake_store
     return app
 
 

@@ -208,5 +208,5 @@ class FeedbackStore:
         destination.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         # Refuse overwriting an earlier backup; sqlite backup takes a consistent snapshot.
         fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600); os.close(fd)
-        with self._connection() as source, closing(sqlite3.connect(destination)) as target:
+        with closing(sqlite3.connect(self.path.resolve().as_uri()+'?mode=ro',uri=True)) as source, closing(sqlite3.connect(destination)) as target:
             source.backup(target)

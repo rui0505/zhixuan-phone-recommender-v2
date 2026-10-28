@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import sqlite3
+import re
 from threading import RLock
 
 from .repository import CatalogRepository
@@ -55,23 +56,43 @@ def verify_release(db_path: Path, manifest_sha: str, snapshot_sha: str) -> Verif
 
 class ReleaseStore:
     """Only validated resources are cached; both actual file hashes are checked per use."""
-    def __init__(self, db_path: Path):
+    def __init__(self, db_path: Path, active_root: Path | None = None):
         self.db_path = Path(db_path).resolve()
+        self.active_root = Path(active_root).resolve() if active_root is not None else None
         self._verified = None
         self._lock = RLock()
+
+    def selected_path(self):
+        if self.active_root is None or not (self.active_root/'current.json').exists():return self.db_path,None
+        try:
+            pointer=json.loads((self.active_root/'current.json').read_text(encoding='utf-8'))
+            if set(pointer)!={'directory','snapshot_sha256','manifest_sha256','base_snapshot_sha256'}:raise ValueError('活动发布指针格式无效')
+            name=pointer['directory']
+            if not isinstance(name,str) or not re.fullmatch(r'r-[a-f0-9]{32}',name):raise ValueError('活动发布路径无效')
+            if any(not isinstance(pointer[k],str) or not re.fullmatch('[a-f0-9]{64}',pointer[k]) for k in pointer if k!='directory'):raise ValueError('活动发布指纹无效')
+            path=self.active_root/'snapshots'/name/'catalog.sqlite'
+            if (self.active_root/'snapshots').is_symlink() or path.is_symlink() or path.parent.is_symlink() or path.resolve().parent.parent!=(self.active_root/'snapshots').resolve():raise ValueError('活动发布路径越界')
+            if file_sha(self.db_path)!=pointer['base_snapshot_sha256']:raise ValueError('基础目录版本变化，请先迁移管理员发布数据')
+            return path,pointer
+        except (OSError,KeyError,TypeError,json.JSONDecodeError) as exc:raise ValueError('活动发布指针不可读取') from exc
+
+    def data_root(self):
+        with self._lock:return self.selected_path()[0].parent
 
     def get(self) -> VerifiedRelease:
         with self._lock:
             try:
-                db_sha = file_sha(self.db_path)
-                mp_sha = file_sha(self.db_path.with_name('release_manifest.json'))
+                path,pointer=self.selected_path()
+                db_sha = file_sha(path)
+                mp_sha = file_sha(path.with_name('release_manifest.json'))
+                if pointer and (db_sha!=pointer['snapshot_sha256'] or mp_sha!=pointer['manifest_sha256']):raise ValueError('活动发布指纹变化')
             except OSError as exc:
                 self._verified = None
                 raise ValueError('发布数据不可读取') from exc
             cached = self._verified
-            if cached and (cached.key['snapshot_sha256'], cached.key['manifest_sha256']) == (db_sha, mp_sha):
+            if cached and cached.repo.db_path==str(path) and (cached.key['snapshot_sha256'], cached.key['manifest_sha256']) == (db_sha, mp_sha):
                 return cached
             self._verified = None
-            verified = verify_release(self.db_path, mp_sha, db_sha)
+            verified = verify_release(path, mp_sha, db_sha)
             self._verified = verified
             return verified

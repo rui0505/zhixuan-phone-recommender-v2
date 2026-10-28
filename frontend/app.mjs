@@ -1,5 +1,6 @@
 import {createState,setPreferences,applyMeta,beginRequest,acceptResponse,addComparison,removeComparison} from './state.mjs';
 import {fetchJson,fetchDownload} from './api.mjs';
+import {watchCatalogUpdates} from './catalog-updates.mjs';
 import {element,button,labels,renderCard,renderDecision,renderComparison,renderDetail,renderPerformance} from './render.mjs';
 import {draftFields,renderAismStructure} from './needs.mjs';
 import {requestFields,withoutCriterion,reviseNeedsText,preferenceMetrics,importanceLevels,importanceWeight,importancePosition} from './preferences.mjs';
@@ -296,3 +297,4 @@ $('detail-dialog').addEventListener('close',()=>{controllers.get('detail')?.abor
 $('clear-comparison').addEventListener('click',()=>{for(const id of [...state.comparisonIds])removeComparison(state,id);controllers.get('compare')?.abort();compareCount();renderCurrentCards();loadComparison();});
 for(const node of document.querySelectorAll('[data-download]'))node.addEventListener('click',()=>download(node.dataset.download));
 $('decision-summary').replaceChildren(renderDecision(state));refreshMeta(true);
+watchCatalogUpdates(()=>refreshMeta());

@@ -20,14 +20,15 @@ def parse_query(items):
     return pagination,grade
 
 class BuyerReviews:
-    def __init__(self,path):self.path=Path(path);self._key=None;self._data=None
+    def __init__(self,path):self.path=path if callable(path) else Path(path);self._key=None;self._data=None
 
     def read(self,snapshot):
-        if not self.path.is_file():return None
+        path=Path(self.path()) if callable(self.path) else self.path
+        if not path.is_file():return None
         try:
-            stat=self.path.stat();key=(stat.st_mtime_ns,stat.st_size)
+            stat=path.stat();key=(str(path),stat.st_mtime_ns,stat.st_size)
             if key!=self._key:
-                data=json.loads(self.path.read_text(encoding='utf-8'))
+                data=json.loads(path.read_text(encoding='utf-8'))
                 if data['format']!='taobao-buyer-reviews-v1' or not isinstance(data['models'],dict):raise ValueError()
                 for records in data['models'].values():
                     if not isinstance(records,list):raise ValueError()
