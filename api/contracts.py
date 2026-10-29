@@ -34,7 +34,7 @@ class RecommendationRequest:
     mode: str
     confirmed: bool
     expected_release: dict[str,str]
-    method: str = 'topsis'
+    method: str = 'hybrid_rrf'
     expected_algorithm_version: str | None = None
     game_scope: str = 'honor_of_kings'
     defaulted_metrics: tuple[str,...] = ()
@@ -118,8 +118,8 @@ def _hash(value):
 
 def parse_recommendation(body: dict, known_brands: list[str]) -> RecommendationRequest:
     obj = _object(body,REQUEST_FIELDS | OPTIONAL_REQUEST_FIELDS,required=REQUEST_FIELDS)
-    method = obj.get('method', 'topsis')
-    if type(method) is not str or method not in ALGORITHM_VERSIONS:
+    method = obj.get('method', 'hybrid_rrf')
+    if type(method) is not str or method != 'hybrid_rrf':
         invalid('请选择标准排序或混合排序（实验）')
     version = obj.get('expected_algorithm_version')
     if 'expected_algorithm_version' in obj and (type(version) is not str or not version or len(version)>256):

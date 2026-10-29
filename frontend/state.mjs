@@ -19,7 +19,7 @@ export function applyMeta(state,meta){
 export function beginRequest(state,channel){
   if(!channels.includes(channel))throw new Error('Unknown request channel');
   state.loading[channel]=true;state.errors[channel]=null;
-  return {revision:state.preferenceRevision,sequence:++state.sequence[channel],release:releaseTag(state.release),runtime:runtimeTag(state.meta),method:state.preferences.method??'topsis',algorithmVersion:state.preferences.expected_algorithm_version,evaluationMode:state.preferences.evaluation_mode??state.meta?.defaults?.evaluation_mode??'spec_reference',referenceRuleVersion:state.preferences.expected_reference_rule_version};
+  return {revision:state.preferenceRevision,sequence:++state.sequence[channel],release:releaseTag(state.release),runtime:runtimeTag(state.meta),method:state.preferences.method??state.meta?.defaults?.method??'hybrid_rrf',algorithmVersion:state.preferences.expected_algorithm_version,evaluationMode:state.preferences.evaluation_mode??state.meta?.defaults?.evaluation_mode??'spec_reference',referenceRuleVersion:state.preferences.expected_reference_rule_version};
 }
 export function acceptResponse(state,channel,token,value){
   if(token.revision!==state.preferenceRevision||token.sequence!==state.sequence[channel]||token.release!==releaseTag(state.release)||token.runtime!==runtimeTag(state.meta))return false;

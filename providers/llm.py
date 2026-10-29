@@ -45,6 +45,7 @@ import urllib.request
 from typing import Any, Iterable, Mapping, MutableMapping
 
 from providers.jev import JevUnavailable, JevResult, normalise_response
+from semantic_aism import aism_prompt_context, semantic_structure
 
 # --- Prompt -----------------------------------------------------------------
 #
@@ -53,9 +54,9 @@ from providers.jev import JevUnavailable, JevResult, normalise_response
 
 # Prompt 版本号。**改动 SYSTEM_PROMPT 必须同步升版本**，并写进返回结构，
 # 否则无法追溯某次结果是哪个 prompt 产出的。命名规则：extract-needs-v<主>.<次>。
-PROMPT_VERSION = "extract-needs-v1.3-seven-dimensions"
+PROMPT_VERSION = "extract-needs-v1.4-aism-" + semantic_structure()['model_sha256'][:12]
 
-SYSTEM_PROMPT = """\
+_BASE_SYSTEM_PROMPT = """\
 你是手机选购需求的结构化抽取器。只做抽取，不做推荐，不替用户补充他没说出口的偏好。
 prompt_version: extract-needs-v1.2
 
@@ -143,6 +144,10 @@ judgements 里 7 个维度必须齐全，顺序不限。每项只含criterion、
 
 {"judgements":[{"criterion":"weight","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"storage","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"screen","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"photo","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"game","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"battery","choice":"未提及","evidence":"","verdict":"unknown"},{"criterion":"chipset","choice":"未提及","evidence":"","verdict":"unknown"}],"hard_constraints":{"budget_min":null,"budget_max":null,"budget_reference":null,"min_storage":null,"brands":[],"target_screen":null},"evidence":{"budget":"","min_storage":"","target_screen":"","brands":""},"excluded_brands":[],"asks":[],"unsupported_needs":[]}\
 """
+
+SYSTEM_PROMPT = _BASE_SYSTEM_PROMPT.replace('prompt_version: extract-needs-v1.2',
+                                         f'prompt_version: {PROMPT_VERSION}').replace(
+    '\n## 输出\n', '\n' + aism_prompt_context() + '\n\n## 输出\n')
 
 USER_TEMPLATE = "用户需求原文：\n{text}\n\n按上述 JSON 结构输出。"
 

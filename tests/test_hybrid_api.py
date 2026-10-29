@@ -41,22 +41,10 @@ class HybridApiTests(unittest.TestCase):
     def hybrid(self, **updates):
         return {**self.body, 'method': 'hybrid_rrf', **updates}
 
-    def test_old_request_and_explicit_default_keep_original_hashes(self):
-        # Catch accidental routing of default TOPSIS through the fusion adapter.
-        request = parse_recommendation(self.body, ['品牌1', '品牌2'])
-        di = build_input(self.release.repo, request.needs, request.weights, 6.5, 'new')
-        expected = rank_decision_input(di, target_screen=6.5)
-        for body in (self.body, {**self.body, 'method': 'topsis',
-                                'expected_algorithm_version': 'topsis-1.0.0'}):
-            response = self.post(body)
-            self.assertEqual(response.status_code, 200, response.text)
-            payload = response.json()
-            self.assertIn('method', payload)
-            self.assertEqual(payload['method'], 'topsis')
-            self.assertEqual(payload['score_label'], 'TOPSIS 贴近度')
-            self.assertEqual(payload['ranking_sha256'], expected.ranking_sha256)
-            self.assertEqual(payload['decision_sha256'], expected.decision_sha256)
-            self.assertEqual([r['score'] for r in payload['ranked']], expected.ranked['score'].tolist())
+    def test_standalone_topsis_is_retired(self):
+        self.assertEqual(self.post({**self.body,'method':'topsis'}).status_code,422)
+        body=deepcopy(self.body);body.pop('method',None)
+        self.assertEqual(self.post(body).json()['method'],'hybrid_rrf')
 
     def test_hybrid_is_explicit_versioned_and_bound_to_evidence(self):
         response = self.post(self.hybrid(expected_algorithm_version='hybrid-rrf-1.0.0-experimental'))
@@ -73,13 +61,13 @@ class HybridApiTests(unittest.TestCase):
         self.assertIn('尚未证明更准确', ' '.join(payload['evidence']['limitations']))
         baseline = self.post().json()
         self.assertEqual(payload['decision_sha256'], baseline['decision_sha256'])
-        self.assertNotEqual(payload['ranking_sha256'], baseline['ranking_sha256'])
+        self.assertEqual(payload['ranking_sha256'], baseline['ranking_sha256'])
 
     def test_invalid_method_and_version_are_rejected(self):
         for value in ('unknown', '', None, True, [], {}):
             with self.subTest(method=value):
                 self.assertEqual(self.post({**self.body, 'method': value}).status_code, 422)
-        for method in ('topsis', 'hybrid_rrf'):
+        for method in ('hybrid_rrf',):
             response = self.post({**self.body, 'method': method, 'expected_algorithm_version': 'obsolete'})
             self.assertEqual(response.status_code, 409, response.text)
             self.assertEqual(response.json()['error']['code'], 'algorithm_changed')
@@ -87,9 +75,9 @@ class HybridApiTests(unittest.TestCase):
             self.assertEqual(self.post({**self.body, 'expected_algorithm_version': version}).status_code, 422)
         self.assertEqual(self.post({**self.hybrid(), 'theta': 2}).status_code, 422)
 
-    def test_changed_method_cannot_export_or_explain_old_fingerprints(self):
+    def test_changed_weights_cannot_export_or_explain_old_fingerprints(self):
         old = self.post().json()
-        envelope = {'request': self.hybrid(), 'fingerprints': {k: old[k] for k in
+        envelope = {'request': self.hybrid(weights={**self.body['weights'],'weight_g':9}), 'fingerprints': {k: old[k] for k in
                     ('decision_sha256', 'ranking_sha256')}}
         for fmt in ('csv', 'xlsx', 'json'):
             self.assertEqual(self.post(envelope, '/api/v1/export/' + fmt).status_code, 409)
@@ -125,7 +113,7 @@ class HybridApiTests(unittest.TestCase):
         self.assertIn('融合排序分', explanation.json()['text'])
 
     def test_battery_zero_is_ignored_but_positive_is_explicitly_unavailable(self):
-        for method in ('topsis', 'hybrid_rrf'):
+        for method in ('hybrid_rrf',):
             base = {**self.body, 'method': method}
             expected = self.post(base).json()
             zero = self.post({**base, 'weights': {**self.body['weights'], 'battery_mixed_usage_duration_min': 0}})
@@ -135,8 +123,8 @@ class HybridApiTests(unittest.TestCase):
             self.assertEqual(positive.status_code, 422)
             self.assertEqual(positive.json()['error']['code'], 'unsupported_metric')
 
-    def test_game_remains_strictly_insufficient_in_both_modes(self):
-        for method in ('topsis', 'hybrid_rrf'):
+    def test_game_remains_strictly_insufficient_in_hybrid(self):
+        for method in ('hybrid_rrf',):
             response = self.post({**self.body, 'method': method, 'weights': {'honor_of_kings_avg_fps': 10}})
             self.assertEqual(response.status_code, 200, response.text)
             self.assertEqual(response.json()['status'], 'insufficient_comparable_data')
@@ -147,7 +135,7 @@ class HybridApiTests(unittest.TestCase):
         meta = self.client.get('/api/v1/meta').json()
         self.assertIn('algorithms', meta)
         self.assertEqual(set(meta['release']), {'dataset_version', 'feature_rule_version', 'snapshot_sha256', 'manifest_sha256'})
-        self.assertEqual({a['method'] for a in meta['algorithms']}, {'topsis', 'hybrid_rrf'})
+        self.assertEqual({a['method'] for a in meta['algorithms']}, {'hybrid_rrf'})
         capabilities = meta['performance_capabilities']
         self.assertEqual(capabilities['battery_mixed_usage_duration_min']['status'], 'unsupported_metric')
         self.assertFalse(capabilities['honor_of_kings_avg_fps']['available'])
@@ -189,7 +177,8 @@ class HybridApiTests(unittest.TestCase):
         default = service.recommend(parse_recommendation(body, brands))
         self.assertIn('algorithms', service.meta())
         hybrid = service.recommend(parse_recommendation({**body, 'method': 'hybrid_rrf'}, brands))
-        core = rank_decision_input(default.di, target_screen=6.5)
+        from ranking_modes import rank
+        core = rank(default.di, target_screen=6.5, method='hybrid_rrf')
         self.assertEqual(default.result.ranking_sha256, core.ranking_sha256)
         verify_result(hybrid.result)
         verify_bundle(build_evidence(hybrid.di, hybrid.result, hybrid.needs))

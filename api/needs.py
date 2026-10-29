@@ -116,7 +116,7 @@ class NeedsService:
             except (ValueError, TypeError, KeyError, ApiError):
                 return {'status':'degraded', 'extraction':result, 'draft':None,
                         'notice':'条件、品牌或偏好未能可靠匹配，请在下方手动确认；没有自动放宽条件'}
-            notice='已生成待确认草稿，七项偏好按维度等级表赋权，拍照与游戏未提及时保留初值 1。规格模式按固定规则估算；实测模式若可比资料不完整或游戏范围未确认，会保留初始偏好并说明本次未计入。电池容量不等于续航，价格和品牌仅作硬性筛选，请检查后确认。'
+            notice='已按 AISM 维度结构生成待确认草稿，请检查七项偏好与硬性条件后整体确认。维度关系不代表偏好强度，游戏需求不会自动提高处理器或电池容量偏好。规格参考不等于实测，电池容量不等于续航。'
             if inferred is not None:
                 notice=(f'你说的是「{result["budget"]["reference"]:g} 元左右」，'
                         f'已按 ¥{inferred[0]:,}–¥{inferred[1]:,} 推断预算范围（推断值，可修改）。'

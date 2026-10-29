@@ -33,11 +33,11 @@ class ApiContractTests(unittest.TestCase):
     def test_weight_numeric_domain(self):
         for value in (-1,11,True,'5',float('nan'),float('inf'),None):
             with self.subTest(value=value):
-                body=deepcopy(self.body);body['weights']['price_cny']=value
+                body=deepcopy(self.body);body['weights']['weight_g']=value
                 with self.assertRaises(self.c.ApiError):self.parse(body)
         for value in (0,10):
-            body=deepcopy(self.body);body['weights']['price_cny']=value
-            self.assertEqual(self.parse(body).weights['price_cny'],value)
+            body=deepcopy(self.body);body['weights']['weight_g']=value
+            self.assertEqual(self.parse(body).weights['weight_g'],value)
 
     def test_zero_unknown_or_alias_weights_rejected(self):
         for weights in ({k:0 for k in self.body['weights']},{'made_up':1},{'price':1,'price_cny':1},{}):
@@ -47,7 +47,7 @@ class ApiContractTests(unittest.TestCase):
     def test_required_confirmation_and_unknown_fields(self):
         for value in (False,1,None,'true'):
             with self.assertRaises(self.c.ApiError):self.parse(request_payload(self.release,confirmed=value))
-        for key in self.body:
+        for key in self.c.REQUEST_FIELDS:
             body=deepcopy(self.body);del body[key]
             with self.subTest(missing=key),self.assertRaises(self.c.ApiError):self.parse(body)
         body=deepcopy(self.body);body['db_path']='untrusted'

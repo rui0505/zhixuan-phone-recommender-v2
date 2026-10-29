@@ -41,6 +41,6 @@ def request_payload(release, **updates):
                    weights={'weight_g':2,'storage_gb':3,
                             'screen_size_inch':1,'battery_capacity_mah':2,
                             'dxomark_photo':0,'honor_of_kings_avg_fps':0,'chipset_tier':2},
-                   target_screen=6.5,mode='new',confirmed=True,expected_release=deepcopy(release.key))
+                   target_screen=6.5,mode='new',method='hybrid_rrf',confirmed=True,expected_release=deepcopy(release.key))
     payload.update(deepcopy(updates))
     return payload

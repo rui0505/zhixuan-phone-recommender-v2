@@ -2,7 +2,7 @@
 
 人工确认需求 → 硬条件筛选 → 七维评分与相对排序 → 有依据的推荐理由。
 
-当前公网站点：[知选](https://zhixuanji.cn/)。HTML + 独立 API 入口为 `api.app:app`，保留 Streamlit `app.py`。本次完整更新位于 `codex/hybrid-seven-dimensions-20261027`；GitHub 分支、PR、main 与生产发布分别记录，见 [同步范围](docs/github-sync-20261027.md)。
+当前公网站点：[知选](https://zhixuanji.cn/)。HTML + 独立 API 入口为 `api.app:app`，保留 Streamlit `app.py`。当前整合更新位于 `codex/user-feedback-20261028`；GitHub 分支、PR、main 与生产发布分别记录，见 [同步范围](docs/github-sync-20261027.md)。
 
 四页新界面、七维偏好、百分制规格参考及买家评价已在 2026-10-27 发布到现有 ECS。详见 [界面发布记录](docs/alpine-public-release-20261027.md)、[评分规则与来源](docs/spec-reference-scoring-20261027.md)、[买家评价及云端发布](docs/buyer-reviews-20261027.md)。新版协作、图片与可选 DeepSeek 边界见 [HTML/API 交付](docs/html-api-local.md)。
 
@@ -10,10 +10,12 @@
 
 - 147 机型、150 版本、484 SKU；卫星版本和存储配置独立关联。
 - 预算、品牌包含/排除、最低存储和成色是硬条件；存储、重量、电池容量、处理器档位、屏幕尺寸、拍照、游戏是七个偏好维度。五档重要性按维度映射，未提及有正初值，明确不在意可为 0。
-- 默认 TOPSIS，相对排序可选实验性 RRF 混合模式；支持对比、来源与 CSV/XLSX/JSON 导出。
+- 正式 HTML/API 仅提供 TOPSIS + TODIM 混合排序（RRF），默认即为混合模式；支持对比、来源与 CSV/XLSX/JSON 导出。独立 TOPSIS 请求已停用，见 [混合算法上线记录](docs/hybrid-only-delivery-20261029.md)。
 - 数据/规则/算法版本与快照哈希绑定；换库后旧确认和解释失效。
 - 默认无 API key、不调用付费模型。可选抽取后仍须手动确认，程序产生解释。
-- TOPSIS 是可比候选内相对匹配分，不是绝对性能或购买概率。默认权重是试验设置，不是学习出的偏好。
+- 需求抽取采用 AISM 七维结构上下文，提供可审查的 UP/DOWN 分层；大模型逐维抽取，关系不自动传播偏好。初始结构依据与本地验收见 [AISM 交付记录](docs/aism-semantic-delivery-20261028.md)。
+- 手机库独立展示全商品，默认全部成色147机型/484配置；自己的搜索、筛选和清空不影响智能选机。见 [独立手机库交付](docs/independent-catalog-delivery-20261028.md)。
+- 混合排序分是可比候选内相对匹配分，不是绝对性能或购买概率。默认权重是试验设置，不是学习出的偏好。
 - 默认规格参考模式提供固定规则的七维百分制估算，游戏用处理器和电池容量代理；不承诺为实测体验或经真实用户校准的性能。
 - 可选实测模式中，拍照只用同协议 DXOMARK 照片子分，不混 v4/v5/v6；游戏须同次测试且关键条件齐全。1% Low 无有效覆盖，不推算完整实测总分。
 - 详情页可查看 5,108 条淘宝买家评价（118 个机型），保留采集昵称，支持等级筛选、分页和追评；机型级样本可能来自不同配置与成色。
@@ -27,7 +29,7 @@
 ```powershell
 git clone https://github.com/rui0505/zhixuan-phone-recommender-v2.git
 cd zhixuan-phone-recommender-v2
-git switch codex/hybrid-seven-dimensions-20261027
+git switch codex/user-feedback-20261028
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-api.txt
 .\.venv\Scripts\python.exe scripts/check_release.py --root .

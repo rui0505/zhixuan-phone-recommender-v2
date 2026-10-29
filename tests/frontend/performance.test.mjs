@@ -11,7 +11,7 @@ const base={needs:{budget:{min:100,max:3000},min_storage:256,brands:{include:['�
 test('strict request serialization binds default or explicit method to available version',()=>{
   const input={...base,desired_weights:{battery_mixed_usage_duration_min:3},confirmed:false,source_fragments:['原话']};
   const regular=invoke('requestFields',input,{algorithms});
-  assert.equal(regular.method,'topsis');assert.equal(regular.expected_algorithm_version,'topsis-1.0.0');
+  assert.equal(regular.method,'hybrid_rrf');assert.equal(regular.expected_algorithm_version,'hybrid-rrf-1.0.0-experimental');
   assert.equal(regular.desired_weights,undefined);assert.equal(regular.source_fragments,undefined);assert.equal(regular.confirmed,undefined);
   const hybrid=invoke('requestFields',{...input,method:'hybrid_rrf',game_scope:'unsupported'},{algorithms});
   assert.equal(hybrid.method,'hybrid_rrf');assert.equal(hybrid.expected_algorithm_version,'hybrid-rrf-1.0.0-experimental');assert.equal(hybrid.game_scope,'unsupported');

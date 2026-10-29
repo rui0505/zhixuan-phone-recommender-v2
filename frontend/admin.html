@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex,nofollow">
+  <title>机型管理 · 知选</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/glass.css">
+  <link rel="stylesheet" href="/admin.css?v=intake-20261028">
+  <script type="module" src="/admin.mjs?v=intake-20261028"></script>
+</head>
+<body class="intake-body">
+  <a class="skip-link" href="#intake-main">跳转到机型管理</a>
+  <div class="app-shell">
+    <header class="header intake-header">
+      <a class="brand" href="/" aria-label="返回知选首页"><img class="brand-symbol" src="/assets/icons/phone.svg" alt=""><span>知选 <small>ZHIXUAN</small></span></a>
+      <nav aria-label="管理导航"><a href="/feedback-admin.html">评论审核</a><a href="/">返回网站</a></nav>
+    </header>
+    <main id="intake-main" class="intake-main">
+      <div class="intake-page-heading"><h1>机型管理</h1><p>把新资料整理成可复核的记录，再发布到正式手机库。</p></div>
+      <section id="intake-login-panel" class="intake-login-panel" aria-labelledby="intake-login-title">
+        <h2 id="intake-login-title">进入管理</h2>
+        <p>使用与评论审核相同的维护密钥。密钥仅在本次页面会话的内存中使用，刷新或退出后需重新输入。</p>
+        <form id="intake-login" method="post" action="/admin.html" autocomplete="off">
+          <label for="intake-key">维护密钥<input id="intake-key" type="password" required autocomplete="off" spellcheck="false" placeholder="粘贴维护密钥"></label>
+          <button id="intake-login-button" class="primary" type="submit">进入机型管理</button>
+        </form>
+      </section>
+      <p id="intake-message" class="intake-message" role="status" aria-live="polite"></p>
+      <div id="intake-workspace" hidden>
+        <div class="intake-toolbar"><p id="catalog-release" class="intake-muted"></p><div class="intake-actions"><a href="/feedback-admin.html">前往评论审核</a><button id="intake-logout" type="button">退出管理</button></div></div>
+        <div class="intake-layout">
+          <section class="intake-editor" aria-labelledby="editor-title">
+            <div class="intake-editor-heading"><div><h2 id="editor-title">新增与编辑</h2><p id="record-summary" class="intake-muted"></p></div><button id="new-record" type="button">新建记录</button></div>
+            <form id="intake-form" novalidate>
+              <fieldset id="intake-fields">
+                <div class="intake-section">
+                  <h3>机型与版本</h3>
+                  <div class="intake-grid">
+                    <label for="brand">品牌<input id="brand" name="brand" maxlength="128" required autocomplete="off"></label>
+                    <label for="display-name">完整机型名称<input id="display-name" name="display_name" maxlength="128" required autocomplete="off"></label>
+                    <label for="release-month">发布时间<input id="release-month" name="release_month" type="month"></label>
+                    <label for="variant-name">版本名称<input id="variant-name" name="variant_name" maxlength="128" value="标准版" required></label>
+                    <label for="region">销售地区（可留空）<input id="region" name="region" maxlength="128"></label>
+                    <label for="model-source" class="intake-source-field">机型与规格来源链接<input id="model-source" name="model_source" type="url" maxlength="2000" placeholder="https://" aria-describedby="model-source-help"></label>
+                  </div>
+                  <p id="model-source-help" class="intake-field-help">下方技术规格共用此出处；带规格的记录在发布前必须补全。每个配置的价格单独记录来源。</p>
+                  <div class="intake-checks"><label for="satellite"><input id="satellite" type="checkbox">支持卫星通信</label><label for="is-default"><input id="is-default" type="checkbox" checked>设为默认版本</label></div>
+                </div>
+                <div class="intake-section">
+                  <div class="intake-section-heading"><h3>配置与价格</h3><button id="add-sku" type="button">添加配置</button></div>
+                  <p class="intake-field-help">每个内存 / 存储组合只录入一次。提交待审核时，请补齐价格、口径、成色、记录日期与来源链接。</p>
+                  <div id="sku-rows" class="intake-entries"></div>
+                </div>
+                <div class="intake-section">
+                  <div class="intake-section-heading"><h3>技术规格</h3><button id="add-spec" type="button">添加规格</button></div>
+                  <p class="intake-field-help">只填写有来源的规格。数值未知请留空，将保存为 null；不要用 0 或博主排名代替客观参数。</p>
+                  <div id="spec-rows" class="intake-entries"></div>
+                  <details class="intake-spec-help"><summary>常用指标键与单位</summary><p>重量：weight_g / g；电池：battery_capacity_mah / mAh；屏幕尺寸：screen_size_inch / inch。其他指标沿用目录的既有指标键，保留来源原文供复核。</p></details>
+                </div>
+                <div class="intake-section intake-note-section"><label for="source-note">补充说明<textarea id="source-note" name="source_note" rows="3" maxlength="2000" placeholder="记录版本差异、价格口径或仍需核实的内容"></textarea></label></div>
+              </fieldset>
+              <div class="intake-save-actions"><button id="save-draft" type="button">保存草稿</button><button id="submit-record" class="primary" type="button">提交待审核</button></div>
+            </form>
+            <section class="intake-review" aria-labelledby="review-title">
+              <h3 id="review-title">来源复核与发布</h3>
+              <p id="review-guidance" class="intake-muted"></p>
+              <ul id="record-sources" class="intake-source-list"></ul>
+              <ul id="record-warnings" class="intake-warnings" hidden></ul>
+              <label class="intake-verify" for="sources-verified"><input id="sources-verified" type="checkbox">我已逐项核对保存记录中的规格及价格来源，确认可发布</label>
+              <div class="intake-actions"><button id="publish-record" class="primary" type="button" disabled>确认发布到手机库</button><button id="reject-record" class="intake-danger" type="button" disabled>标记未通过</button><button id="reload-record" type="button" disabled>重新加载记录</button></div>
+              <details class="intake-record-details"><summary>查看已保存记录 JSON</summary><pre id="record-json"></pre></details>
+            </section>
+          </section>
+          <aside class="intake-queue" aria-labelledby="queue-title">
+            <h2 id="queue-title">录入队列</h2><p class="intake-muted">草稿可继续编辑。待审核记录经来源复核并发布后，才会进入正式目录。</p>
+            <div class="intake-actions"><button id="refresh-queue" type="button">刷新队列</button><button id="download-queue" type="button">导出全部 JSON</button></div>
+            <p id="queue-summary" class="intake-muted" role="status"></p>
+            <div id="queue" aria-live="polite"></div>
+            <div id="queue-pagination" class="pagination" aria-label="队列分页"></div>
+          </aside>
+        </div>
+      </div>
+      <noscript><p class="intake-message">机型管理需要 JavaScript。启用后重新加载此页。</p></noscript>
+    </main>
+  </div>
+</body>
+</html>

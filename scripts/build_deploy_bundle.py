@@ -7,7 +7,7 @@ import zipfile
 
 def build(root,output):
     root=Path(root).resolve(); output=Path(output).resolve()
-    names=['bridge.py','engine.py','ranking_modes.py','schemas.py','needs_extraction.py','requirements-api.txt','scripts/api_smoke.py',
+    names=['bridge.py','engine.py','ranking_modes.py','schemas.py','needs_extraction.py','semantic_aism.py','data/aism-semantic-structure.json','requirements-api.txt','scripts/api_smoke.py','scripts/feedback_admin.py',
            'ui/__init__.py','ui/export_results.py','data/catalog.sqlite','data/release_manifest.json','data/image_manifest.json',
            'data/chipset-tiers.json','data/chipset-primary-reference.json','data/buyer_reviews.json',
            'frontend/assets/zhixuan-ai-network.jpg','frontend/assets/alpine-panorama.png',

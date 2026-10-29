@@ -11,7 +11,7 @@ from tests.api_fixture import request_payload
 from catalog.adapter import build_input
 from catalog.evidence import build_evidence
 from catalog.release import ReleaseStore
-from engine import rank_decision_input
+from ranking_modes import rank
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -24,7 +24,7 @@ class DeploymentTests(unittest.TestCase):
         app=create_app(); service=app.state.service; release=service.store.get(); payload=request_payload(release)
         request=parse_recommendation(payload,service.meta()['brands']); outcome=service.recommend(request)
         di=build_input(release.repo,request.needs,request.weights,request.target_screen,request.mode)
-        result=rank_decision_input(di,target_screen=request.target_screen)
+        result=rank(di,target_screen=request.target_screen,method='hybrid_rrf')
         evidence=build_evidence(di,result,request.needs)
         self.assertEqual(result.ranking_sha256,outcome.result.ranking_sha256)
         self.assertEqual(result.decision_sha256,outcome.result.decision_sha256)

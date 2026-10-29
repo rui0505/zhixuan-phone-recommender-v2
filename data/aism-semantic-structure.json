@@ -1,0 +1,29 @@
+{
+  "model_version": "aism-seven-dimensions-v1",
+  "title": "知选七维语义结构",
+  "basis_type": "project_scoring_dependencies",
+  "relation_semantics": "项目规格参考分的计算依赖，不是用户偏好传播或普遍物理因果",
+  "applicability": "spec_reference",
+  "empirically_validated": false,
+  "source": "catalog/spec_reference.py:reference_values；docs/spec-reference-scoring-20261027.md",
+  "nodes": [
+    {"id": "weight", "label": "重量", "definition": "用户对机身更轻的重视程度，不等于手感实测。"},
+    {"id": "storage", "label": "存储", "definition": "用户对存储更大的重视程度；最低容量门槛另存 min_storage，门槛不等于偏好强度。"},
+    {"id": "screen", "label": "屏幕尺寸", "definition": "用户对尺寸接近偏好目标的重视程度；分辨率、面板画质不等同于尺寸。"},
+    {"id": "photo", "label": "拍照", "definition": "用户对拍照的重视程度，不由模型补造手机成片质量或性能数值。"},
+    {"id": "game", "label": "游戏", "definition": "用户对游戏表现的重视程度，保留具体游戏原话；规格参考分由程序计算，不等于实测帧率。"},
+    {"id": "battery", "label": "电池容量", "definition": "用户对标称电池容量更大的重视程度；续航久、一天一充不等于明确要求更大容量。"},
+    {"id": "chipset", "label": "处理器档位", "definition": "用户对处理器档位更高的重视程度，不等于整机散热调度或指定游戏实测表现。"}
+  ],
+  "relations": [
+    {"source": "chipset", "target": "game", "basis": "现有游戏规格参考分 = 0.8 × 处理器参考分 + 0.2 × 电池容量参考分；处理器是该项目公式的输入。"},
+    {"source": "battery", "target": "game", "basis": "同一既有规格代理公式中，电池容量参考分是游戏参考分的输入，不代表真实游戏续航。"}
+  ],
+  "hard_constraint_fields": ["budget", "brands", "min_storage", "target_screen"],
+  "limitations": [
+    "初始矩阵来自项目已有定义和计算依赖，尚未经过领域专家调查或语义效果实验验证。",
+    "未连边表示当前结构没有引入该依赖，不证明现实中完全无关。",
+    "UP/DOWN层级不代表偏好强度，不生成数值权重，不将用户对游戏的偏好传播到处理器或电池容量。",
+    "AISM负责组织维度，不能单独判定某句话是否支持模型抽取结果，也不证明消除了幻觉。"
+  ]
+}
