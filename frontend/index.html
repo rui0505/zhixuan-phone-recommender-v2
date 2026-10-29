@@ -52,8 +52,8 @@
 </div><p id="brands-help" class="small">不选代表不限品牌。可多选；电脑按 Ctrl / Command 选择，同一品牌不能同时包含和排除。</p></details></fieldset><fieldset class="ranking-options"><legend>选择排序方式</legend>
           <label for="evaluation-mode">评分资料<select id="evaluation-mode" aria-describedby="evaluation-help"><option value="spec_reference">默认 · 规格参考分</option><option value="measured">可选 · 可比实测资料</option></select></label>
           <p id="evaluation-help" class="small">默认用七项固定规则换算为 0—100 分的规格参考，不是实测体验分。游戏按 80% 处理器参考分 + 20% 电池容量参考分估算，容量不代表实际续航。切换资料模式后需重新确认。</p>
-          <label for="method">排序方式<select id="method" aria-describedby="method-help"><option value="topsis">默认 · TOPSIS</option><option value="hybrid_rrf">实验 · 混合排序</option></select></label>
-          <p id="method-help" class="small">默认按 TOPSIS 排序。实验混合使用固定参数 theta=1、alpha=0.5、k=10；未证明更准确，不是学习所得。切换后需重新确认。</p>
+          <label for="method">排序方式<select id="method" aria-describedby="method-help" disabled><option value="hybrid_rrf" selected>默认 · TOPSIS + TODIM 混合排序</option></select></label>
+          <p id="method-help" class="small">默认按 TOPSIS + TODIM 混合排序。混合算法使用固定参数 theta=1、alpha=0.5、k=10；未证明更准确，不是学习所得。确认偏好后生成推荐。</p>
           <p id="method-status" class="small" aria-live="polite"></p>
         </fieldset>
         <p id="preference-policy" class="small">五档重视程度，价格和品牌仅作硬筛选。</p><label id="game-scope-control" for="game-scope" hidden>游戏实测参考范围<select id="game-scope"><option value="unconfirmed">尚未确认游戏范围</option><option value="honor_of_kings">使用王者荣耀测试参考</option><option value="unsupported">其他游戏暂无实测</option></select></label><div class="actions"><button type="button" data-not-count="dxomark_photo">拍照暂不计入</button><button type="button" data-not-count="honor_of_kings_avg_fps">游戏暂不计入</button></div><p id="performance-counts" class="small" aria-live="polite">正在读取可比资料覆盖…</p><details class="advanced"><summary>偏好原话与评分依据</summary><div id="performance-summary" aria-live="polite"></div></details></details>

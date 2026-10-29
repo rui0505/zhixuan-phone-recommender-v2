@@ -17,7 +17,7 @@ export function importancePosition(key,weight,level){
 
 // Evidence and desired preferences stay in the extraction record, outside strict API requests.
 export function requestFields(fields,meta){
-  const method=fields.method??'topsis';
+  const method=fields.method??meta?.defaults?.method??'hybrid_rrf';
   const algorithm=meta?.algorithms?.find(item=>item.method===method);
   const value={needs:structuredClone(fields.needs),weights:Object.fromEntries(Object.entries(fields.weights).filter(([key])=>preferenceMetrics.includes(key)||key==='battery_mixed_usage_duration_min')),
     target_screen:fields.target_screen,mode:fields.mode,method,evaluation_mode:fields.evaluation_mode??meta?.defaults?.evaluation_mode??'spec_reference',game_scope:fields.game_scope??'honor_of_kings'};

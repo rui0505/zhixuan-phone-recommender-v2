@@ -10,7 +10,7 @@ from api.contracts import ApiError, Pagination, parse_recommendation, parse_cata
 from catalog.adapter import build_input
 from catalog.release import ReleaseStore, file_sha
 from catalog.evidence import build_evidence, verify_bundle
-from engine import rank_decision_input
+from ranking_modes import rank as hybrid_rank
 from tests.api_fixture import make_release, request_payload
 from tests.catalog_fixture import insert
 
@@ -28,7 +28,7 @@ class ServiceTests(unittest.TestCase):
 
     def test_same_input_matches_core(self):
         di = build_input(self.release.repo, self.request.needs, self.request.weights,6.5,'new')
-        expected = rank_decision_input(di,target_screen=6.5)
+        expected = hybrid_rank(di,target_screen=6.5,method='hybrid_rrf')
         outcome = self.service.recommend(self.request)
         self.assertEqual(outcome.result.ranked.to_dict('records'),expected.ranked.to_dict('records'))
         for name in ('decision_sha256','ranking_sha256','status'):
@@ -64,9 +64,9 @@ class ServiceTests(unittest.TestCase):
             self.assertIsNone(payload['evidence']); self.assertEqual(payload['explanations'],{})
 
     def test_target_and_weights_match_confirmed_request(self):
-        request=parse_recommendation(request_payload(self.release,weights={'screen_size_inch':7,'price_cny':3},target_screen=6.1),['品牌1','品牌2'])
+        request=parse_recommendation(request_payload(self.release,weights={'screen_size_inch':7,'storage_gb':3},target_screen=6.1),['品牌1','品牌2'])
         p=self.service.recommendation_payload(self.service.recommend(request),Pagination())
-        self.assertEqual(p['target_screen'],6.1); self.assertEqual(p['effective_weights'],{'price_cny':0.3,'screen_size_inch':0.7})
+        self.assertEqual(p['target_screen'],6.1); self.assertEqual(p['effective_weights'],{'storage_gb':0.3,'screen_size_inch':0.7})
         self.assertEqual(p['selection_rules']['target_screen'],6.1)
 
     def test_unknown_sku_is_404(self):
@@ -80,7 +80,7 @@ class ServiceTests(unittest.TestCase):
         db=make_release(Path(self.temp.name)/'single',prepare=prepare)
         from api.service import CatalogService
         store=ReleaseStore(db); service=CatalogService(store)
-        request=parse_recommendation(request_payload(store.get(),weights={'price_cny':1},needs={'budget':{'min':None,'max':None},'min_storage':None,'brands':{'include':['品牌1'],'exclude':[]}}),['品牌1','品牌2'])
+        request=parse_recommendation(request_payload(store.get(),weights={'storage_gb':1},needs={'budget':{'min':None,'max':None},'min_storage':None,'brands':{'include':['品牌1'],'exclude':[]}}),['品牌1','品牌2'])
         outcome=service.recommend(request)
         self.assertEqual(len(outcome.di['candidates']),2)
         self.assertEqual(outcome.result.status,'insufficient_comparable_data'); self.assertIsNone(outcome.bundle)
@@ -137,7 +137,7 @@ class ServiceTests(unittest.TestCase):
         release=ReleaseStore(db).get(); service=CatalogService(ReleaseStore(db))
         request=parse_recommendation(request_payload(release),service.meta()['brands'])
         di=build_input(release.repo,request.needs,request.weights,request.target_screen,request.mode)
-        core=rank_decision_input(di,target_screen=request.target_screen)
+        core=hybrid_rank(di,target_screen=request.target_screen,method='hybrid_rrf')
         actual=service.recommend(request).result
         self.assertEqual(actual.ranking_sha256,core.ranking_sha256)
         self.assertEqual(actual.decision_sha256,core.decision_sha256)

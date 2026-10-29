@@ -153,9 +153,9 @@ test('detail entry loads actual review endpoint, filters, paginates and returns 
   await h.ids.get('detail-dialog').emit('close');
 });
 
-test('real form submits default then explicit hybrid with bound version and original release fields',async()=>{
+test('real form submits the sole hybrid algorithm with bound versions',async()=>{
   const h=await harness();await h.generate();let body=h.calls.find(c=>c.path.startsWith('/api/v1/recommend')).body;
-  assert.equal(body.method,'topsis');assert.equal(body.expected_algorithm_version,'topsis-1.0.0');assert.deepEqual(body.expected_release,release);
+  assert.equal(body.method,'hybrid_rrf');assert.equal(body.expected_algorithm_version,'hybrid-rrf-1.0.0-experimental');assert.deepEqual(body.expected_release,release);
   assert.equal(body.evaluation_mode,'spec_reference');assert.equal(body.expected_reference_rule_version,'spec-reference-v1');
   assert.equal(body.weights.dxomark_photo,1);assert.equal(body.weights.honor_of_kings_avg_fps,1);
   assert.ok(body.defaulted_metrics.includes('dxomark_photo'));assert.ok(body.defaulted_metrics.includes('honor_of_kings_avg_fps'));

@@ -108,11 +108,11 @@ class CatalogService:
                 'algorithms':[{'method':method,'algorithm_version':version,'score_label':SCORE_LABELS[method],
                                'experimental':method=='hybrid_rrf',
                                'parameters':deepcopy(HYBRID_PARAMETERS) if method=='hybrid_rrf' else {}}
-                              for method,version in ALGORITHM_VERSIONS.items()],
+                              for method,version in ALGORITHM_VERSIONS.items() if method=='hybrid_rrf'],
                 'performance_capabilities':deepcopy(self._performance_cache[1]),
                 'reference_rule_version':reference_version(repo),
                 'source_summary':[{'label':label,'count':count} for label,count in source_counts.items()],
-                'brands':brands,'metrics':list(METRICS),'defaults':{'weights':dict(DEFAULT_WEIGHTS),'defaulted_metrics':list(METRICS),'target_screen':6.5,'mode':'new','evaluation_mode':'spec_reference'},
+                'brands':brands,'metrics':list(METRICS),'defaults':{'method':'hybrid_rrf','weights':dict(DEFAULT_WEIGHTS),'defaulted_metrics':list(METRICS),'target_screen':6.5,'mode':'new','evaluation_mode':'spec_reference'},
                 'categories':self._category_counts(self._category_index(release)),
                 'acceptance':deepcopy(release.manifest.get('acceptance',{})),
                 'features':{'llm':bool(self.explanations and self.explanations.available),'vikor':False,'images':bool(image_count),'image_models':image_count,'weights':'试验默认值，非学习所得',

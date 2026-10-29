@@ -78,7 +78,7 @@ export function renderDecision(state){
   note.append(element('p',`${result.score_label??'TOPSIS 相对贴近度'}不是绝对性能或购买概率；不同条件下的分数不能直接比较。`,'small'));
   if(result.evaluation_mode==='spec_reference')note.append(element('p','本次使用七项规格参考分：各项按固定规则换算为 0—100 分，再依据你的权重排序。游戏与拍照均为规格代理，不代表实测表现。','small'));
   else if(result.evaluation_mode==='measured')note.append(element('p','本次使用可比实测资料；拍照与游戏的协议、测试条件和缺失资料按实测规则核验。','small'));
-  if(result.method==='hybrid_rrf')note.append(element('p','实验融合：theta=1、alpha=0.5、k=10，使用固定参数；未证明比默认排序更准确，也不是学习所得。','warning'));
+  if(result.method==='hybrid_rrf')note.append(element('p','实验融合：theta=1、alpha=0.5、k=10，使用固定参数；未证明比单独 TOPSIS 更准确，也不是学习所得。','warning'));
   for(const item of result.selection_rules?.default_reference_policy?.deferred??[])note.append(element('p',`${labels[item.metric_key]}：保留系统初始权重 ${item.initial_weight}。${item.reason}。若设为一般或以上，将严格检查该项资料。`,'warning'));
   const more=element('details');more.append(element('summary','查看权重、版本与未评分说明'));
   more.append(element('p',`数据 ${result.dataset_version} / 规则 ${result.feature_rule_version} / ${result.algorithm_version}`,'small'));

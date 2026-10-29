@@ -32,7 +32,7 @@ function preferencesSummary(){
   $('honor_of_kings_avg_fps-help').textContent=reference?'规格估算：80% 处理器参考分 + 20% 电池容量参考分；不代表实测帧率或实际续航。':'仅比较同条件王者荣耀平均帧率，不代表其他游戏。';
   $('screen_size_inch-help').textContent='越接近下方理想尺寸越优先；这是尺寸匹配，不代表屏幕显示质量。';
   $('game-scope-control').hidden=reference;$('game-scope').disabled=reference;
-  $('method-status').textContent=`${reference?'规格参考分':'可比实测资料'} · 本次${f.method==='hybrid_rrf'?'实验混合排序':'默认 TOPSIS'} · ${f.expected_algorithm_version??'版本待读取'}`;
+  $('method-status').textContent=`${reference?'规格参考分':'可比实测资料'} · 本次${f.method==='hybrid_rrf'?'TOPSIS + TODIM 混合排序':'TOPSIS'} · ${f.expected_algorithm_version??'版本待读取'}`;
   const blockers=[];
   if(!reference&&f.weights.battery_mixed_usage_duration_min>0)blockers.push('续航尚无对应实测，请选择“续航暂不计入”后重新确认，或保留需求等待资料。');
   if(!reference&&f.weights.honor_of_kings_avg_fps>0&&!f.defaulted_metrics.includes('honor_of_kings_avg_fps')&&f.game_scope!=='honor_of_kings')blockers.push('游戏范围尚未覆盖或确认。可明确改用王者荣耀作参考，或选择“游戏暂不计入”；原始意图仍保留。');
@@ -64,9 +64,9 @@ async function refreshMeta(initial=false){
     const changedRelease=applyMeta(state,meta);
     const changedCatalogRelease=applyMeta(catalogState,meta);
     if(changedRelease){abortRequests(true);clearResults();clearCatalogResults();compareCount();$('compare-content').replaceChildren(renderComparison([]));}
-    if(initial){for(const key of metrics)$(key).value=1;$('mode').value=meta.defaults.mode;$('target-screen').value=meta.defaults.target_screen;$('evaluation-mode').value=meta.defaults.evaluation_mode??'spec_reference';}
+    if(initial){$('method').value=meta.defaults.method??'hybrid_rrf';for(const key of metrics)$(key).value=1;$('mode').value=meta.defaults.mode;$('target-screen').value=meta.defaults.target_screen;$('evaluation-mode').value=meta.defaults.evaluation_mode??'spec_reference';}
     for(const option of $('method').options)option.disabled=Boolean(meta.algorithms)&&!meta.algorithms.some(a=>a.method===option.value);
-    if($('method').selectedOptions[0]?.disabled)$('method').value='topsis';
+    if($('method').selectedOptions[0]?.disabled)$('method').value='hybrid_rrf';
     fillBrands('include-brands',meta.brands);fillBrands('exclude-brands',meta.brands);state.preferences=structuredClone(fields());preferencesSummary();
     fillBrands('catalog-include-brands',meta.brands);fillBrands('catalog-exclude-brands',meta.brands);
     $('needs-status').textContent=meta.features.offline_fixture?'离线测试夹具可用：仅用于本地验证，未调用 DeepSeek。':meta.features.needs_extraction?'可用：先理解需求，再检查下方条件与偏好。':'自然语言理解暂未启用，仍可直接手动填写。';

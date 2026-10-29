@@ -209,7 +209,7 @@ class PerformanceNeedsTests(unittest.TestCase):
         from api.contracts import ApiError, parse_recommendation, parse_export
         body = dict(needs={'budget': {'min': None, 'max': None}, 'min_storage': None,
                            'brands': {'include': [], 'exclude': []}},
-                    weights={'price_cny': 1, 'honor_of_kings_avg_fps': 2},
+                    weights={'storage_gb': 1, 'honor_of_kings_avg_fps': 2},
                     target_screen=None, mode='new', confirmed=True,
                     expected_release={'dataset_version': 'v1', 'feature_rule_version': 'v1',
                                       'snapshot_sha256': 'a'*64, 'manifest_sha256': 'b'*64})
@@ -223,7 +223,7 @@ class PerformanceNeedsTests(unittest.TestCase):
                 parse_export({'request': scoped, 'fingerprints': {
                     'decision_sha256': 'c'*64, 'ranking_sha256': 'd'*64}}, [])
             self.assertEqual(caught.exception.code, code)
-            scoped['weights'] = {'price_cny': 1, 'honor_of_kings_avg_fps': 0}
+            scoped['weights'] = {'storage_gb': 1, 'honor_of_kings_avg_fps': 0}
             self.assertEqual(parse_recommendation(scoped, []).game_scope, scope)
         for scope in ('anything', None, True):
             with self.assertRaises(ApiError):
