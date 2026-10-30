@@ -4,6 +4,8 @@
 
 ## 作品访问与版本
 
+- [下载佐证材料 PDF（13页）](02_知选佐证材料_20261030.pdf)
+
 - [在线使用知选](https://zhixuanji.cn/)
 - [公开代码仓库与安装说明](../../README.md)
 - [参赛核心功能固定版本 ec302d9](https://github.com/rui0505/zhixuan-phone-recommender-v2/tree/ec302d9eafde464f4c335099fe2f32b7a03b1ec9)

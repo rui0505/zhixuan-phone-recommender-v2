@@ -2,6 +2,11 @@
   "prepared_on": "2026-10-30",
   "files": [
     {
+      "path": "02_知选佐证材料_20261030.pdf",
+      "bytes": 1016113,
+      "sha256": "d58ae4f5d106eb4f9bd6402dffc068760669f659550c1525d38ec52e3eeb328c"
+    },
+    {
       "path": "evidence/feedback-summary-20261030.json",
       "bytes": 1050,
       "sha256": "cb9306e69f4a21802abc391a440a686344ae63d8987f197813f3c401803509a0"
@@ -83,8 +88,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5786,
-      "sha256": "b0487dacab7903ce7ec25cce73a2eac5929075cb5d54f3b3deca165ef1718ad2"
+      "bytes": 5922,
+      "sha256": "006b2d2d35fc97be6d9b424831b059bfc4859af03ad699b14afa763ca2bb07ae"
     }
   ]
 }
