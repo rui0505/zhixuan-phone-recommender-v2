@@ -1,0 +1,25 @@
+{
+  "prepared_on": "2026-10-30",
+  "source_file_sha256": "3d67eb4a472333ea97cfff46c109a92ce1f0f01616005df8ee60dedd7f121209",
+  "collection_method": "团队说明：线下组织用户试用网页，并讲解手机相关知识。",
+  "sample_unit": "反馈记录；不同昵称不作为独立身份核验依据",
+  "records": 100,
+  "rating_counts": {
+    "4": 35,
+    "5": 65
+  },
+  "average_rating": 4.65,
+  "dimension_counts": {
+    "综合": 34,
+    "推荐功能": 30,
+    "UI界面": 21,
+    "页面流畅度": 15
+  },
+  "original_date_min": "2026-07-31",
+  "original_date_max": "2026-10-27",
+  "published_on": "2026-10-29",
+  "saved_public_response_records": 100,
+  "source_and_published_text_rating_match": true,
+  "scope": "本批次有讲解支持的主观体验反馈；非算法准确率或混合算法优越性证明。原始日期来自表格，不据此认定各次试用均对应当前版本。",
+  "privacy": "仅发布汇总统计及已公开页面截图，不提供原始昵称清单或生产数据库。"
+}

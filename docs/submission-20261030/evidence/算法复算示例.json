@@ -1,0 +1,72 @@
+{
+  "label": "人工构造算例，仅验证计算链路，不代表真实手机或用户实验",
+  "input": [
+    {
+      "id": "A",
+      "产品名称": "构造方案A",
+      "weight": 175,
+      "storage": 256
+    },
+    {
+      "id": "B",
+      "产品名称": "构造方案B",
+      "weight": 195,
+      "storage": 512
+    },
+    {
+      "id": "C",
+      "产品名称": "构造方案C",
+      "weight": 220,
+      "storage": 1024
+    },
+    {
+      "id": "D",
+      "产品名称": "构造方案D",
+      "weight": 185,
+      "storage": 256
+    }
+  ],
+  "weights": {
+    "weight": 7,
+    "storage": 3
+  },
+  "parameters": {
+    "theta": 1,
+    "alpha": 0.5,
+    "k": 10
+  },
+  "results": [
+    {
+      "sku_id": "A",
+      "topsis_score": 0.2968051755065716,
+      "todim_score": 1.0,
+      "topsis_rank": 3.0,
+      "todim_rank": 1.0,
+      "score": 0.08391608391608392
+    },
+    {
+      "sku_id": "C",
+      "topsis_score": 0.7031948244934284,
+      "todim_score": 0.5848069123295252,
+      "topsis_rank": 1.0,
+      "todim_rank": 3.0,
+      "score": 0.08391608391608392
+    },
+    {
+      "sku_id": "B",
+      "topsis_score": 0.3704635880237335,
+      "todim_score": 0.5869635656985142,
+      "topsis_rank": 2.0,
+      "todim_rank": 2.0,
+      "score": 0.08333333333333333
+    },
+    {
+      "sku_id": "D",
+      "topsis_score": 0.24633565370757496,
+      "todim_score": 0.0,
+      "topsis_rank": 4.0,
+      "todim_rank": 4.0,
+      "score": 0.07142857142857142
+    }
+  ]
+}

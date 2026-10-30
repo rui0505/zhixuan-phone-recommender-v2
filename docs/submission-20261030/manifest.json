@@ -1,0 +1,90 @@
+{
+  "prepared_on": "2026-10-30",
+  "files": [
+    {
+      "path": "evidence/feedback-summary-20261030.json",
+      "bytes": 1050,
+      "sha256": "cb9306e69f4a21802abc391a440a686344ae63d8987f197813f3c401803509a0"
+    },
+    {
+      "path": "evidence/github-ci-20261030.json",
+      "bytes": 754,
+      "sha256": "5bf291686569f950dd6f352cfe4f4a1f7645b5531ab4c89a4a611314989bfb3f"
+    },
+    {
+      "path": "evidence/前端回归摘要.txt",
+      "bytes": 446,
+      "sha256": "4082a8ce6422f9db67398bed3a3909e33a061121bd8c442dc6e0a5d9f0bfa6b7"
+    },
+    {
+      "path": "evidence/后端回归摘要.txt",
+      "bytes": 443,
+      "sha256": "2cac066c8a67f40020b7164de7f19a4e5b91074b8d56c2d0b788ffa4f843a8ca"
+    },
+    {
+      "path": "evidence/复算示例.py",
+      "bytes": 988,
+      "sha256": "0743a888cf96c3fa356d2d3feca353d691c1e892e619a14aacd5c764ab788bb3"
+    },
+    {
+      "path": "evidence/数据管线回归摘要.txt",
+      "bytes": 263,
+      "sha256": "a39c14ff44b6ed8fe108044e2ba7157c83588543d9a279eff312c99ae8e38bfc"
+    },
+    {
+      "path": "evidence/本地环境依赖元数据.json",
+      "bytes": 25231,
+      "sha256": "448bf30336f4e9647597efb81e781c00dd2ceb5b8c0d99cf81eba1bfe71af31b"
+    },
+    {
+      "path": "evidence/核验摘要.json",
+      "bytes": 1333,
+      "sha256": "77a97aadbb30be0d9c90ad76e61311ea8633db60a2addd481b28a487201d9f19"
+    },
+    {
+      "path": "evidence/算法复算示例.json",
+      "bytes": 1556,
+      "sha256": "15b55f54dd91ea1800027aff5343384e203a59b1e705b7b512e2b3f07655287b"
+    },
+    {
+      "path": "evidence/证据来源指纹.json",
+      "bytes": 1058,
+      "sha256": "57723d31d0a05d6aa2ec4236fd3af91f890dafa3b7cdae85a1e3f031ae4a8606"
+    },
+    {
+      "path": "images/admin-isolated-20261028.png",
+      "bytes": 506381,
+      "sha256": "44cb6606f8264cb156729bdd7251d72ae07274eccc8c72af49f52389ef1a0b4d"
+    },
+    {
+      "path": "images/aism-local-20261028.png",
+      "bytes": 489922,
+      "sha256": "782064e637ed6554da9cd4718fba3d17c923bf38d0eccd87a76a544c878ba91a"
+    },
+    {
+      "path": "images/catalog-local-20261028.png",
+      "bytes": 571844,
+      "sha256": "e020941e522c0dac81a138daa86fef56955922a0b5503bc236c1ac60cc57651f"
+    },
+    {
+      "path": "images/comparison-local-20261027.png",
+      "bytes": 837472,
+      "sha256": "4b5432ed5da67c8b13ce77893f70c5b4029607264c2b5517fdd8904917eec2de"
+    },
+    {
+      "path": "images/feedback-public-20261029.png",
+      "bytes": 87705,
+      "sha256": "9e542bb890ea59eba66c519b8d95311d5fce5b6a32d52e62895259a0049f2df0"
+    },
+    {
+      "path": "images/hybrid-ranking-public-20261029.png",
+      "bytes": 138977,
+      "sha256": "b6e2419157ab3cba6746acc20ecbc2512a131082443002b991543bad00ef331e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5786,
+      "sha256": "b0487dacab7903ce7ec25cce73a2eac5929075cb5d54f3b3deca165ef1718ad2"
+    }
+  ]
+}

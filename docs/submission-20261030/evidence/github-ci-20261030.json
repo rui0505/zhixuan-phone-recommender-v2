@@ -1,0 +1,22 @@
+{
+  "checked_on": "2026-10-30",
+  "code_commit": "ec302d9eafde464f4c335099fe2f32b7a03b1ec9",
+  "run_id": 40830145389,
+  "run_url": "https://github.com/rui0505/zhixuan-phone-recommender-v2/actions/runs/40830145389",
+  "run_date": "2026-10-29",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": {
+    "offline": "success",
+    "api-only": "success"
+  },
+  "verified_steps": [
+    "安装开发依赖",
+    "发布快照检查",
+    "Python应用回归",
+    "数据管线回归",
+    "Node前端测试",
+    "仅安装API依赖后自托管接口检查"
+  ],
+  "scope": "GitHub已完成运行的当前读回结果；本次材料整理没有重新执行完整测试套件。历史842/92/37数量另见2026-10-28摘要。"
+}

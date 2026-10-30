@@ -1,0 +1,14 @@
+证据来源：intake-frontend-tests-20261028.log
+核对日期：2026-10-28
+原文件SHA-256：83cd311351b150faaf133dd3da8e586f822e756ab09048e14e629b6fc97c3d5e
+
+✔ states and preferences are isolated and late errors discarded (0.1912ms)
+✔ explanations reject responses from an earlier preference revision (0.1292ms)
+ℹ tests 92
+ℹ suites 0
+ℹ pass 92
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 252.9919

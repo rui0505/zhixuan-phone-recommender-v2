@@ -1,0 +1,34 @@
+[
+  {
+    "path": "engine.py",
+    "sha256": "292d6262110a39654e327e9f50cb48a4018134470b736ad9003b561a5d3d67a4"
+  },
+  {
+    "path": "ranking_modes.py",
+    "sha256": "3b58bb971591cfe78078fa64c02ed65fe3eb4586a717c4dfea29c2fc7af896e3"
+  },
+  {
+    "path": "semantic_aism.py",
+    "sha256": "1dc50cf894fc5ac2c7dfb78a73e724cbab1c5989a428db7ce231d5b8cc3d46b1"
+  },
+  {
+    "path": "api/explanations.py",
+    "sha256": "5e013329e765b45d7abc64157b3cfae701a9d9bd2745e652d6bd44ac96637b6a"
+  },
+  {
+    "path": "catalog/spec_reference.py",
+    "sha256": "45c1aa882b76d5b899016835fa9e4503d6aa2b4b222a208a7f79f75f1cb9a0de"
+  },
+  {
+    "path": "frontend/alpine.mjs",
+    "sha256": "b0a3a910e441f800a3b4f89dd3666452d88c9cd9e40059f2c476ec93d0f6eeb1"
+  },
+  {
+    "path": "docs/intake-feedback-delivery-20261028.md",
+    "sha256": "6d53462a23215ee01144c11bb914577da5ad3f3634f96543e427b2496175aee4"
+  },
+  {
+    "path": "docs/buyer-reviews-20261027.md",
+    "sha256": "dc0081fc281561ba4f9ea3283c01ceb6e43c911557e157e657f0f900a4f2287b"
+  }
+]

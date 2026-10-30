@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-28",
+  "catalog_counts": {
+    "phone_models": 147,
+    "phone_variants": 150,
+    "skus": 484,
+    "price_snapshots": 484,
+    "specifications": 2671,
+    "sources": 477
+  },
+  "catalog_sha256": "128207745f5450c285cb8d6c61ff2c692f19387f2df0823690cd5b323c453bc8",
+  "historical_public_acceptance": {
+    "source": "local_evidence/intake-public-acceptance-20261028.json",
+    "status": "PASS",
+    "public_url": "https://zhixuanji.cn/",
+    "counts": {
+      "phone_models": 147,
+      "phone_variants": 150,
+      "skus": 484,
+      "price_snapshots": 484,
+      "specifications": 2671,
+      "benchmark_runs": 207,
+      "metric_observations": 923,
+      "sources": 477,
+      "assets": 0,
+      "quality_issues": 0
+    }
+  },
+  "historical_tests": {
+    "python": 842,
+    "node": 92,
+    "pipeline": 37,
+    "note": "项目2026-10-28已保存日志；本轮核对日志，不冒称重新跑全量回归"
+  },
+  "current_code_readback": [
+    "semantic_aism.py",
+    "ranking_modes.py",
+    "engine.py",
+    "api/explanations.py",
+    "frontend/alpine.mjs"
+  ],
+  "unverified": [
+    "真实LLM复杂语句准确率",
+    "真实用户推荐满意度",
+    "混合排序优于TOPSIS",
+    "全部原始数据人工验收",
+    "公网浏览器画面验收"
+  ]
+}

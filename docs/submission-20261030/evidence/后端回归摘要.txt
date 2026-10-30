@@ -1,0 +1,12 @@
+证据来源：intake-full-tests-final-20261028.log
+核对日期：2026-10-28
+原文件SHA-256：593349a3f239627cdf2ad43e25154376a879a884c4e3125d9e73cc6470c56e52
+
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+----------------------------------------------------------------------
+Ran 842 tests in 110.043s
+
+OK

@@ -2,7 +2,7 @@
 
 人工确认需求 → 硬条件筛选 → 七维评分与相对排序 → 有依据的推荐理由。
 
-当前公网站点：[知选](https://zhixuanji.cn/)。HTML + 独立 API 入口为 `api.app:app`，保留 Streamlit `app.py`。当前整合更新位于 `codex/user-feedback-20261028`；GitHub 分支、PR、main 与生产发布分别记录，见 [同步范围](docs/github-sync-20261027.md)。
+当前公网站点：[知选](https://zhixuanji.cn/)。HTML + 独立 API 入口为 `api.app:app`，保留 Streamlit `app.py`。仓库及提交历史已公开，无需邀请即可查阅；参赛安装统一使用 `main`，核心功能版本固定参考 `ec302d9eafde464f4c335099fe2f32b7a03b1ec9`（PR #8 合并）。[参赛材料与证据索引](docs/submission-20261030/README.md)集中提供测试摘要、算法复算、截图、反馈统计和版本记录。
 
 四页新界面、七维偏好、百分制规格参考及买家评价已在 2026-10-27 发布到现有 ECS。详见 [界面发布记录](docs/alpine-public-release-20261027.md)、[评分规则与来源](docs/spec-reference-scoring-20261027.md)、[买家评价及云端发布](docs/buyer-reviews-20261027.md)。新版协作、图片与可选 DeepSeek 边界见 [HTML/API 交付](docs/html-api-local.md)。
 
@@ -24,17 +24,19 @@
 
 ## HTML/API 安装与启动（Windows / WorkBuddy）
 
-仓库地址：https://github.com/rui0505/zhixuan-phone-recommender-v2 。私有仓库先接受管理员邀请；用自己的 GitHub 账号，不共享 token。
+公开仓库：https://github.com/rui0505/zhixuan-phone-recommender-v2 。匿名下载与克隆不需要邀请，也不需要提供 token。
 
 ```powershell
 git clone https://github.com/rui0505/zhixuan-phone-recommender-v2.git
 cd zhixuan-phone-recommender-v2
-git switch codex/user-feedback-20261028
+git switch main
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-api.txt
 .\.venv\Scripts\python.exe scripts/check_release.py --root .
 .\.venv\Scripts\python.exe -m uvicorn api.app:app --host 127.0.0.1 --port 8600
 ```
+
+需复核本次参赛功能版本时，可在克隆后运行 `git checkout ec302d9eafde464f4c335099fe2f32b7a03b1ec9`，再执行安装与启动命令。该固定提交对应业务代码；后续参赛证据与说明更新见上方索引。
 
 Linux/macOS 使用 `python3.12 -m venv .venv`，解释器换为 `.venv/bin/python`。
 浏览器访问 `http://127.0.0.1:8600/`。无需桌面 Excel、图片 ZIP、Node 或 Word；生产网页读取只读目录快照、版本化规则、展示图片及评价运行快照。Node 仅用于前端测试。
@@ -68,4 +70,5 @@ Streamlit 新应用选实际新仓库 / `main` / `app.py` / Python 3.12；不填
 云端实测 Python 3.12.15；平台自动将 PyArrow 25.0.0 换为 24.0.0。与本地 3.12.14 的环境记录分开，不声称全依赖锁定。
 源码提交、部署分支与数据快照已核对；平台未提供本轮可独立验证的运行提交 SHA，不能把分支 HEAD 当作平台证明。
 
-代码暂未选择开源许可证；私有协作不等于授权再分发。公开前应完成来源、版权与事实抽查，比赛材料据实披露数据和创新边界。
+代码暂未选择开源许可证；源码公开不等于授权再分发。比赛材料据实披露数据和创新边界，许可状态沿用项目既有说明。
+
